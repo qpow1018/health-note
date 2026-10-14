@@ -1,3 +1,4 @@
+import toast from '@/utils/toast'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteExercise } from '@/features/exercise/exerciseStorage'
@@ -28,6 +29,7 @@ function ExerciseDetailPage() {
       setDeleteError('삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.')
       return
     }
+    toast.success('운동을 삭제했어요.')
     navigate('/exercise', { replace: true })
   }
 

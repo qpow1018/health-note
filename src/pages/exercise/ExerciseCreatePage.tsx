@@ -1,3 +1,4 @@
+import toast from '@/utils/toast'
 import { useNavigate } from 'react-router-dom'
 import Header from '@/components/common/header/Header'
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
@@ -14,6 +15,7 @@ function ExerciseCreatePage() {
     } catch {
       return '저장하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.'
     }
+    toast.success('운동을 등록했어요.')
     navigate('/exercise')
     return ''
   }

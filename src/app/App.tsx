@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import ToastContainer from '@/components/common/toast/ToastContainer'
 import Header from '@/components/common/header/Header'
 import ExerciseListPage from '@/pages/exercise/ExerciseListPage'
 import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage'
@@ -29,6 +30,7 @@ function App() {
           } />
         </Routes>
       </main>
+      <ToastContainer />
     </BrowserRouter>
   )
 }

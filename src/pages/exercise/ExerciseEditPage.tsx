@@ -1,3 +1,4 @@
+import toast from '@/utils/toast'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Header from '@/components/common/header/Header'
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
@@ -19,6 +20,7 @@ function ExerciseEditPage() {
     } catch {
       return '저장하지 못했어요. 운동이 삭제되었거나 브라우저 저장 공간에 문제가 있을 수 있어요.'
     }
+    toast.success('운동을 수정했어요.')
     navigate(detailTo, { replace: true })
     return ''
   }
