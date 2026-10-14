@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getExercises } from './exerciseStorage'
-import { isYoutubeUrl } from './youtubeUrl'
+import { getExercises } from '@/features/exercise/exerciseStorage'
+import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
 import styles from './ExerciseDetailPage.module.scss'
 
 function loadExercise(exerciseId: string | undefined) {

@@ -45,3 +45,10 @@ Noto Sans KR 로컬 폰트, LoaM 기반 다크 팔레트, SCSS Modules를 사용
 Sass 변수·믹스인은 전역 주입하고 `@/`는 `src/`를 가리킵니다.
 앱과 fixed 요소는 `$app-max-width`를 공유합니다.
 코드 규칙은 `AGENTS.md`와 연결된 프론트엔드 스킬을 참고합니다.
+
+## 코드 구조
+
+- `src/app/`: 앱 레이아웃과 라우트 조립
+- `src/pages/exercise/`: 운동 목록·등록·상세 페이지와 페이지 전용 스타일
+- `src/features/exercise/`: 운동 타입·저장·검증 등 기능 코드. 실제 공유 여부보다 책임을 기준으로 배치합니다.
+- `src/components/common/`: 운동과 무관한 공용 UI

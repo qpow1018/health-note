@@ -7,8 +7,10 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 
 ## 구조
 
-- 앱 조립·레이아웃은 src/app/, 운동 기능은 src/features/exercise/에 둔다.
-- 기능 전용 화면·스타일·타입·저장 코드는 feature가 소유한다.
+- 앱 레이아웃·라우트 조립은 src/app/, 페이지는 src/pages/<domain>/에 둔다.
+- 페이지는 URL 파라미터 해석, 화면 조립, 저장 후 이동을 담당하고 페이지 전용 스타일을 같은 폴더에 둔다.
+- 운동 폼·검증·타입·저장 처리는 src/features/exercise/에 둔다. features는 공유 코드만 모으는 곳이 아니라 기능 책임을 가진 코드의 위치다.
+- 페이지에서만 쓰는 JSX는 페이지 안에 유지할 수 있다. 페이지를 얇게 만들기 위해 억지로 분리하지 않는다.
 - 도메인과 무관한 공용 UI는 src/components/common/에 둔다.
 - 두 번째 실제 사용처가 생기고 역할까지 같을 때 공용화를 검토한다. 모양만 비슷한 코드는 강제로 합치지 않는다.
 - 폴더·추상화·옵션은 필요한 시점에 추가한다.

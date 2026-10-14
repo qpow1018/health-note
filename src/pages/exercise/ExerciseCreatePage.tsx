@@ -4,8 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import Button from '@/components/common/button/Button'
 import ButtonLink from '@/components/common/button/ButtonLink'
 import Input from '@/components/common/input/Input'
-import { isYoutubeUrl } from './youtubeUrl'
-import { createExercise } from './exerciseStorage'
+import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
+import { createExercise } from '@/features/exercise/exerciseStorage'
 import styles from './ExerciseCreatePage.module.scss'
 
 type TLinkInput = { id: string; value: string }

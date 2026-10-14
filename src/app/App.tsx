@@ -1,7 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import ExercisePage from '@/features/exercise/ExercisePage'
-import ExerciseDetailPage from '@/features/exercise/ExerciseDetailPage'
-import ExerciseCreatePage from '@/features/exercise/ExerciseCreatePage'
+import ExerciseListPage from '@/pages/exercise/ExerciseListPage'
+import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage'
+import ExerciseCreatePage from '@/pages/exercise/ExerciseCreatePage'
 import styles from './App.module.scss'
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
               <Link to="/exercise">내 운동</Link>
             </div>
           } />
-          <Route path="/exercise" element={<ExercisePage />} />
+          <Route path="/exercise" element={<ExerciseListPage />} />
           <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
           <Route path="/exercise/new" element={<ExerciseCreatePage />} />
           <Route path="*" element={

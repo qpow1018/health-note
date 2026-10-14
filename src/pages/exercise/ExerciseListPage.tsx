@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ButtonLink from '@/components/common/button/ButtonLink'
-import { getExercises } from './exerciseStorage'
-import styles from './ExercisePage.module.scss'
+import { getExercises } from '@/features/exercise/exerciseStorage'
+import styles from './ExerciseListPage.module.scss'
 
 function loadExercises() {
   try {
@@ -18,7 +18,7 @@ function loadExercises() {
   }
 }
 
-function ExercisePage() {
+function ExerciseListPage() {
   const [result] = useState(loadExercises)
   const { exercises, error } = result
 
@@ -58,4 +58,4 @@ function ExercisePage() {
   )
 }
 
-export default ExercisePage
+export default ExerciseListPage
