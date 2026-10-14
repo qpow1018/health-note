@@ -19,6 +19,8 @@ test.beforeEach(async ({ page }) => {
 
 test('목록에서 상세로 이동해 저장된 순서와 요일·메모를 표시한다', async ({ page }) => {
   await page.reload()
+  await page.getByRole('button', { name: '전체 루틴', exact: true }).click()
+  const listUrl = page.url()
   await page.getByRole('link', { name: /상체 루틴/ }).click()
   await expect(page).toHaveURL('/routine/routine-1')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('상체 루틴')
@@ -28,7 +30,7 @@ test('목록에서 상세로 이동해 저장된 순서와 요일·메모를 표
   await page.reload()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('상체 루틴')
   await page.getByRole('button', { name: '뒤로가기' }).click()
-  await expect(page).toHaveURL('/routine')
+  await expect(page).toHaveURL(listUrl)
 })
 
 test('간격 반복과 빈 메모를 표시하고 직접 진입의 뒤로가기는 목록으로 이동한다', async ({ page, context }) => {

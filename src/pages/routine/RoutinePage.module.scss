@@ -14,6 +14,56 @@
     text-decoration: none;
   }
 
+  .view-options {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+
+    > * { flex: 1; }
+  }
+
+  .date-picker {
+    margin-top: 24px;
+
+    > label {
+      display: block;
+      margin-bottom: 8px;
+    }
+  }
+
+  .date-row {
+    display: flex;
+    gap: 8px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: $control-height;
+      padding: 0;
+    }
+  }
+
+  .date-caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    color: $text-secondary;
+  }
+
+  .list-heading {
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
   .message { padding-block: 48px; }
 
   .error {
