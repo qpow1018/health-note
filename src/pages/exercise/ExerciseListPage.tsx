@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '@/components/common/header/Header'
 import { getExercises } from '@/features/exercise/exerciseStorage'
@@ -19,8 +19,31 @@ function loadExercises() {
 }
 
 function ExerciseListPage() {
-  const [result] = useState(loadExercises)
+  const [result, setResult] = useState(loadExercises)
   const { exercises, error } = result
+
+  useEffect(function watchExerciseChanges() {
+    function refreshExercises() {
+      setResult(loadExercises())
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') refreshExercises()
+    }
+
+    window.addEventListener('storage', refreshExercises)
+    window.addEventListener('focus', refreshExercises)
+    window.addEventListener('pageshow', refreshExercises)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    refreshExercises()
+
+    return function stopWatching() {
+      window.removeEventListener('storage', refreshExercises)
+      window.removeEventListener('focus', refreshExercises)
+      window.removeEventListener('pageshow', refreshExercises)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   return (
     <section className={styles['exercise-page']}>

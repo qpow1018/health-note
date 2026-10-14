@@ -40,14 +40,16 @@ export function createExercise(exercise: TExerciseValues): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises))
 }
 
-export function updateExercise(id: string, values: TExerciseValues): void {
+export function updateExercise(id: string, values: TExerciseValues, expectedExercise: TExercise): 'updated' | 'conflict' {
   const exercises = getExercises()
   const index = exercises.findIndex(exercise => exercise.id === id)
   if (index === -1) {
     throw new Error('Exercise not found')
   }
+  if (JSON.stringify(exercises[index]) !== JSON.stringify(expectedExercise)) return 'conflict'
   exercises[index] = { ...values, id }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises))
+  return 'updated'
 }
 
 export function deleteExercise(id: string): void {

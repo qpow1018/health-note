@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import toast from '@/utils/toast'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Header from '@/components/common/header/Header'
@@ -7,16 +8,18 @@ import { updateExercise } from '@/features/exercise/exerciseStorage'
 import type { TExerciseValues } from '@/features/exercise/exercise.types'
 import styles from './ExerciseEditPage.module.scss'
 
-function ExerciseEditPage() {
-  const { exerciseId } = useParams()
+function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {
   const navigate = useNavigate()
-  const { exercise, error } = loadExercise(exerciseId)
+  const [{ exercise, error }] = useState(() => loadExercise(exerciseId))
   const detailTo = `/exercise/${encodeURIComponent(exerciseId ?? '')}`
 
   function handleSave(values: TExerciseValues): string {
     if (!exercise) return '운동을 찾을 수 없어요.'
     try {
-      updateExercise(exercise.id, values)
+      const result = updateExercise(exercise.id, values, exercise)
+      if (result === 'conflict') {
+        return '다른 화면에서 변경된 운동이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.'
+      }
     } catch {
       return '저장하지 못했어요. 운동이 삭제되었거나 브라우저 저장 공간에 문제가 있을 수 있어요.'
     }
@@ -42,6 +45,11 @@ function ExerciseEditPage() {
       </div>
     </section>
   )
+}
+
+function ExerciseEditPage() {
+  const { exerciseId } = useParams()
+  return <ExerciseEditContent key={exerciseId} exerciseId={exerciseId} />
 }
 
 export default ExerciseEditPage
