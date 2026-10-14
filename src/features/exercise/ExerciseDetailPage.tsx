@@ -31,17 +31,19 @@ function ExerciseDetailPage() {
   return (
     <section className={styles['exercise-detail-page']}>
       <Link className={styles['back-link']} to="/exercise">목록으로</Link>
-      {error ? (
+      {error && (
         <>
           <h1>운동 상세</h1>
           <p className={styles['error']} role="alert">{error}</p>
         </>
-      ) : !exercise ? (
+      )}
+      {!error && !exercise && (
         <>
           <h1>운동을 찾을 수 없어요.</h1>
           <p className={styles['hint']}>목록으로 돌아가 운동을 선택해 주세요.</p>
         </>
-      ) : (
+      )}
+      {!error && exercise && (
         <>
           <h1>{exercise.name}</h1>
           <dl className={styles['amount-row']}>
@@ -56,19 +58,23 @@ function ExerciseDetailPage() {
           </dl>
           <section className={styles['section']} aria-labelledby="youtube-heading">
             <h2 id="youtube-heading">유튜브 링크</h2>
-            {exercise.youtubeLinks.length === 0 ? (
+            {exercise.youtubeLinks.length === 0 && (
               <p className={styles['hint']}>등록한 링크가 없어요.</p>
-            ) : (
+            )}
+            {exercise.youtubeLinks.length > 0 && (
               <ul className={styles['links']}>
                 {exercise.youtubeLinks.map(function renderLink(url, index) {
+                  const isValidLink = isYoutubeUrl(url)
+
                   return (
                     <li key={`${index}-${url}`}>
-                      {isYoutubeUrl(url) ? (
+                      {isValidLink && (
                         <a href={url} target="_blank" rel="noopener noreferrer">
                           <span>유튜브 링크 {index + 1} (새 탭)</span>
                           <span className={styles['url']}>{url}</span>
                         </a>
-                      ) : (
+                      )}
+                      {!isValidLink && (
                         <p className={styles['hint']}>유튜브 링크 {index + 1}의 주소를 확인할 수 없어요.</p>
                       )}
                     </li>
@@ -79,8 +85,8 @@ function ExerciseDetailPage() {
           </section>
           <section className={styles['section']} aria-labelledby="memo-heading">
             <h2 id="memo-heading">메모</h2>
-            {exercise.memo ? <p className={styles['memo']}>{exercise.memo}</p> :
-              <p className={styles['hint']}>등록한 메모가 없어요.</p>}
+            {exercise.memo && <p className={styles['memo']}>{exercise.memo}</p>}
+            {!exercise.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
           </section>
         </>
       )}
