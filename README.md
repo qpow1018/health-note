@@ -1,13 +1,13 @@
 # Health Note
 
-React 19 + TypeScript + Vite 기반 모바일 웹 프로젝트입니다.
-운동 목록(`/exercise`), 등록(`/exercise/new`), 상세(`/exercise/:exerciseId`)을 제공하며 브라우저 localStorage에 저장합니다.
-수정·삭제·네이티브 연동은 아직 구현하지 않았습니다.
-BrowserRouter를 사용하므로 배포 시 모든 페이지 경로를 index.html로 연결하는 SPA fallback 설정이 필요합니다.
+내 방식대로 운동 이름과 운동량·세트를 정하고, 유튜브 링크와 메모를 함께 관리하는 모바일 웹앱입니다.
+운동 등록·목록·상세·수정·삭제를 지원합니다.
+
+React 19, TypeScript, Vite, React Router, SCSS Modules를 사용합니다.
 
 ## 실행
 
-Node.js 22.23.3과 npm을 사용합니다.
+Node.js 22.23.3과 npm을 사용합니다. nvm을 사용한다면 `.nvmrc`로 버전을 맞출 수 있습니다.
 
 ```sh
 nvm use
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-같은 Wi-Fi의 Android 휴대폰에서 확인하려면 다음 명령으로 실행하고 출력된 Network 주소에 접속합니다.
+같은 Wi-Fi의 Android 휴대폰에서 확인하려면 아래 명령으로 실행하고 출력된 Network 주소에 접속합니다.
 
 ```sh
 npm run dev -- --host 0.0.0.0
@@ -27,28 +27,25 @@ npm run dev -- --host 0.0.0.0
 npm run lint
 npm run typecheck
 npm run build
-```
-
-운동 목록·등록 브라우저 테스트는 설치된 Google Chrome으로 실행합니다.
-테스트마다 격리된 저장소를 사용하며 저장 실패와 손상 데이터 보존도 확인합니다.
-
-```sh
 npm run test:e2e
 ```
 
-모바일 폭의 PC Chrome 검증이며 Android 실기기 검증은 별도로 진행합니다.
+E2E 테스트는 설치된 Google Chrome이 필요합니다.
+모바일 폭의 PC 브라우저에서 실행하며, Android 실기기의 키보드·터치 등은 별도로 확인해야 합니다.
 
-## 스타일 기반
+## 저장과 배포
 
-Noto Sans KR 로컬 폰트, LoaM 기반 다크 팔레트, SCSS Modules를 사용합니다.
-공통 토큰은 `src/styles/_variables.scss`에서 관리합니다.
-Sass 변수·믹스인은 전역 주입하고 `@/`는 `src/`를 가리킵니다.
-앱과 fixed 요소는 `$app-max-width`를 공유합니다.
-코드 규칙은 `AGENTS.md`와 연결된 프론트엔드 스킬을 참고합니다.
+- 기록은 현재 브라우저의 localStorage에 저장됩니다. 기기·브라우저 간 동기화는 제공하지 않습니다.
+- 브라우저 데이터를 삭제하면 기록도 사라집니다. 같은 브라우저라도 접속 주소의 origin이 달라지면 저장소가 분리됩니다.
+- 운동 삭제는 복구할 수 없습니다.
+- BrowserRouter를 사용하므로 배포 환경에 SPA fallback을 설정해야 합니다. `/exercise` 같은 페이지 경로에 직접 접속해도 `index.html`을 반환해야 합니다.
 
 ## 코드 구조
 
 - `src/app/`: 앱 레이아웃과 라우트 조립
-- `src/pages/exercise/`: 운동 목록·등록·상세 페이지와 페이지 전용 스타일
-- `src/features/exercise/`: 운동 타입·저장·검증 등 기능 코드. 실제 공유 여부보다 책임을 기준으로 배치합니다.
-- `src/components/common/`: 운동과 무관한 공용 UI
+- `src/pages/`: 페이지와 페이지 전용 스타일
+- `src/features/exercise/`: 운동 폼·타입·조회·저장·검증
+- `src/components/common/`: 공용 UI
+- `src/styles/`: 폰트·다크 테마·공통 토큰·전역 스타일
+
+작성 규칙은 [AGENTS.md](./AGENTS.md)와 연결된 프로젝트 스킬을 참고합니다.

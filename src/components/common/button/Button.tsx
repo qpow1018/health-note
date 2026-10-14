@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import styles from './Button.module.scss'
 
-export type TButtonColor = 'mint' | 'gray'
+export type TButtonColor = 'mint' | 'gray' | 'rose'
 export type TButtonFill = 'solid' | 'outline'
 
 type TButtonProps = ComponentProps<'button'> & {

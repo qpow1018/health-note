@@ -1,0 +1,32 @@
+.exercise-edit-page {
+  .header {
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
+      color: $text-secondary;
+      text-decoration: none;
+    }
+
+    h1 {
+      margin-top: 8px;
+      font-size: $font-size-title;
+    }
+  }
+
+  .error {
+    margin-top: 24px;
+    color: $error-accent;
+  }
+
+  .missing {
+    margin-top: 24px;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
+      color: $mint-accent;
+    }
+  }
+}

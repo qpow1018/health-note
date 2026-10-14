@@ -27,6 +27,10 @@
     @include button-color($mint, $mint-accent, $mint);
   }
 
+  &.color-rose {
+    @include button-color($rose, $rose-accent, $rose);
+  }
+
   &.color-gray {
     @include button-color($gray-600, $text-primary, $border-strong);
   }

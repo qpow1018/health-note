@@ -6,3 +6,5 @@ export type TExercise = {
   youtubeLinks: string[]
   memo: string
 }
+
+export type TExerciseValues = Omit<TExercise, 'id'>

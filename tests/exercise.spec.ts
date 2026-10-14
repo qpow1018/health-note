@@ -190,3 +190,113 @@ test('상세에서 기존 데이터의 빈 항목, 없는 운동, 손상 데이�
   await page.reload()
   await expect(page.getByRole('alert')).toContainText('운동을 불러오지 못했어요.')
 })
+
+const EDIT_TARGET = {
+  id: 'edit-target', name: '푸시업', amount: '10회', sets: 3,
+  youtubeLinks: ['https://youtu.be/abcdefghijk', 'https://www.youtube.com/watch?v=abcdefghijk'],
+  memo: '첫 줄\n둘째 줄',
+}
+
+async function seedEditExercises(page: import('@playwright/test').Page) {
+  await page.goto('/exercise')
+  await page.evaluate(({ key, exercises }) => localStorage.setItem(key, JSON.stringify(exercises)), {
+    key: STORAGE_KEY, exercises: [EXISTING[0], EDIT_TARGET],
+  })
+  await page.goto('/exercise/edit-target')
+}
+
+test('상세에서 수정하고 모든 필드와 ID 및 다른 운동을 유지한다', async ({ page }) => {
+  await seedEditExercises(page)
+  await page.getByRole('link', { name: '수정', exact: true }).click()
+  await expect(page).toHaveURL('/exercise/edit-target/edit')
+  await expect(page.getByLabel('운동 이름')).toHaveValue('푸시업')
+  await expect(page.getByLabel('운동량')).toHaveValue('10회')
+  await expect(page.getByLabel('세트')).toHaveValue('3')
+  await expect(page.getByLabel('메모')).toHaveValue('첫 줄\n둘째 줄')
+  await expect(page.getByLabel('유튜브 링크 2', { exact: true })).toHaveValue(EDIT_TARGET.youtubeLinks[1])
+  await page.getByLabel('운동 이름').fill('수정한 푸시업')
+  await page.getByLabel('운동량').fill('8회')
+  await page.getByLabel('세트').fill('2')
+  await page.getByRole('button', { name: '유튜브 링크 1 삭제', exact: true }).click()
+  await page.getByLabel('메모').fill('수정한 메모\n줄바꿈 유지')
+  await page.screenshot({ path: 'test-results/exercise-edit-mobile.png', fullPage: true })
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page).toHaveURL('/exercise/edit-target')
+  await expect(page.getByRole('heading', { name: '수정한 푸시업', exact: true })).toBeVisible()
+  await page.reload()
+  const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY)
+  expect(stored).toHaveLength(2)
+  expect(stored[0]).toMatchObject(EXISTING[0])
+  expect(stored[1]).toEqual({ ...EDIT_TARGET, name: '수정한 푸시업', amount: '8회', sets: 2,
+    youtubeLinks: [EDIT_TARGET.youtubeLinks[1]], memo: '수정한 메모\n줄바꿈 유지' })
+})
+
+test('수정 취소는 기존 데이터를 바꾸지 않는다', async ({ page }) => {
+  await seedEditExercises(page)
+  const before = await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)
+  await page.getByRole('link', { name: '수정', exact: true }).click()
+  await page.getByLabel('운동 이름').fill('취소할 이름')
+  await page.getByLabel('메모').fill('취소할 메모')
+  await page.getByRole('link', { name: '취소', exact: true }).click()
+  await expect(page).toHaveURL('/exercise/edit-target')
+  expect(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)).toBe(before)
+})
+
+test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한다', async ({ page }) => {
+  await seedEditExercises(page)
+  page.once('dialog', async dialog => {
+    expect(dialog.message()).toContain('푸시업')
+    expect(dialog.message()).toContain('복구할 수 없어요')
+    await dialog.dismiss()
+  })
+  await page.getByRole('button', { name: '삭제', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '푸시업', exact: true })).toBeVisible()
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: '삭제', exact: true }).click()
+  await expect(page).toHaveURL('/exercise')
+  await expect(page.getByRole('listitem')).toHaveCount(1)
+  const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY)
+  expect(stored[0]).toMatchObject(EXISTING[0])
+  await page.goto('/exercise/edit-target')
+  await expect(page.getByRole('heading', { name: '운동을 찾을 수 없어요.' })).toBeVisible()
+})
+
+test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async ({ page }) => {
+  await seedEditExercises(page)
+  await page.getByRole('link', { name: '수정', exact: true }).click()
+  await page.getByLabel('운동 이름').fill('저장 실패 이름')
+  await page.evaluate(() => {
+    Storage.prototype.setItem = function () { throw new DOMException('Full', 'QuotaExceededError') }
+  })
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('저장하지 못했어요')
+  await expect(page.getByLabel('운동 이름')).toHaveValue('저장 실패 이름')
+  await expect(page.getByLabel('메모')).toHaveValue(EDIT_TARGET.memo)
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY)).toEqual(EDIT_TARGET)
+  await page.getByRole('link', { name: '취소', exact: true }).click()
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: '삭제', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('삭제하지 못했어요')
+  await expect(page).toHaveURL('/exercise/edit-target')
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY)).toEqual(EDIT_TARGET)
+})
+
+test('수정 진입 시 없는 운동과 손상 데이터에 폼을 제공하지 않는다', async ({ page }) => {
+  await page.goto('/exercise/missing/edit')
+  await expect(page.getByText('운동을 찾을 수 없어요.')).toBeVisible()
+  await expect(page.getByRole('button', { name: '저장', exact: true })).toHaveCount(0)
+  await page.evaluate(key => localStorage.setItem(key, '{broken'), STORAGE_KEY)
+  await page.reload()
+  await expect(page.getByRole('alert')).toContainText('운동을 불러오지 못했어요')
+  expect(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)).toBe('{broken')
+})
+
+test('수정 중 대상이 삭제되면 다시 생성하지 않는다', async ({ page }) => {
+  await seedEditExercises(page)
+  await page.getByRole('link', { name: '수정', exact: true }).click()
+  await page.getByLabel('운동 이름').fill('다시 만들지 않을 운동')
+  await page.evaluate(({ key, existing }) => localStorage.setItem(key, JSON.stringify(existing)), { key: STORAGE_KEY, existing: EXISTING })
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('저장하지 못했어요')
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY)).toEqual(EXISTING)
+})

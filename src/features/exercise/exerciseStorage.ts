@@ -1,4 +1,4 @@
-import type { TExercise } from './exercise.types'
+import type { TExercise, TExerciseValues } from './exercise.types'
 
 type TStoredExercise = Omit<TExercise, 'youtubeLinks' | 'memo'> & {
   youtubeLinks?: string[]
@@ -34,8 +34,27 @@ export function getExercises(): TExercise[] {
   })
 }
 
-export function createExercise(exercise: Omit<TExercise, 'id'>): void {
+export function createExercise(exercise: TExerciseValues): void {
   const exercises = getExercises()
   exercises.push({ ...exercise, id: crypto.randomUUID() })
   localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises))
+}
+
+export function updateExercise(id: string, values: TExerciseValues): void {
+  const exercises = getExercises()
+  const index = exercises.findIndex(exercise => exercise.id === id)
+  if (index === -1) {
+    throw new Error('Exercise not found')
+  }
+  exercises[index] = { ...values, id }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises))
+}
+
+export function deleteExercise(id: string): void {
+  const exercises = getExercises()
+  if (!exercises.some(exercise => exercise.id === id)) {
+    throw new Error('Exercise not found')
+  }
+  const remaining = exercises.filter(exercise => exercise.id !== id)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining))
 }

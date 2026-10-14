@@ -1,32 +1,31 @@
-import { useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getExercises } from '@/features/exercise/exerciseStorage'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteExercise } from '@/features/exercise/exerciseStorage'
+import { loadExercise } from '@/features/exercise/exerciseLoader'
+import Button from '@/components/common/button/Button'
+import ButtonLink from '@/components/common/button/ButtonLink'
 import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
 import styles from './ExerciseDetailPage.module.scss'
 
-function loadExercise(exerciseId: string | undefined) {
-  try {
-    const exercises = getExercises()
-    const exercise = exercises.find(function matchExercise(exercise) {
-      return exercise.id === exerciseId
-    })
-
-    return {
-      exercise,
-      error: '',
-    }
-  } catch {
-    return {
-      exercise: undefined,
-      error: '운동을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    }
-  }
-}
-
 function ExerciseDetailPage() {
   const { exerciseId } = useParams()
-  const result = useMemo(() => loadExercise(exerciseId), [exerciseId])
+  const navigate = useNavigate()
+  const [deleteError, setDeleteError] = useState('')
+  const result = loadExercise(exerciseId)
   const { exercise, error } = result
+
+  function handleDelete() {
+    if (!exercise) return
+    const isConfirmed = window.confirm(`“${exercise.name}” 운동을 삭제할까요? 삭제하면 복구할 수 없어요.`)
+    if (!isConfirmed) return
+    try {
+      deleteExercise(exercise.id)
+    } catch {
+      setDeleteError('삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.')
+      return
+    }
+    navigate('/exercise', { replace: true })
+  }
 
   return (
     <section className={styles['exercise-detail-page']}>
@@ -88,6 +87,11 @@ function ExerciseDetailPage() {
             {exercise.memo && <p className={styles['memo']}>{exercise.memo}</p>}
             {!exercise.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
           </section>
+          {deleteError && <p className={styles['error']} role="alert">{deleteError}</p>}
+          <div className={styles['actions']}>
+            <ButtonLink to={`/exercise/${encodeURIComponent(exercise.id)}/edit`}>수정</ButtonLink>
+            <Button color="rose" fill="outline" onClick={handleDelete}>삭제</Button>
+          </div>
         </>
       )}
     </section>
