@@ -1,8 +1,9 @@
+import { getNextRoutineDate, getTodayDate, isRoutineDate, isRoutineScheduled, moveRoutineDate } from './routineSchedule'
 import { getExercises } from '@/features/exercise/exerciseStorage'
 
 export type TRoutineSchedule =
   | { type: 'weekdays'; days: number[] }
-  | { type: 'interval'; startDate: string; intervalDays: number }
+  | { type: 'interval'; startDate: string; intervalDays: number; postponedDates?: string[] }
 
 export type TRoutineValues = {
   name: string
@@ -16,9 +17,7 @@ export type TRoutine = TRoutineValues & { id: string }
 const STORAGE_KEY = 'health-note.routines.v1'
 
 function isDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-  const date = new Date(`${value}T00:00:00Z`)
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  return typeof value === 'string' && isRoutineDate(value)
 }
 
 function isSchedule(value: unknown): value is TRoutineSchedule {
@@ -29,9 +28,18 @@ function isSchedule(value: unknown): value is TRoutineSchedule {
       && schedule.days.every(day => Number.isInteger(day) && day >= 0 && day <= 6)
       && new Set(schedule.days).size === schedule.days.length
   }
-  return schedule.type === 'interval' && isDate(schedule.startDate)
-    && typeof schedule.intervalDays === 'number'
-    && Number.isSafeInteger(schedule.intervalDays) && schedule.intervalDays >= 1
+  if (schedule.type !== 'interval' || !isDate(schedule.startDate)
+    || typeof schedule.intervalDays !== 'number'
+    || !Number.isSafeInteger(schedule.intervalDays) || schedule.intervalDays < 1) return false
+  if (schedule.postponedDates === undefined) return true
+  if (!Array.isArray(schedule.postponedDates)) return false
+  let anchor = schedule.startDate
+  for (const date of schedule.postponedDates) {
+    if (!isDate(date) || date >= '9999-12-31') return false
+    if (!isRoutineScheduled({ type: 'interval', startDate: anchor, intervalDays: schedule.intervalDays }, date)) return false
+    anchor = moveRoutineDate(date, 1)
+  }
+  return true
 }
 
 function isRoutine(value: unknown): value is TRoutine {
@@ -70,7 +78,18 @@ export function updateRoutine(id: string, values: TRoutineValues): void {
   const routines = getRoutines()
   const index = routines.findIndex(routine => routine.id === id)
   if (index === -1) throw new Error('Routine not found')
-  const routine = { ...values, id }
+  const previousSchedule = routines[index].schedule
+  let schedule = values.schedule
+  if (schedule.type === 'interval') {
+    const isSameSchedule = previousSchedule.type === 'interval'
+      && previousSchedule.startDate === schedule.startDate
+      && previousSchedule.intervalDays === schedule.intervalDays
+    schedule = {
+      type: 'interval', startDate: schedule.startDate, intervalDays: schedule.intervalDays,
+      postponedDates: isSameSchedule ? previousSchedule.postponedDates : undefined,
+    }
+  }
+  const routine = { ...values, id, schedule }
   validateRoutine(routine)
   routines[index] = routine
   localStorage.setItem(STORAGE_KEY, JSON.stringify(routines))
@@ -80,4 +99,23 @@ export function deleteRoutine(id: string): void {
   const routines = getRoutines()
   if (!routines.some(routine => routine.id === id)) throw new Error('Routine not found')
   localStorage.setItem(STORAGE_KEY, JSON.stringify(routines.filter(routine => routine.id !== id)))
+}
+
+export function postponeRoutine(id: string, expectedDate: string): void {
+  const routines = getRoutines()
+  const index = routines.findIndex(routine => routine.id === id)
+  if (index === -1) throw new Error('Routine not found')
+  const routine = routines[index]
+  if (routine.schedule.type !== 'interval') throw new Error('Interval routine required')
+  const nextDate = getNextRoutineDate(routine.schedule, getTodayDate())
+  if (nextDate === null || nextDate !== expectedDate || nextDate >= '9999-12-31') {
+    throw new Error('Schedule changed or date out of range')
+  }
+  const schedule: TRoutineSchedule = {
+    ...routine.schedule,
+    postponedDates: [...(routine.schedule.postponedDates ?? []), nextDate],
+  }
+  if (!isSchedule(schedule)) throw new Error('Invalid schedule')
+  routines[index] = { ...routine, schedule }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines))
 }

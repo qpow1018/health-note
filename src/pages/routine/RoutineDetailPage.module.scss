@@ -32,6 +32,15 @@
     }
   }
 
+  .next-schedule {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    margin-top: 20px;
+
+    .hint { font-size: $font-size-caption; }
+  }
+
   .hint { color: $text-secondary; }
   .memo { white-space: pre-wrap; }
 

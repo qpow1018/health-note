@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '@/components/common/button/Button'
 import toast from '@/utils/toast'
-import { deleteRoutine } from '@/features/routine/routineStorage'
+import { deleteRoutine, postponeRoutine } from '@/features/routine/routineStorage'
 import Header from '@/components/common/header/Header'
 import ButtonLink from '@/components/common/button/ButtonLink'
 import { loadRoutine, loadRoutineExercises } from '@/features/routine/routineLoader'
 import type { TRoutineSchedule } from '@/features/routine/routineStorage'
+import { getNextRoutineDate, getTodayDate, moveRoutineDate } from '@/features/routine/routineSchedule'
 import styles from './RoutineDetailPage.module.scss'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -21,15 +22,36 @@ function formatSchedule(schedule: TRoutineSchedule) {
   return `${year}년 ${Number(month)}월 ${Number(day)}일부터 ${schedule.intervalDays}일 간격`
 }
 
+function formatDate(date: string) {
+  const [year, month, day] = date.split('-')
+  return `${year}년 ${Number(month)}월 ${Number(day)}일`
+}
+
 function RoutineDetailPage() {
   const { routineId } = useParams()
   const navigate = useNavigate()
   const [deleteError, setDeleteError] = useState('')
+  const [postponeResult, setPostponeResult] = useState({ message: '', error: '' })
   const { routine, error } = loadRoutine(routineId)
+  const nextDate = routine?.schedule.type === 'interval' ? getNextRoutineDate(routine.schedule, getTodayDate()) : null
   const exerciseResult = routine ? loadRoutineExercises() : undefined
   let title = '루틴 상세'
   if (!error && !routine) title = '루틴을 찾을 수 없어요.'
   if (!error && routine) title = routine.name
+
+  function handlePostpone() {
+    if (!routine || !nextDate || nextDate >= '9999-12-31') return
+    const movedDate = moveRoutineDate(nextDate, 1)
+    const isConfirmed = window.confirm(`${formatDate(nextDate)}의 운동을 ${formatDate(movedDate)}로 미룰까요? 이후 예정 일정도 하루씩 이동해요. 이전 일정은 유지돼요.`)
+    if (!isConfirmed) return
+    try {
+      postponeRoutine(routine.id, nextDate)
+    } catch {
+      setPostponeResult({ message: '', error: '미루지 못했어요. 일정이 변경되었거나 브라우저 저장에 문제가 있을 수 있어요. 현재 일정을 확인하고 다시 시도해 주세요.' })
+      return
+    }
+    setPostponeResult({ message: `${formatDate(movedDate)}로 미뤘어요.`, error: '' })
+  }
 
   function handleDelete() {
     if (!routine) return
@@ -54,6 +76,14 @@ function RoutineDetailPage() {
           <section className={styles['section']} aria-labelledby="schedule-heading">
             <h2 id="schedule-heading">반복 일정</h2>
             <p>{formatSchedule(routine.schedule)}</p>
+            {routine.schedule.type === 'interval' && <div className={styles['next-schedule']}>
+              {nextDate && <p>다음 예정일: <strong>{formatDate(nextDate)}</strong></p>}
+              {!nextDate && <p className={styles['hint']}>표시할 수 있는 다음 예정일이 없어요.</p>}
+              <Button color="gray" fill="outline" disabled={!nextDate || nextDate >= '9999-12-31'} onClick={handlePostpone}>하루 미루기</Button>
+              <p className={styles['hint']}>다음 예정일부터 이후 일정이 하루씩 이동해요.</p>
+              {postponeResult.message && <p role="status">{postponeResult.message}</p>}
+              {postponeResult.error && <p role="alert" className={styles['error']}>{postponeResult.error}</p>}
+            </div>}
           </section>
           <section className={styles['section']} aria-labelledby="exercises-heading">
             <h2 id="exercises-heading">운동</h2>

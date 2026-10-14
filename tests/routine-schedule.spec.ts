@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { isRoutineScheduled, moveRoutineDate, isRoutineDate } from '../src/features/routine/routineSchedule'
+import { isRoutineScheduled, moveRoutineDate, isRoutineDate, getNextRoutineDate } from '../src/features/routine/routineSchedule'
 
 test('요일 반복은 일요일과 복수 요일을 구분한다', () => {
   const schedule = { type: 'weekdays', days: [0, 3] } as const
@@ -22,4 +22,30 @@ test('날짜 이동과 날짜 검증은 월말·윤일과 잘못된 날짜를 �
   expect(moveRoutineDate('2024-03-01', -1)).toBe('2024-02-29')
   for (const date of ['', 'invalid', '2026-02-29', '2026-04-31', '0000-01-01']) expect(isRoutineDate(date)).toBe(false)
   for (const date of ['2024-02-29', '0001-01-01', '9999-12-31']) expect(isRoutineDate(date)).toBe(true)
+})
+
+test('미루기는 선택한 예정일 이후만 변경하고 여러 번 누적할 수 있다', () => {
+  const schedule = { type: 'interval', startDate: '2026-10-14', intervalDays: 2, postponedDates: ['2026-10-18'] } as const
+  for (const date of ['2026-10-14', '2026-10-16', '2026-10-19', '2026-10-21']) {
+    expect(isRoutineScheduled({ ...schedule, postponedDates: [...schedule.postponedDates] }, date)).toBe(true)
+  }
+  for (const date of ['2026-10-18', '2026-10-20']) {
+    expect(isRoutineScheduled({ ...schedule, postponedDates: [...schedule.postponedDates] }, date)).toBe(false)
+  }
+  const repeated = { ...schedule, postponedDates: ['2026-10-18', '2026-10-19'] }
+  expect(isRoutineScheduled(repeated, '2026-10-16')).toBe(true)
+  expect(isRoutineScheduled(repeated, '2026-10-19')).toBe(false)
+  expect(isRoutineScheduled(repeated, '2026-10-20')).toBe(true)
+  expect(isRoutineScheduled(repeated, '2026-10-22')).toBe(true)
+})
+
+test('다음 예정일은 오늘·미래 시작일·미루기 내역을 반영한다', () => {
+  const schedule = { type: 'interval', startDate: '2026-10-14', intervalDays: 2 } as const
+  expect(getNextRoutineDate(schedule, '2026-10-13')).toBe('2026-10-14')
+  expect(getNextRoutineDate(schedule, '2026-10-14')).toBe('2026-10-14')
+  expect(getNextRoutineDate(schedule, '2026-10-15')).toBe('2026-10-16')
+  expect(getNextRoutineDate({ ...schedule, postponedDates: ['2026-10-18'] }, '2026-10-14')).toBe('2026-10-14')
+  expect(getNextRoutineDate({ ...schedule, postponedDates: ['2026-10-18'] }, '2026-10-18')).toBe('2026-10-19')
+  expect(getNextRoutineDate({ ...schedule, postponedDates: ['2026-10-18'] }, '2026-10-20')).toBe('2026-10-21')
+  expect(getNextRoutineDate({ ...schedule, intervalDays: Number.MAX_SAFE_INTEGER }, '2026-10-15')).toBeNull()
 })

@@ -23,7 +23,34 @@ export function isRoutineScheduled(schedule: TRoutineSchedule, date: string): bo
   const selected = new Date(`${date}T00:00:00Z`)
   if (schedule.type === 'weekdays') return schedule.days.includes(selected.getUTCDay())
 
-  const start = new Date(`${schedule.startDate}T00:00:00Z`)
+  let anchor = schedule.startDate
+  for (const postponedDate of schedule.postponedDates ?? []) {
+    if (date < postponedDate) break
+    anchor = moveRoutineDate(postponedDate, 1)
+  }
+  const start = new Date(`${anchor}T00:00:00Z`)
   const elapsedDays = (selected.getTime() - start.getTime()) / DAY_MS
   return elapsedDays >= 0 && elapsedDays % schedule.intervalDays === 0
+}
+
+export function getNextRoutineDate(
+  schedule: Extract<TRoutineSchedule, { type: 'interval' }>,
+  fromDate: string,
+): string | null {
+  let anchor = schedule.startDate
+  for (const postponedDate of schedule.postponedDates ?? []) {
+    const next = getNextIntervalDate(anchor, schedule.intervalDays, fromDate)
+    if (next === null || next < postponedDate) return next
+    anchor = moveRoutineDate(postponedDate, 1)
+  }
+  return getNextIntervalDate(anchor, schedule.intervalDays, fromDate)
+}
+
+function getNextIntervalDate(anchor: string, intervalDays: number, fromDate: string): string | null {
+  const start = new Date(`${anchor}T00:00:00Z`).getTime()
+  const from = new Date(`${fromDate}T00:00:00Z`).getTime()
+  const elapsedDays = Math.max(0, (from - start) / DAY_MS)
+  const nextTime = start + Math.ceil(elapsedDays / intervalDays) * intervalDays * DAY_MS
+  if (!Number.isFinite(nextTime) || nextTime > new Date('9999-12-31T00:00:00Z').getTime()) return null
+  return new Date(nextTime).toISOString().slice(0, 10)
 }

@@ -121,6 +121,8 @@ function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
         </div>
         <fieldset className={styles['field']}>
           <legend>반복 일정 (필수)</legend>
+          {initialValues?.schedule.type === 'interval' && Boolean(initialValues.schedule.postponedDates?.length) &&
+            <p className={styles['hint']}>시작일이나 반복 간격을 변경하면 미루기 내역이 초기화돼요.</p>}
           <div className={styles['schedule-options']}>
             <label><input type="radio" name="scheduleType" checked={scheduleType === 'weekdays'} onChange={() => setScheduleType('weekdays')} /> 요일 반복</label>
             <label><input type="radio" name="scheduleType" checked={scheduleType === 'interval'} onChange={() => setScheduleType('interval')} /> 간격 반복</label>
