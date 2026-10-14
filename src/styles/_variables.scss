@@ -26,8 +26,8 @@ $rose-900: #4c0519;
 
 // Rose semantic
 $rose: $rose-600;
-$rose-light: $rose-300;
-$rose-accent: $rose-400;
+$rose-light: $rose-400;
+$rose-accent: $rose-500;
 $rose-tint: rgba($rose, 0.1);
 $rose-surface: $rose-800;
 
@@ -51,8 +51,8 @@ $mint-900: #14532d;
 
 // Mint semantic
 $mint: $mint-600;
-$mint-light: $mint-200;
-$mint-accent: $mint-400;
+$mint-light: $mint-400;
+$mint-accent: $mint-500;
 $mint-tint: rgba($mint, 0.1);
 $mint-surface: $mint-800;
 
@@ -69,8 +69,8 @@ $amber-900: #78350f;
 
 // Amber semantic
 $amber: $amber-600;
-$amber-light: $amber-200;
-$amber-accent: $amber-400;
+$amber-light: $amber-400;
+$amber-accent: $amber-500;
 $amber-tint: rgba($amber, 0.1);
 $amber-surface: $amber-800;
 
@@ -87,8 +87,8 @@ $violet-900: #581c87;
 
 // Violet semantic
 $violet: $violet-600;
-$violet-light: $violet-300;
-$violet-accent: $violet-400;
+$violet-light: $violet-400;
+$violet-accent: $violet-500;
 $violet-tint: rgba($violet, 0.1);
 $violet-surface: $violet-800;
 
@@ -105,8 +105,8 @@ $azure-900: #0c4a6e;
 
 // Azure semantic
 $azure: $azure-600;
-$azure-light: $azure-200;
-$azure-accent: $azure-400;
+$azure-light: $azure-400;
+$azure-accent: $azure-500;
 $azure-tint: rgba($azure, 0.1);
 $azure-surface: $azure-800;
 
@@ -128,7 +128,7 @@ $bg: $gray-800;
 $bg-light: $gray-700;
 $bg-accent: $gray-600;
 
-$font-family: 'Noto Sans KR', sans-serif;
+$font-family: "Noto Sans KR", sans-serif;
 $font-size-body: 15px;
 $font-size-caption: 13px;
 $font-size-title: 22px;

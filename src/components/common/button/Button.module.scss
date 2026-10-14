@@ -24,7 +24,7 @@
   text-decoration: none;
 
   &.color-mint {
-    @include button-color($mint, $mint-light, $mint-accent);
+    @include button-color($mint, $mint-accent, $mint);
   }
 
   &.color-gray {
