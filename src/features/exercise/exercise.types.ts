@@ -3,4 +3,6 @@ export type TExercise = {
   name: string
   amount: string
   sets: number | null
+  youtubeLinks: string[]
+  memo: string
 }

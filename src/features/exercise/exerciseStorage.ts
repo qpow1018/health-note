@@ -1,14 +1,22 @@
 import type { TExercise } from './exercise.types'
 
+type TStoredExercise = Omit<TExercise, 'youtubeLinks' | 'memo'> & {
+  youtubeLinks?: string[]
+  memo?: string
+}
+
 const STORAGE_KEY = 'health-note.exercises.v1'
 
-function isExercise(value: unknown): value is TExercise {
+function isExercise(value: unknown): value is TStoredExercise {
   if (typeof value !== 'object' || value === null) return false
   const exercise = value as Record<string, unknown>
   return (
     typeof exercise.id === 'string' &&
     typeof exercise.name === 'string' &&
     typeof exercise.amount === 'string' &&
+    (exercise.memo === undefined || typeof exercise.memo === 'string') &&
+    (exercise.youtubeLinks === undefined ||
+      (Array.isArray(exercise.youtubeLinks) && exercise.youtubeLinks.every(link => typeof link === 'string'))) &&
     (exercise.sets === null ||
       (typeof exercise.sets === 'number' && Number.isSafeInteger(exercise.sets) && exercise.sets > 0))
   )
@@ -21,7 +29,9 @@ export function getExercises(): TExercise[] {
   if (!Array.isArray(exercises) || !exercises.every(isExercise)) {
     throw new Error('Invalid exercise data')
   }
-  return exercises
+  return exercises.map(function normalizeExercise(exercise) {
+    return { ...exercise, youtubeLinks: exercise.youtubeLinks ?? [], memo: exercise.memo ?? '' }
+  })
 }
 
 export function createExercise(exercise: Omit<TExercise, 'id'>): void {

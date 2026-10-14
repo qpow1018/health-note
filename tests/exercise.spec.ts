@@ -115,3 +115,46 @@ test('좁은 화면과 긴 운동 이름에서 가로 넘침이 없다', async (
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
   await page.screenshot({ path: 'test-results/exercise-list-mobile.png' })
 })
+
+test('여러 유튜브 링크와 메모를 저장하고 기존 기록을 유지한다', async ({ page }) => {
+  await page.goto('/exercise/new')
+  await page.evaluate(({ key, existing }) => localStorage.setItem(key, JSON.stringify(existing)), { key: STORAGE_KEY, existing: EXISTING })
+  await page.getByLabel('운동 이름', { exact: false }).fill('브릿지')
+  await page.getByLabel('유튜브 링크 1', { exact: true }).fill(' https://youtu.be/abcdefghijk ')
+  await page.getByRole('button', { name: '링크 추가', exact: true }).click()
+  await page.getByLabel('유튜브 링크 2', { exact: true }).fill('https://www.youtube.com/watch?v=abcdefghijk')
+  await page.getByRole('button', { name: '링크 추가', exact: true }).click()
+  await page.getByLabel('유튜브 링크 3', { exact: true }).fill('https://example.com/remove')
+  await page.getByRole('button', { name: '유튜브 링크 3 삭제', exact: true }).click()
+  await page.getByRole('button', { name: '링크 추가', exact: true }).click()
+  await page.getByLabel('메모').fill('허리를 과하게 꺾지 않기\n천천히 진행')
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page).toHaveURL('/exercise')
+  const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY)
+  expect(stored[0]).toEqual({ ...EXISTING[0], youtubeLinks: [], memo: '' })
+  expect(stored[1]).toMatchObject({
+    name: '브릿지', sets: null,
+    youtubeLinks: ['https://youtu.be/abcdefghijk', 'https://www.youtube.com/watch?v=abcdefghijk'],
+    memo: '허리를 과하게 꺾지 않기\n천천히 진행',
+  })
+  await page.reload()
+  await expect(page.getByRole('listitem')).toHaveCount(2)
+})
+
+test('유튜브 호스트 위장 주소를 거부하고 삭제 후 남은 입력값을 보존한다', async ({ page }) => {
+  await page.goto('/exercise/new')
+  await page.getByLabel('운동 이름').fill('푸시업')
+  await page.getByLabel('유튜브 링크 1', { exact: true }).fill('https://youtube.com.evil.example/watch?v=abcdefghijk')
+  await page.getByRole('button', { name: '링크 추가', exact: true }).click()
+  await page.getByLabel('유튜브 링크 2', { exact: true }).fill('https://youtu.be/abcdefghijk')
+  await page.getByLabel('메모').fill('입력 유지')
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('유튜브 링크를 확인')
+  await expect(page.getByLabel('메모')).toHaveValue('입력 유지')
+  expect(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)).toBeNull()
+  await page.getByRole('button', { name: '유튜브 링크 1 삭제', exact: true }).click()
+  await expect(page.getByLabel('유튜브 링크 1', { exact: true })).toHaveValue('https://youtu.be/abcdefghijk')
+  await expect(page.getByRole('button', { name: /유튜브 링크 .* 삭제/ })).toHaveCount(0)
+  await page.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(page).toHaveURL('/exercise')
+})
