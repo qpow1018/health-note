@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import ToastContainer from '@/components/common/toast/ToastContainer'
 import BottomNavigation from './BottomNavigation'
 import RoutinePage from '@/pages/routine/RoutinePage'
+import RoutineDetailPage from '@/pages/routine/RoutineDetailPage'
 import RoutineCreatePage from '@/pages/routine/RoutineCreatePage'
 import ExerciseListPage from '@/pages/exercise/ExerciseListPage'
 import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage'
@@ -21,6 +22,7 @@ function App() {
           </Route>
           <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
           <Route path="/exercise/:exerciseId/edit" element={<ExerciseEditPage />} />
+          <Route path="/routine/:routineId" element={<RoutineDetailPage />} />
           <Route path="/routine/new" element={<RoutineCreatePage />} />
           <Route path="/exercise/new" element={<ExerciseCreatePage />} />
           <Route path="*" element={

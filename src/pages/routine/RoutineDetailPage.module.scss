@@ -1,0 +1,44 @@
+.routine-detail-page {
+  .content {
+    padding: 0 max($page-padding, env(safe-area-inset-right))
+      max($page-padding, env(safe-area-inset-bottom))
+      max($page-padding, env(safe-area-inset-left));
+  }
+
+  .section {
+    margin-top: 32px;
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  .exercise-list {
+    padding-left: 24px;
+    margin: 0;
+
+    li {
+      padding: 16px 0 16px 4px;
+      border-bottom: 1px solid $border-soft;
+
+      h3 {
+        font-size: $font-size-body;
+        font-weight: 500;
+      }
+
+      p { margin-top: 4px; }
+    }
+  }
+
+  .hint { color: $text-secondary; }
+  .memo { white-space: pre-wrap; }
+
+  .error {
+    margin-top: 24px;
+    color: $error-accent;
+  }
+
+  .actions { margin-top: 32px; }
+}

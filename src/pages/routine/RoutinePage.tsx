@@ -24,8 +24,10 @@ function RoutinePage() {
         {!error && routines.length === 0 && <p className={styles['message']}>아직 등록한 루틴이 없어요.</p>}
         {!error && routines.length > 0 && <ul className={styles['list']}>
           {routines.map(routine => <li key={routine.id}>
-            <h2>{routine.name}</h2>
-            <p>운동 {routine.exerciseIds.length}개</p>
+            <Link className={styles['detail-link']} to={`/routine/${encodeURIComponent(routine.id)}`}>
+              <h2>{routine.name}</h2>
+              <p>운동 {routine.exerciseIds.length}개</p>
+            </Link>
           </li>)}
         </ul>}
       </div>
