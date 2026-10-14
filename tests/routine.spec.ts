@@ -83,7 +83,13 @@ for (const failure of ['quota', 'corrupt', 'deleted']) {
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(page.getByRole('alert')).toContainText('저장하지 못했어요.')
     await expect(page.getByLabel('루틴 이름')).toHaveValue('저장할 루틴')
-    await expect(page.getByRole('listitem')).toContainText('걷기')
+    await expect(page.getByRole('listitem')).toHaveCount(1)
+    if (failure === 'deleted') {
+      await expect(page.getByRole('listitem')).toContainText('삭제된 운동')
+      await expect(page.getByRole('button', { name: '삭제된 운동 제거' })).toBeVisible()
+    } else {
+      await expect(page.getByRole('listitem')).toContainText('걷기')
+    }
     expect(await page.evaluate(key => localStorage.getItem(key), KEY)).toBe(failure === 'corrupt' ? '{broken' : null)
   })
 }

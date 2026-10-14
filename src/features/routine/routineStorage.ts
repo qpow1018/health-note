@@ -74,10 +74,11 @@ export function createRoutine(values: TRoutineValues): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...routines, routine]))
 }
 
-export function updateRoutine(id: string, values: TRoutineValues): void {
+export function updateRoutine(id: string, values: TRoutineValues, expectedRoutine: TRoutine): 'updated' | 'conflict' {
   const routines = getRoutines()
   const index = routines.findIndex(routine => routine.id === id)
   if (index === -1) throw new Error('Routine not found')
+  if (JSON.stringify(routines[index]) !== JSON.stringify(expectedRoutine)) return 'conflict'
   const previousSchedule = routines[index].schedule
   let schedule = values.schedule
   if (schedule.type === 'interval') {
@@ -93,6 +94,7 @@ export function updateRoutine(id: string, values: TRoutineValues): void {
   validateRoutine(routine)
   routines[index] = routine
   localStorage.setItem(STORAGE_KEY, JSON.stringify(routines))
+  return 'updated'
 }
 
 export function deleteRoutine(id: string): void {

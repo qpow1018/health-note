@@ -33,7 +33,7 @@ type TRoutineFormProps = {
 }
 
 function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
-  const [result] = useState(loadExercises)
+  const [result, setResult] = useState(loadExercises)
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? [])
   const [draftIds, setDraftIds] = useState<string[]>([])
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -42,6 +42,9 @@ function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
   const [today] = useState(getToday)
 
   function handleOpenExercises() {
+    const latest = loadExercises()
+    setResult(latest)
+    if (latest.error) return
     setDraftIds([...exerciseIds])
     setIsSheetOpen(true)
   }
@@ -63,6 +66,13 @@ function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
     const data = new FormData(event.currentTarget)
     const name = String(data.get('name') ?? '').trim()
     setError('')
+    const latest = loadExercises()
+    setResult(latest)
+    if (latest.error) return
+    if (exerciseIds.some(id => !latest.exercises.some(exercise => exercise.id === id))) {
+      setError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.')
+      return
+    }
     if (!name) {
       setError('루틴 이름을 입력해 주세요.')
       return
@@ -102,7 +112,7 @@ function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
           <h2>운동 (필수)</h2>
           <p className={styles['hint']}>등록한 운동량과 세트를 사용해요. 순서는 보기 편하게 바꿀 수 있어요.</p>
           {result.error && <p role="alert" className={styles['error']}>{result.error}</p>}
-          <Button color="gray" fill="outline" onClick={handleOpenExercises} disabled={Boolean(result.error)}>운동 선택</Button>
+          <Button color="gray" fill="outline" onClick={handleOpenExercises}>운동 선택</Button>
           {exerciseIds.length > 0 && <ol className={styles['selected-list']}>
             {exerciseIds.map(function renderExercise(id, index) {
               const exercise = result.exercises.find(item => item.id === id)

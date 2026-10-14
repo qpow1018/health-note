@@ -7,7 +7,8 @@ import Header from '@/components/common/header/Header'
 import ButtonLink from '@/components/common/button/ButtonLink'
 import { loadRoutine, loadRoutineExercises } from '@/features/routine/routineLoader'
 import type { TRoutineSchedule } from '@/features/routine/routineStorage'
-import { getNextRoutineDate, getTodayDate, moveRoutineDate } from '@/features/routine/routineSchedule'
+import { getNextRoutineDate, moveRoutineDate } from '@/features/routine/routineSchedule'
+import { useRoutineToday } from '@/features/routine/useRoutineToday'
 import styles from './RoutineDetailPage.module.scss'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -29,11 +30,12 @@ function formatDate(date: string) {
 
 function RoutineDetailPage() {
   const { routineId } = useParams()
+  const today = useRoutineToday()
   const navigate = useNavigate()
   const [deleteError, setDeleteError] = useState('')
   const [postponeResult, setPostponeResult] = useState({ message: '', error: '' })
   const { routine, error } = loadRoutine(routineId)
-  const nextDate = routine?.schedule.type === 'interval' ? getNextRoutineDate(routine.schedule, getTodayDate()) : null
+  const nextDate = routine?.schedule.type === 'interval' ? getNextRoutineDate(routine.schedule, today) : null
   const exerciseResult = routine ? loadRoutineExercises() : undefined
   let title = '루틴 상세'
   if (!error && !routine) title = '루틴을 찾을 수 없어요.'
