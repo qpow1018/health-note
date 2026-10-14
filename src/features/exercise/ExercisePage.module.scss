@@ -1,0 +1,61 @@
+.exercise-page {
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    h1 {
+      font-size: $font-size-title;
+    }
+  }
+
+  .add-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: $control-height;
+    padding: 8px 16px;
+    border: 1px solid $mint-accent;
+    border-radius: $border-radius;
+    color: $mint-light;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .empty {
+    padding-block: 48px;
+  }
+
+  .hint {
+    margin-top: 8px;
+    color: $text-secondary;
+    font-size: $font-size-caption;
+  }
+
+  .list {
+    padding: 0;
+    margin: 24px 0 0;
+    list-style: none;
+
+    .item {
+      padding-block: 20px;
+      border-bottom: 1px solid $border-soft;
+
+      h2 {
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      p {
+        margin-top: 8px;
+        color: $text-secondary;
+      }
+    }
+  }
+
+  .error {
+    margin-top: 24px;
+    color: $error-accent;
+  }
+}

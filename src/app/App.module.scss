@@ -2,12 +2,24 @@
   @include app-width;
   min-height: 100dvh;
   margin-inline: auto;
-  padding: $page-padding;
+  padding: max($page-padding, env(safe-area-inset-top))
+    max($page-padding, env(safe-area-inset-right))
+    max($page-padding, env(safe-area-inset-bottom))
+    max($page-padding, env(safe-area-inset-left));
   background: $bg;
   overflow-wrap: anywhere;
 
-  .title {
-    font-size: $font-size-title;
-    font-weight: 700;
+  .home {
+    h1 {
+      font-size: $font-size-title;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
+      margin-top: 16px;
+      color: $mint-light;
+    }
   }
 }

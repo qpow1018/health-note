@@ -2,7 +2,7 @@
 
 - React 19 + TypeScript + Vite 모바일 웹 프로젝트이며 npm과 package-lock.json을 사용한다.
 - 프론트엔드 작성·수정에는 [following-health-note-frontend-style](.agents/skills/following-health-note-frontend-style/SKILL.md)을 적용한다.
-- 현재는 개발·스타일 환경만 구성했다. 운동 CRUD나 네이티브 연동은 해당 구현 요청에 맞춰 추가한다.
+- 현재 운동 목록·등록과 브라우저 저장을 제공한다. 수정·삭제·네이티브 연동은 해당 구현 요청에 맞춰 추가한다.
 - 새 기능을 위한 빈 폴더, 미사용 옵션, 추상화를 미리 만들지 않는다.
 
 ## 검증

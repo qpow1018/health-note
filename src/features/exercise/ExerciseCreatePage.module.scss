@@ -1,0 +1,84 @@
+.exercise-create-page {
+  .header {
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
+      color: $text-secondary;
+      text-decoration: none;
+    }
+
+    h1 {
+      margin-top: 8px;
+      font-size: $font-size-title;
+    }
+  }
+
+  .form {
+    margin-top: 32px;
+
+    .field {
+      margin-bottom: 24px;
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      span,
+      p {
+        color: $text-secondary;
+        font-size: $font-size-caption;
+      }
+
+      p {
+        margin-top: 8px;
+      }
+
+      input {
+        width: 100%;
+        min-height: $control-height;
+        padding: 12px;
+        border: 1px solid $border-strong;
+        border-radius: $border-radius;
+        background: $bg-dark;
+        color: $text-primary;
+
+        &::placeholder {
+          color: $text-secondary;
+        }
+      }
+    }
+
+    .error {
+      margin-bottom: 16px;
+      color: $error-accent;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+
+      .cancel-link,
+      button {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        min-height: $control-height;
+        padding: 12px;
+        border: 1px solid $border-strong;
+        border-radius: $border-radius;
+        background: transparent;
+        color: $text-primary;
+        text-decoration: none;
+      }
+
+      button {
+        background: $mint-surface;
+        border-color: $mint-accent;
+        color: $mint-light;
+      }
+    }
+  }
+}

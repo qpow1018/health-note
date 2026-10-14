@@ -1,10 +1,30 @@
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import ExercisePage from '@/features/exercise/ExercisePage'
+import ExerciseCreatePage from '@/features/exercise/ExerciseCreatePage'
 import styles from './App.module.scss'
 
 function App() {
   return (
-    <main className={styles['app-shell']}>
-      <h1 className={styles['title']}>Health Note</h1>
-    </main>
+    <BrowserRouter>
+      <main className={styles['app-shell']}>
+        <Routes>
+          <Route path="/" element={
+            <div className={styles['home']}>
+              <h1>Health Note</h1>
+              <Link to="/exercise">내 운동</Link>
+            </div>
+          } />
+          <Route path="/exercise" element={<ExercisePage />} />
+          <Route path="/exercise/new" element={<ExerciseCreatePage />} />
+          <Route path="*" element={
+            <div className={styles['home']}>
+              <h1>페이지를 찾을 수 없어요.</h1>
+              <Link to="/">메인으로</Link>
+            </div>
+          } />
+        </Routes>
+      </main>
+    </BrowserRouter>
   )
 }
 

@@ -1,7 +1,9 @@
 # Health Note
 
 React 19 + TypeScript + Vite 기반 모바일 웹 프로젝트입니다.
-현재는 개발 환경만 구성했으며 운동 CRUD, 저장, 네이티브 연동은 구현하지 않았습니다.
+운동 목록(`/exercise`)과 등록(`/exercise/new`)을 제공하며 브라우저 localStorage에 저장합니다.
+수정·삭제·네이티브 연동은 아직 구현하지 않았습니다.
+BrowserRouter를 사용하므로 배포 시 모든 페이지 경로를 index.html로 연결하는 SPA fallback 설정이 필요합니다.
 
 ## 실행
 
@@ -26,6 +28,15 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+
+운동 목록·등록 브라우저 테스트는 설치된 Google Chrome으로 실행합니다.
+테스트마다 격리된 저장소를 사용하며 저장 실패와 손상 데이터 보존도 확인합니다.
+
+```sh
+npm run test:e2e
+```
+
+모바일 폭의 PC Chrome 검증이며 Android 실기기 검증은 별도로 진행합니다.
 
 ## 스타일 기반
 
