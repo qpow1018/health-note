@@ -19,7 +19,6 @@ test.beforeEach(async ({ page }) => {
 
 test('목록에서 상세로 이동해 저장된 순서와 요일·메모를 표시한다', async ({ page }) => {
   await page.reload()
-  await page.getByRole('button', { name: '전체 루틴', exact: true }).click()
   const listUrl = page.url()
   await page.getByRole('link', { name: /상체 루틴/ }).click()
   await expect(page).toHaveURL('/routine/routine-1')

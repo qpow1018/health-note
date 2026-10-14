@@ -25,7 +25,6 @@ test('요일 루틴에 운동을 선택하고 정렬해 저장하며 새로고�
   await page.getByLabel('메모').fill('  천천히  ')
   await page.getByRole('button', { name: '저장', exact: true }).click()
   await expect(page).toHaveURL('/routine')
-  await page.getByRole('button', { name: '전체 루틴', exact: true }).click()
   await page.reload()
   await expect(page.getByRole('heading', { name: '기본 루틴' })).toBeVisible()
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), KEY)).toMatchObject([
