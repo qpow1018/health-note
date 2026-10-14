@@ -40,5 +40,11 @@
     color: $error-accent;
   }
 
-  .actions { margin-top: 32px; }
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+
+    > * { flex: 1; }
+  }
 }

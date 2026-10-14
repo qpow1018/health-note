@@ -1,0 +1,12 @@
+.routine-edit-page {
+  .error, .missing {
+    margin: 24px max($page-padding, env(safe-area-inset-right))
+      $page-padding max($page-padding, env(safe-area-inset-left));
+  }
+
+  .error { color: $error-accent; }
+
+  .missing {
+    p { margin-bottom: 16px; }
+  }
+}

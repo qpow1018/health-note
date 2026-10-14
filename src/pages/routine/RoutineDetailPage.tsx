@@ -1,4 +1,8 @@
-import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import Button from '@/components/common/button/Button'
+import toast from '@/utils/toast'
+import { deleteRoutine } from '@/features/routine/routineStorage'
 import Header from '@/components/common/header/Header'
 import ButtonLink from '@/components/common/button/ButtonLink'
 import { loadRoutine, loadRoutineExercises } from '@/features/routine/routineLoader'
@@ -19,11 +23,26 @@ function formatSchedule(schedule: TRoutineSchedule) {
 
 function RoutineDetailPage() {
   const { routineId } = useParams()
+  const navigate = useNavigate()
+  const [deleteError, setDeleteError] = useState('')
   const { routine, error } = loadRoutine(routineId)
   const exerciseResult = routine ? loadRoutineExercises() : undefined
   let title = '루틴 상세'
   if (!error && !routine) title = '루틴을 찾을 수 없어요.'
   if (!error && routine) title = routine.name
+
+  function handleDelete() {
+    if (!routine) return
+    if (!window.confirm(`“${routine.name}” 루틴을 삭제할까요? 삭제하면 복구할 수 없어요.`)) return
+    try {
+      deleteRoutine(routine.id)
+    } catch {
+      setDeleteError('삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.')
+      return
+    }
+    toast.success('루틴을 삭제했어요.')
+    navigate('/routine', { replace: true })
+  }
 
   return (
     <section className={styles['routine-detail-page']}>
@@ -58,6 +77,11 @@ function RoutineDetailPage() {
             {!routine.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
           </section>
         </>}
+        {deleteError && <p role="alert" className={styles['error']}>{deleteError}</p>}
+        {!error && routine && <div className={styles['actions']}>
+          <ButtonLink to={`/routine/${encodeURIComponent(routine.id)}/edit`}>수정</ButtonLink>
+          <Button color="rose" fill="outline" onClick={handleDelete}>삭제</Button>
+        </div>}
         <div className={styles['actions']}>
           <ButtonLink to="/routine" color="gray" fill="outline">루틴 목록으로</ButtonLink>
         </div>

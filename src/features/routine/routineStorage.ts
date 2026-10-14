@@ -51,13 +51,33 @@ export function getRoutines(): TRoutine[] {
   return routines
 }
 
-export function createRoutine(values: TRoutineValues): void {
-  const routine = { ...values, id: crypto.randomUUID() }
+function validateRoutine(routine: TRoutine): void {
   if (!isRoutine(routine)) throw new Error('Invalid routine')
   const exercises = getExercises()
-  if (!values.exerciseIds.every(id => exercises.some(exercise => exercise.id === id))) {
+  if (!routine.exerciseIds.every(id => exercises.some(exercise => exercise.id === id))) {
     throw new Error('Exercise not found')
   }
+}
+
+export function createRoutine(values: TRoutineValues): void {
+  const routine = { ...values, id: crypto.randomUUID() }
+  validateRoutine(routine)
   const routines = getRoutines()
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...routines, routine]))
+}
+
+export function updateRoutine(id: string, values: TRoutineValues): void {
+  const routines = getRoutines()
+  const index = routines.findIndex(routine => routine.id === id)
+  if (index === -1) throw new Error('Routine not found')
+  const routine = { ...values, id }
+  validateRoutine(routine)
+  routines[index] = routine
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines))
+}
+
+export function deleteRoutine(id: string): void {
+  const routines = getRoutines()
+  if (!routines.some(routine => routine.id === id)) throw new Error('Routine not found')
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines.filter(routine => routine.id !== id)))
 }
