@@ -1,0 +1,7 @@
+.routine-page {
+  .message {
+    padding: 48px max($page-padding, env(safe-area-inset-right))
+      $page-padding max($page-padding, env(safe-area-inset-left));
+    color: $text-secondary;
+  }
+}

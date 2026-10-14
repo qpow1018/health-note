@@ -1,6 +1,7 @@
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import ToastContainer from '@/components/common/toast/ToastContainer'
-import Header from '@/components/common/header/Header'
+import BottomNavigation from './BottomNavigation'
+import RoutinePage from '@/pages/routine/RoutinePage'
 import ExerciseListPage from '@/pages/exercise/ExerciseListPage'
 import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage'
 import ExerciseEditPage from '@/pages/exercise/ExerciseEditPage'
@@ -12,13 +13,11 @@ function App() {
     <BrowserRouter>
       <main className={styles['app-shell']}>
         <Routes>
-          <Route path="/" element={
-            <div className={styles['home']}>
-              <Header title="Health Note" showBack={false} />
-              <Link to="/exercise">내 운동</Link>
-            </div>
-          } />
-          <Route path="/exercise" element={<ExerciseListPage />} />
+          <Route path="/" element={<Navigate to="/exercise" replace />} />
+          <Route element={<BottomNavigation />}>
+            <Route path="/routine" element={<RoutinePage />} />
+            <Route path="/exercise" element={<ExerciseListPage />} />
+          </Route>
           <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
           <Route path="/exercise/:exerciseId/edit" element={<ExerciseEditPage />} />
           <Route path="/exercise/new" element={<ExerciseCreatePage />} />
