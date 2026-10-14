@@ -50,10 +50,14 @@ for (const sets of ['0', '-1', '1.5', '9007199254740992']) {
 }
 
 test('취소와 목록으로 이동은 입력을 저장하지 않는다', async ({ page }) => {
-  for (const link of ['취소', '목록으로']) {
+  for (const link of ['취소', '뒤로가기']) {
     await page.goto('/exercise/new')
     await page.getByLabel('운동 이름').fill('저장하지 않을 운동')
-    await page.getByRole('link', { name: link, exact: true }).click()
+    if (link === '뒤로가기') {
+      await page.getByRole('button', { name: link, exact: true }).click()
+    } else {
+      await page.getByRole('link', { name: link, exact: true }).click()
+    }
     await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible()
     expect(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY)).toBeNull()
   }
@@ -174,7 +178,7 @@ test('목록에서 상세로 이동하고 링크와 여러 줄 메모를 표시�
   await expect(page.getByRole('link', { name: /유튜브 링크 2/ })).toHaveAttribute('target', '_blank')
   await page.reload()
   await expect(page.getByRole('heading', { name: '걷기', exact: true })).toBeVisible()
-  await page.getByRole('link', { name: '목록으로' }).click()
+  await page.getByRole('button', { name: '뒤로가기' }).click()
   await expect(page).toHaveURL('/exercise')
 })
 
@@ -299,4 +303,34 @@ test('수정 중 대상이 삭제되면 다시 생성하지 않는다', async ({
   await page.getByRole('button', { name: '저장', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('저장하지 못했어요')
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY)).toEqual(EXISTING)
+})
+
+test('헤더는 목록에서 뒤로 버튼을 숨기고 등록에서 이전 화면으로 돌아간다', async ({ page }) => {
+  await page.goto('/exercise')
+  await expect(page.getByRole('button', { name: '뒤로가기', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: '운동 추가', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '운동 등록', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
+  await expect(page).toHaveURL('/exercise')
+})
+
+test('수정 주소 직접 접속 시 헤더 뒤로가기는 상세로 대체 이동한다', async ({ page }) => {
+  await seedEditExercises(page)
+  await page.goto('/exercise/edit-target/edit')
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
+  await expect(page).toHaveURL('/exercise/edit-target')
+  await expect(page.getByRole('heading', { name: '푸시업', exact: true })).toBeVisible()
+  await page.screenshot({ path: 'test-results/exercise-header-mobile.png', fullPage: true })
+})
+
+test('상세 직접 접속에서 긴 제목이 헤더를 가로로 넘치지 않는다', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 })
+  await page.goto('/exercise/edit-target')
+  await page.evaluate(({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])), {
+    key: STORAGE_KEY, exercise: { ...EDIT_TARGET, name: '매우긴운동이름'.repeat(30) },
+  })
+  await page.reload()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
+  await expect(page).toHaveURL('/exercise')
 })

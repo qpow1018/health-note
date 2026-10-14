@@ -1,0 +1,53 @@
+import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import type { To } from 'react-router-dom'
+import styles from './Header.module.scss'
+
+type THeaderProps = {
+  title: string
+  showBack?: boolean
+  fallbackTo?: To
+  backTo?: To
+  onBack?: () => void
+  actions?: ReactNode
+}
+
+function Header({ title, showBack = true, fallbackTo = '/', backTo, onBack, actions }: THeaderProps) {
+  const navigate = useNavigate()
+
+  function handleBack() {
+    if (onBack) {
+      onBack()
+      return
+    }
+    if (backTo !== undefined) {
+      navigate(backTo)
+      return
+    }
+
+    // BrowserRouter는 최초 진입을 0으로 두고 앱 내 이동에 idx를 증가시킨다.
+    // 전체 브라우저 history.length 대신 앱 라우터의 이동 이력을 확인한다.
+    const historyIndex: unknown = window.history.state?.idx
+    if (typeof historyIndex === 'number' && historyIndex > 0) {
+      navigate(-1)
+      return
+    }
+    navigate(fallbackTo, { replace: true })
+  }
+
+  return (
+    <header className={styles['header']}>
+      {showBack && (
+        <button className={styles['back-button']} type="button" onClick={handleBack} aria-label="뒤로가기">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+      <h1 className={styles['title']} title={title}>{title}</h1>
+      {actions && <div className={styles['actions']}>{actions}</div>}
+    </header>
+  )
+}
+
+export default Header

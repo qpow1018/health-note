@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import Header from '@/components/common/header/Header'
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
 import { loadExercise } from '@/features/exercise/exerciseLoader'
 import { updateExercise } from '@/features/exercise/exerciseStorage'
@@ -24,20 +25,19 @@ function ExerciseEditPage() {
 
   return (
     <section className={styles['exercise-edit-page']}>
-      <header className={styles['header']}>
-        <Link className={styles['back-link']} to={detailTo}>상세로</Link>
-        <h1>운동 수정</h1>
-      </header>
-      {error && <p className={styles['error']} role="alert">{error}</p>}
-      {!error && !exercise && (
-        <div className={styles['missing']}>
-          <p>운동을 찾을 수 없어요.</p>
-          <Link to="/exercise">목록으로</Link>
-        </div>
-      )}
-      {!error && exercise && (
-        <ExerciseForm key={exercise.id} initialValues={exercise} cancelTo={detailTo} onSave={handleSave} />
-      )}
+      <Header title="운동 수정" fallbackTo={detailTo} />
+      <div className={styles['content']}>
+        {error && <p className={styles['error']} role="alert">{error}</p>}
+        {!error && !exercise && (
+          <div className={styles['missing']}>
+            <p>운동을 찾을 수 없어요.</p>
+            <Link to="/exercise">목록으로</Link>
+          </div>
+        )}
+        {!error && exercise && (
+          <ExerciseForm key={exercise.id} initialValues={exercise} cancelTo={detailTo} onSave={handleSave} />
+        )}
+      </div>
     </section>
   )
 }

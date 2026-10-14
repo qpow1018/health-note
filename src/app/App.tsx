@@ -1,4 +1,5 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import Header from '@/components/common/header/Header'
 import ExerciseListPage from '@/pages/exercise/ExerciseListPage'
 import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage'
 import ExerciseEditPage from '@/pages/exercise/ExerciseEditPage'
@@ -12,7 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={
             <div className={styles['home']}>
-              <h1>Health Note</h1>
+              <Header title="Health Note" showBack={false} />
               <Link to="/exercise">내 운동</Link>
             </div>
           } />

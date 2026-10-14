@@ -1,8 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import Header from '@/components/common/header/Header'
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
 import { createExercise } from '@/features/exercise/exerciseStorage'
-import type { TExerciseValues } from '@/features/exercise/exercise.types'
 import styles from './ExerciseCreatePage.module.scss'
+import type { TExerciseValues } from '@/features/exercise/exercise.types'
 
 function ExerciseCreatePage() {
   const navigate = useNavigate()
@@ -19,11 +20,10 @@ function ExerciseCreatePage() {
 
   return (
     <section className={styles['exercise-create-page']}>
-      <header className={styles['header']}>
-        <Link className={styles['back-link']} to="/exercise">목록으로</Link>
-        <h1>운동 등록</h1>
-      </header>
-      <ExerciseForm cancelTo="/exercise" onSave={handleSave} />
+      <Header title="운동 등록" fallbackTo="/exercise" />
+      <div className={styles['content']}>
+        <ExerciseForm cancelTo="/exercise" onSave={handleSave} />
+      </div>
     </section>
   )
 }

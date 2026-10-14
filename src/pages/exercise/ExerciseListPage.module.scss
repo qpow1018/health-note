@@ -1,17 +1,19 @@
 .exercise-page {
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-
-    h1 {
-      font-size: $font-size-title;
-    }
+  .content {
+    padding: 0 max($page-padding, env(safe-area-inset-right))
+      max($page-padding, env(safe-area-inset-bottom))
+      max($page-padding, env(safe-area-inset-left));
   }
 
   .add-link {
-    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: $control-height;
+    padding-inline: 8px;
+    color: $mint-accent;
+    font-size: $font-size-body;
+    font-weight: 500;
+    text-decoration: none;
   }
 
   .empty {
