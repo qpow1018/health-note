@@ -1,0 +1,13 @@
+.app-shell {
+  @include app-width;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: $page-padding;
+  background: $bg;
+  overflow-wrap: anywhere;
+
+  .title {
+    font-size: $font-size-title;
+    font-weight: 700;
+  }
+}

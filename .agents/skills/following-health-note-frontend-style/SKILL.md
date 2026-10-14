@@ -1,0 +1,47 @@
+---
+name: following-health-note-frontend-style
+description: Apply Health Note conventions when writing or changing React, TypeScript, mobile layouts, SCSS, or browser persistence in this repository.
+---
+
+# Health Note 프론트엔드 스타일
+
+## 구조
+
+- 앱 조립·레이아웃은 src/app/, 운동 기능은 src/features/exercise/에 둔다.
+- 기능 전용 화면·스타일·타입·저장 코드는 feature가 소유한다.
+- 도메인과 무관한 공용 UI는 src/components/common/에 둔다.
+- 두 번째 실제 사용처가 생기고 역할까지 같을 때 공용화를 검토한다. 모양만 비슷한 코드는 강제로 합치지 않는다.
+- 폴더·추상화·옵션은 필요한 시점에 추가한다.
+- 폴더명은 lower camel case, 컴포넌트 파일명은 PascalCase.
+- 같은 폴더나 하위 폴더 import는 ./를 허용한다. ../ 대신 src/ 기준 @/를 사용한다.
+
+## TypeScript·React
+
+- 기본 타입 선언은 type, 타입 이름은 T 접두사, 타입 import는 import type.
+- 컴포넌트와 이름 있는 헬퍼는 함수 선언식.
+- boolean은 is..., 이벤트 props는 on..., 처리 함수는 handle....
+- 모듈 상수는 UPPER_SNAKE_CASE, any 대신 unknown과 타입 검사.
+- 조기 반환으로 중첩을 줄인다.
+- Vite 앱에 Next.js 서버·클라이언트 컴포넌트 규칙을 적용하지 않는다.
+- 브라우저 저장 코드는 화면과 분리해 feature에서 관리한다.
+
+## SCSS
+
+- LoaM 기반 Noto Sans KR·gray 다크 테마·mint·rose 색감을 유지한다.
+- 폰트는 @fontsource/noto-sans-kr 로컬 번들로 제공한다.
+- 컴포넌트와 같은 PascalCase 이름의 *.module.scss를 같은 폴더에 둔다.
+- styles로 import하고 kebab-case 클래스를 styles['class-name']으로 접근한다.
+- HTML 구조에 맞춰 root 아래에 nesting하고 상태·modifier는 대상 아래에 둔다.
+- 깊이는 고정하지 않되 불필요한 nesting을 피한다. 공용 컴포넌트 내부 스타일은 해당 컴포넌트가 관리한다.
+- src/styles/reset.scss는 reset, global.scss는 폰트·body 등 전역 기본값만 관리한다.
+- 기본 줄 높이는 전역에서 관리하고 필요한 요소에서 재정의할 수 있다.
+- _variables.scss와 _mixins.scss는 Vite에서 전역 주입하므로 SCSS마다 @use를 반복하지 않는다.
+- 주입 파일은 변수·믹스인만 제공한다. 실제 CSS를 출력하는 reset·global은 main.tsx에서 한 번 import한다.
+
+## 레이아웃
+
+- 모바일 전체 너비, PC 중앙 정렬 최대 너비를 사용한다.
+- 콘텐츠와 fixed 요소 모두 $app-max-width 또는 app-width 믹스인을 사용한다.
+- viewport 기준 fixed 요소는 같은 너비와 중앙 정렬을 함께 적용한다.
+- safe area·키보드·좁은 화면·긴 텍스트를 고려한다.
+- 크기·간격 토큰은 시작값이며 실제 화면을 보며 조정한다.
