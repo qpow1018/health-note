@@ -11,15 +11,6 @@
   }
 
   .add-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: $control-height;
-    padding: 8px 16px;
-    border: 1px solid $mint-accent;
-    border-radius: $border-radius;
-    color: $mint-light;
-    text-decoration: none;
     flex-shrink: 0;
   }
 

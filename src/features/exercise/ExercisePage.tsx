@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import ButtonLink from '@/components/common/button/ButtonLink'
 import { getExercises } from './exerciseStorage'
 import styles from './ExercisePage.module.scss'
 
@@ -16,7 +16,7 @@ function ExercisePage() {
     <section className={styles['exercise-page']}>
       <header className={styles['header']}>
         <h1>내 운동</h1>
-        <Link className={styles['add-link']} to="/exercise/new">운동 추가</Link>
+        <ButtonLink className={styles['add-link']} fill="outline" to="/exercise/new">운동 추가</ButtonLink>
       </header>
       {result.error ? (
         <p role="alert" className={styles['error']}>{result.error}</p>

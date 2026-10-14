@@ -34,20 +34,6 @@
       p {
         margin-top: 8px;
       }
-
-      input {
-        width: 100%;
-        min-height: $control-height;
-        padding: 12px;
-        border: 1px solid $border-strong;
-        border-radius: $border-radius;
-        background: $bg-dark;
-        color: $text-primary;
-
-        &::placeholder {
-          color: $text-secondary;
-        }
-      }
     }
 
     .error {
@@ -59,25 +45,8 @@
       display: flex;
       gap: 12px;
 
-      .cancel-link,
-      button {
-        display: flex;
+      .action {
         flex: 1;
-        align-items: center;
-        justify-content: center;
-        min-height: $control-height;
-        padding: 12px;
-        border: 1px solid $border-strong;
-        border-radius: $border-radius;
-        background: transparent;
-        color: $text-primary;
-        text-decoration: none;
-      }
-
-      button {
-        background: $mint-surface;
-        border-color: $mint-accent;
-        color: $mint-light;
       }
     }
   }

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Button from '@/components/common/button/Button'
+import ButtonLink from '@/components/common/button/ButtonLink'
+import Input from '@/components/common/input/Input'
 import { createExercise } from './exerciseStorage'
 import styles from './ExerciseCreatePage.module.scss'
 
@@ -41,21 +44,21 @@ function ExerciseCreatePage() {
       <form className={styles['form']} onSubmit={handleSubmit}>
         <div className={styles['field']}>
           <label htmlFor="exercise-name">운동 이름 <span>(필수)</span></label>
-          <input id="exercise-name" name="name" required placeholder="예: 푸시업" />
+          <Input id="exercise-name" name="name" required placeholder="예: 푸시업" />
         </div>
         <div className={styles['field']}>
           <label htmlFor="exercise-amount">운동량</label>
-          <input id="exercise-amount" name="amount" placeholder="예: 10회, 30초, 30분" aria-describedby="amount-hint" />
+          <Input id="exercise-amount" name="amount" placeholder="예: 10회, 30초, 30분" aria-describedby="amount-hint" />
           <p id="amount-hint">횟수나 시간을 원하는 방식으로 적어주세요.</p>
         </div>
         <div className={styles['field']}>
           <label htmlFor="exercise-sets">세트 <span>(선택)</span></label>
-          <input id="exercise-sets" name="sets" type="number" inputMode="numeric" min="1" step="1" placeholder="예: 3" />
+          <Input id="exercise-sets" name="sets" type="number" inputMode="numeric" min="1" step="1" placeholder="예: 3" />
         </div>
         {error && <p className={styles['error']} role="alert">{error}</p>}
         <div className={styles['actions']}>
-          <Link className={styles['cancel-link']} to="/exercise">취소</Link>
-          <button type="submit">저장</button>
+          <ButtonLink className={styles['action']} color="gray" fill="outline" to="/exercise">취소</ButtonLink>
+          <Button className={styles['action']} type="submit" fill="solid">저장</Button>
         </div>
       </form>
     </section>
