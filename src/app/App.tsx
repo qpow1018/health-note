@@ -1,5 +1,6 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import ExercisePage from '@/features/exercise/ExercisePage'
+import ExerciseDetailPage from '@/features/exercise/ExerciseDetailPage'
 import ExerciseCreatePage from '@/features/exercise/ExerciseCreatePage'
 import styles from './App.module.scss'
 
@@ -15,6 +16,7 @@ function App() {
             </div>
           } />
           <Route path="/exercise" element={<ExercisePage />} />
+          <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
           <Route path="/exercise/new" element={<ExerciseCreatePage />} />
           <Route path="*" element={
             <div className={styles['home']}>

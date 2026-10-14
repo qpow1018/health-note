@@ -1,0 +1,79 @@
+.exercise-detail-page {
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: $control-height;
+    color: $text-secondary;
+    text-decoration: none;
+  }
+
+  h1 {
+    margin-top: 8px;
+    font-size: $font-size-title;
+  }
+
+  .amount-row {
+    display: flex;
+    gap: 24px;
+    margin: 32px 0;
+
+    > div {
+      flex: 1;
+      min-width: 0;
+
+      dt {
+        color: $text-secondary;
+        font-size: $font-size-caption;
+      }
+
+      dd { margin: 8px 0 0; }
+    }
+  }
+
+  .section {
+    margin-top: 32px;
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .links {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+
+      li {
+        border-bottom: 1px solid $border-soft;
+
+        a {
+          display: block;
+          min-height: $control-height;
+          padding-block: 12px;
+          color: $mint-accent;
+          text-decoration: none;
+
+          .url {
+            display: block;
+            margin-top: 4px;
+            color: $text-secondary;
+            font-size: $font-size-caption;
+          }
+        }
+      }
+    }
+
+    .memo { white-space: pre-wrap; }
+  }
+
+  .hint {
+    color: $text-secondary;
+    margin-top: 12px;
+  }
+
+  .error {
+    margin-top: 24px;
+    color: $error-accent;
+  }
+}

@@ -1,7 +1,7 @@
 # Health Note
 
 React 19 + TypeScript + Vite 기반 모바일 웹 프로젝트입니다.
-운동 목록(`/exercise`)과 등록(`/exercise/new`)을 제공하며 브라우저 localStorage에 저장합니다.
+운동 목록(`/exercise`), 등록(`/exercise/new`), 상세(`/exercise/:exerciseId`)을 제공하며 브라우저 localStorage에 저장합니다.
 수정·삭제·네이티브 연동은 아직 구현하지 않았습니다.
 BrowserRouter를 사용하므로 배포 시 모든 페이지 경로를 index.html로 연결하는 SPA fallback 설정이 필요합니다.
 
