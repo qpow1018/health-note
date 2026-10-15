@@ -1,25 +1,31 @@
 .exercise-detail-page {
   .content {
     padding: 0 max($page-padding, env(safe-area-inset-right))
-      max($page-padding, env(safe-area-inset-bottom))
-      max($page-padding, env(safe-area-inset-left));
+      max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
   .amount-row {
     display: flex;
     gap: 24px;
-    margin: 32px 0;
+    margin: 32px 0 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid $border-soft;
 
     > div {
       flex: 1;
       min-width: 0;
 
       dt {
-        color: $text-secondary;
-        font-size: $font-size-caption;
+        color: $text-primary;
+        font-size: 18px;
+        font-weight: 500;
       }
 
-      dd { margin: 8px 0 0; }
+      dd {
+        margin: 8px 0 0;
+        font-size: $font-size-title;
+        font-weight: 700;
+      }
     }
   }
 
@@ -38,34 +44,54 @@
       list-style: none;
 
       li {
+        margin-bottom: 24px;
         border-bottom: 1px solid $border-soft;
 
-        a {
+        .player {
           display: block;
+          width: 100%;
+          min-height: 200px;
+          aspect-ratio: 16 / 9;
+          border: 0;
+          border-radius: $border-radius;
+          background: $bg-dark;
+        }
+
+        a {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
           min-height: $control-height;
           padding-block: 12px;
-          color: $mint-accent;
+          color: $text-primary;
           text-decoration: none;
+
+          > svg {
+            flex-shrink: 0;
+            color: $mint-accent;
+          }
 
           .url {
             display: block;
-            margin-top: 4px;
+            min-width: 0;
             color: $text-secondary;
             font-size: $font-size-caption;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
       }
     }
 
-    .memo { white-space: pre-wrap; }
+    .memo {
+      white-space: pre-wrap;
+    }
   }
 
-  .actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 32px;
-
-    > * { flex: 1; }
+  .detail-content {
+    padding-bottom: 32px;
   }
 
   .hint {

@@ -230,14 +230,11 @@ test('목록에서 상세로 이동하고 링크와 여러 줄 메모를 표시�
   await expect(page.getByText('첫 줄\n둘째 줄')).toBeVisible();
   await page.setViewportSize({ width: 360, height: 780 });
   await page.screenshot({ path: 'test-results/exercise-detail-mobile.png', fullPage: true });
-  await expect(page.getByRole('link', { name: /유튜브 링크 1/ })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: /영상 1/ })).toHaveAttribute(
     'href',
     exercise.youtubeLinks[0],
   );
-  await expect(page.getByRole('link', { name: /유튜브 링크 2/ })).toHaveAttribute(
-    'target',
-    '_blank',
-  );
+  await expect(page.getByRole('link', { name: /영상 2/ })).toHaveAttribute('target', '_blank');
   await page.reload();
   await expect(page.getByRole('heading', { name: '걷기', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '뒤로가기' }).click();
@@ -251,8 +248,19 @@ test('상세에서 기존 데이터의 빈 항목, 없는 운동, 손상 데이�
     existing: EXISTING,
   });
   await page.reload();
-  await expect(page.getByText('등록한 링크가 없어요.')).toBeVisible();
-  await expect(page.getByText('등록한 메모가 없어요.')).toBeVisible();
+  await expect(page.locator('dd').filter({ hasText: '-' })).toHaveCount(1);
+  await expect(
+    page
+      .getByRole('heading', { name: '유튜브 링크', exact: true })
+      .locator('..')
+      .getByText('-', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('heading', { name: '메모', exact: true })
+      .locator('..')
+      .getByText('-', { exact: true }),
+  ).toBeVisible();
   await page.goto('/exercise/missing');
   await expect(page.getByRole('heading', { name: '운동 상세', exact: true })).toBeVisible();
   await expect(page.getByText('운동을 찾을 수 없어요.', { exact: true })).toBeVisible();
@@ -284,6 +292,7 @@ async function seedEditExercises(page: import('@playwright/test').Page) {
 
 test('상세에서 수정하고 모든 필드와 ID 및 다른 운동을 유지한다', async ({ page }) => {
   await seedEditExercises(page);
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await expect(page).toHaveURL('/exercise/edit-target/edit');
   await expect(page.getByLabel('운동 이름')).toHaveValue('푸시업');
@@ -320,6 +329,7 @@ test('상세에서 수정하고 모든 필드와 ID 및 다른 운동을 유지�
 test('수정 취소는 기존 데이터를 바꾸지 않는다', async ({ page }) => {
   await seedEditExercises(page);
   const before = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await page.getByLabel('운동 이름').fill('취소할 이름');
   await page.getByLabel('메모').fill('취소할 메모');
@@ -331,6 +341,7 @@ test('수정 취소는 기존 데이터를 바꾸지 않는다', async ({ page }
 test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한다', async ({ page }) => {
   await seedEditExercises(page);
   const deleteButton = page.getByRole('button', { name: '삭제', exact: true });
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await deleteButton.click();
   const confirm = page.getByRole('dialog', { name: '운동 삭제' });
   await expect(confirm).toContainText('푸시업');
@@ -338,12 +349,14 @@ test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한�
   await expect(confirm.getByRole('button', { name: '취소' })).toBeFocused();
   await confirm.getByRole('button', { name: '취소' }).click();
   await expect(confirm).not.toBeVisible();
-  await expect(deleteButton).toBeFocused();
+  await expect(page.getByRole('button', { name: '더보기' })).toBeFocused();
   await expect(page.getByRole('heading', { name: '푸시업', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await deleteButton.click();
   await page.keyboard.press('Escape');
   await expect(confirm).not.toBeVisible();
-  await expect(deleteButton).toBeFocused();
+  await expect(page.getByRole('button', { name: '더보기' })).toBeFocused();
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await deleteButton.click();
   await confirm.getByRole('button', { name: '삭제', exact: true }).click();
   await expect(page).toHaveURL('/exercise');
@@ -358,6 +371,7 @@ test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한�
 
 test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async ({ page }) => {
   await seedEditExercises(page);
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await page.getByLabel('운동 이름').fill('저장 실패 이름');
   await page.evaluate(() => {
@@ -376,6 +390,7 @@ test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY),
   ).toEqual(EDIT_TARGET);
   await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await page.getByRole('button', { name: '삭제', exact: true }).click();
   await page
     .getByRole('dialog', { name: '운동 삭제' })
@@ -404,6 +419,7 @@ test('수정 진입 시 없는 운동과 손상 데이터에 폼을 제공하지
 
 test('수정 중 대상이 삭제되면 다시 생성하지 않는다', async ({ page }) => {
   await seedEditExercises(page);
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await page.getByLabel('운동 이름').fill('다시 만들지 않을 운동');
   await page.evaluate(({ key, existing }) => localStorage.setItem(key, JSON.stringify(existing)), {

@@ -4,19 +4,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from '@/utils/toast';
 import { deleteExercise } from '@/features/exercise/exerciseStorage';
 import { loadExercise } from '@/features/exercise/exerciseLoader';
-import { isYoutubeUrl } from '@/features/exercise/youtubeUrl';
+import { getYoutubeVideoId, isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExercise } from '@/features/exercise/exercise.types';
 
 import Header from '@/components/common/header/Header';
-import Button from '@/components/common/button/Button';
-import ButtonLink from '@/components/common/button/ButtonLink';
+import MoreMenu from '@/components/common/moreMenu/MoreMenu';
 import Confirm from '@/components/common/modal/Confirm';
 
 import styles from './ExerciseDetailPage.module.scss';
 
+import { MdOpenInNew } from 'react-icons/md';
+
 type TExerciseDetailContentProps = {
   exercise: TExercise;
-  onDelete: () => void;
 };
 
 export default function ExerciseDetailPage() {
@@ -49,7 +49,20 @@ export default function ExerciseDetailPage() {
 
   return (
     <section className={styles['exercise-detail-page']}>
-      <Header title={exercise?.name ?? '운동 상세'} fallbackTo="/exercise" />
+      <Header
+        title={exercise?.name ?? '운동 상세'}
+        fallbackTo="/exercise"
+        actions={
+          !error && exercise ? (
+            <MoreMenu
+              items={[
+                { label: '수정', to: `/exercise/${encodeURIComponent(exercise.id)}/edit` },
+                { label: '삭제', color: 'rose', onClick: () => setIsDeleteConfirmOpen(true) },
+              ]}
+            />
+          ) : undefined
+        }
+      />
 
       <div className={styles['content']}>
         {error && (
@@ -65,12 +78,7 @@ export default function ExerciseDetailPage() {
           </div>
         )}
 
-        {!error && exercise && (
-          <ExerciseDetailContent
-            exercise={exercise}
-            onDelete={() => setIsDeleteConfirmOpen(true)}
-          />
-        )}
+        {!error && exercise && <ExerciseDetailContent exercise={exercise} />}
       </div>
 
       {!error && exercise && (
@@ -87,36 +95,53 @@ export default function ExerciseDetailPage() {
   );
 }
 
-function ExerciseDetailContent({ exercise, onDelete }: TExerciseDetailContentProps) {
+function ExerciseDetailContent({ exercise }: TExerciseDetailContentProps) {
   return (
-    <>
+    <div className={styles['detail-content']}>
       <dl className={styles['amount-row']}>
         <div>
           <dt>운동량</dt>
-          <dd>{exercise.amount || '미입력'}</dd>
+          <dd>{exercise.amount || '-'}</dd>
         </div>
         <div>
           <dt>세트</dt>
-          <dd>{exercise.sets === null ? '미입력' : `${exercise.sets}세트`}</dd>
+          <dd>{exercise.sets === null ? '-' : `${exercise.sets}세트`}</dd>
         </div>
       </dl>
 
       <section className={styles['section']} aria-labelledby="youtube-heading">
         <h2 id="youtube-heading">유튜브 링크</h2>
-        {exercise.youtubeLinks.length === 0 && (
-          <p className={styles['hint']}>등록한 링크가 없어요.</p>
-        )}
+        {exercise.youtubeLinks.length === 0 && <p className={styles['hint']}>-</p>}
         {exercise.youtubeLinks.length > 0 && (
           <ul className={styles['links']}>
             {exercise.youtubeLinks.map((url, index) => {
               const isValidLink = isYoutubeUrl(url);
+              const videoId = getYoutubeVideoId(url);
 
               return (
                 <li key={`${index}-${url}`}>
+                  {videoId && (
+                    <iframe
+                      className={styles['player']}
+                      src={`https://www.youtube-nocookie.com/embed/${videoId}?playsinline=1`}
+                      title={`유튜브 영상 ${index + 1}`}
+                      loading="lazy"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  )}
                   {isValidLink && (
-                    <a href={url} target="_blank" rel="noopener noreferrer">
-                      <span>유튜브 링크 {index + 1} (새 탭)</span>
-                      <span className={styles['url']}>{url}</span>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`영상 ${index + 1} (새 탭)`}
+                    >
+                      <span className={styles['url']}>
+                        {url.replace(/^https?:\/\/(www\.)?/, '')}
+                      </span>
+                      <MdOpenInNew size={20} aria-hidden="true" />
                     </a>
                   )}
                   {!isValidLink && (
@@ -134,15 +159,8 @@ function ExerciseDetailContent({ exercise, onDelete }: TExerciseDetailContentPro
       <section className={styles['section']} aria-labelledby="memo-heading">
         <h2 id="memo-heading">메모</h2>
         {exercise.memo && <p className={styles['memo']}>{exercise.memo}</p>}
-        {!exercise.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
+        {!exercise.memo && <p className={styles['hint']}>-</p>}
       </section>
-
-      <div className={styles['actions']}>
-        <ButtonLink to={`/exercise/${encodeURIComponent(exercise.id)}/edit`}>수정</ButtonLink>
-        <Button color="rose" fill="outline" onClick={onDelete}>
-          삭제
-        </Button>
-      </div>
-    </>
+    </div>
   );
 }
