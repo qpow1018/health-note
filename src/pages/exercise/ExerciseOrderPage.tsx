@@ -10,12 +10,11 @@ import toast from '@/utils/toast';
 import type { TExercise } from '@/features/exercise/exercise.types';
 
 import Button from '@/components/common/button/Button';
-import ButtonLink from '@/components/common/button/ButtonLink';
 import Header from '@/components/common/header/Header';
 
 import styles from './ExerciseOrderPage.module.scss';
 
-import { MdArrowDownward, MdArrowUpward, MdDragHandle } from 'react-icons/md';
+import { MdDragHandle } from 'react-icons/md';
 
 const ORDER_POINTER_SENSOR = PointerSensor.configure({
   activationConstraints: [new PointerActivationConstraints.Distance({ value: 8 })],
@@ -36,9 +35,6 @@ const ORDER_ACCESSIBILITY = Accessibility.configure({
 type TSortableExerciseProps = {
   exercise: TExercise;
   index: number;
-  count: number;
-  isMoving: boolean;
-  onMove: (from: number, to: number) => void;
 };
 
 export default function ExerciseOrderPage() {
@@ -56,15 +52,13 @@ export default function ExerciseOrderPage() {
         exercises.map((exercise) => exercise.id),
       );
       if (saved === 'conflict') {
-        toast.error('운동 목록이 변경되었어요. 취소한 뒤 최신 목록에서 다시 순서를 바꿔주세요.', {
-          duration: 10000,
+        toast.error('목록이 변경되었어요. 목록으로 돌아가 다시 시도해 주세요.', {
           isShowCloseButton: true,
         });
         return;
       }
     } catch {
-      toast.error('순서를 저장하지 못했어요. 변경한 순서는 유지했어요. 다시 시도해 주세요.', {
-        duration: 10000,
+      toast.error('순서를 저장하지 못했어요. 다시 시도해 주세요.', {
         isShowCloseButton: true,
       });
       return;
@@ -85,15 +79,7 @@ export default function ExerciseOrderPage() {
 
   return (
     <section className={styles['order-page']}>
-      <Header
-        title="운동 순서 변경"
-        onBack={() => navigate('/exercise', { replace: true })}
-        actions={
-          <ButtonLink to="/exercise" replace color="gray" fill="outline">
-            취소
-          </ButtonLink>
-        }
-      />
+      <Header title="운동 순서 변경" onBack={() => navigate('/exercise', { replace: true })} />
       <div className={styles['content']}>
         {error && (
           <p className={styles['error']} role="alert">
@@ -105,9 +91,7 @@ export default function ExerciseOrderPage() {
         )}
         {!error && exercises.length > 0 && (
           <>
-            <p className={styles['hint']}>
-              핸들을 잡고 옮기거나 위·아래 버튼으로 순서를 바꿔주세요.
-            </p>
+            <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
             <p className={styles['announcement']} role="status" aria-live="polite">
               {announcement}
             </p>
@@ -135,9 +119,6 @@ export default function ExerciseOrderPage() {
                     key={id}
                     exercise={exercises.find((exercise) => exercise.id === id)!}
                     index={index}
-                    count={orderedIds.length}
-                    isMoving={isDragging}
-                    onMove={handleMove}
                   />
                 ))}
               </ul>
@@ -154,7 +135,7 @@ export default function ExerciseOrderPage() {
   );
 }
 
-function SortableExercise({ exercise, index, count, isMoving, onMove }: TSortableExerciseProps) {
+function SortableExercise({ exercise, index }: TSortableExerciseProps) {
   const { ref, handleRef, isDragSource } = useSortable({
     id: exercise.id,
     index,
@@ -178,24 +159,6 @@ function SortableExercise({ exercise, index, count, isMoving, onMove }: TSortabl
           {exercise.sets !== null && ` × ${exercise.sets}세트`}
         </p>
       </div>
-      <button
-        type="button"
-        className={styles['move-button']}
-        aria-label={`${exercise.name} 위로`}
-        disabled={index === 0 || isMoving}
-        onClick={() => onMove(index, index - 1)}
-      >
-        <MdArrowUpward size={20} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className={styles['move-button']}
-        aria-label={`${exercise.name} 아래로`}
-        disabled={index === count - 1 || isMoving}
-        onClick={() => onMove(index, index + 1)}
-      >
-        <MdArrowDownward size={20} aria-hidden="true" />
-      </button>
     </li>
   );
 }

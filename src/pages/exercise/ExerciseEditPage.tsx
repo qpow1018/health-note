@@ -34,14 +34,14 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
       if (result === 'conflict') {
         toast.error(
           '다른 화면에서 변경된 운동이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',
-          { duration: 10000, isShowCloseButton: true },
+          { isShowCloseButton: true },
         );
         return;
       }
     } catch {
       toast.error(
         '저장하지 못했어요. 운동이 삭제되었거나 브라우저 저장 공간에 문제가 있을 수 있어요.',
-        { duration: 10000, isShowCloseButton: true },
+        { isShowCloseButton: true },
       );
       return;
     }

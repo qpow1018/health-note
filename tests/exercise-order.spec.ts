@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const KEY = 'health-note.exercises.v1';
 const EXERCISES = ['푸시업', '스쿼트', '걷기'].map((name, index) => ({
@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
   await page.reload();
 });
 
-test('버튼으로 순서를 변경하고 완료하면 내용과 루틴을 보존하며 새로고침 후 유지한다', async ({
+test('핸들로 순서를 변경하고 완료하면 내용과 루틴을 보존하며 새로고침 후 유지한다', async ({
   page,
 }) => {
   const routine = { marker: '기존 루틴 순서 보존' };
@@ -30,9 +30,7 @@ test('버튼으로 순서를 변경하고 완료하면 내용과 루틴을 보�
   await page.getByRole('link', { name: '순서 변경' }).click();
   await expect(page.getByRole('button', { name: '완료' })).toBeDisabled();
   await expect(page.getByRole('link', { name: /푸시업/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '푸시업 위로' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: '걷기 아래로' })).toBeDisabled();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
+  await moveFirstDown(page);
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual(
     EXERCISES,
@@ -51,15 +49,15 @@ test('버튼으로 순서를 변경하고 완료하면 내용과 루틴을 보�
   ).toEqual(routine);
 });
 
-test('취소와 브라우저 뒤로가기는 미저장 순서를 버린다', async ({ page }) => {
+test('헤더와 브라우저 뒤로가기는 미저장 순서를 버린다', async ({ page }) => {
   await page.getByRole('link', { name: '순서 변경' }).click();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
-  await page.getByRole('link', { name: '취소' }).click();
+  await moveFirstDown(page);
+  await page.getByRole('button', { name: '뒤로가기' }).click();
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(
     EXERCISES.map((item) => item.name),
   );
   await page.getByRole('link', { name: '순서 변경' }).click();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
+  await moveFirstDown(page);
   await expect(page.getByRole('navigation')).toHaveCount(0);
   await page.goBack();
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(
@@ -69,7 +67,7 @@ test('취소와 브라우저 뒤로가기는 미저장 순서를 버린다', asy
 
 test('저장 실패는 임시 순서를 유지하고 재시도할 수 있다', async ({ page }) => {
   await page.getByRole('link', { name: '순서 변경' }).click();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
+  await moveFirstDown(page);
   await page.evaluate(() => {
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function () {
@@ -90,7 +88,7 @@ test('저장 실패는 임시 순서를 유지하고 재시도할 수 있다', a
 for (const change of ['추가', '삭제', '순서']) {
   test(`편집 중 목록 변경을 덮어쓰지 않는다: ${change}`, async ({ page }) => {
     await page.getByRole('link', { name: '순서 변경' }).click();
-    await page.getByRole('button', { name: '푸시업 아래로' }).click();
+    await moveFirstDown(page);
     const changed =
       change === '추가'
         ? [...EXERCISES, { ...EXERCISES[0], id: 'new' }]
@@ -111,7 +109,7 @@ for (const change of ['추가', '삭제', '순서']) {
 
 test('순서 저장은 다른 화면에서 수정한 운동 내용을 유지한다', async ({ page }) => {
   await page.getByRole('link', { name: '순서 변경' }).click();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
+  await moveFirstDown(page);
   const changed = EXERCISES.map((item) => ({ ...item, memo: '최신 메모' }));
   await page.evaluate(({ key, items }) => localStorage.setItem(key, JSON.stringify(items)), {
     key: KEY,
@@ -142,10 +140,8 @@ test('핸들을 마우스로 드래그해 이동한다', async ({ page }) => {
 test('키보드로 이동하고 Escape로 드래그를 취소한다', async ({ page }) => {
   await page.getByRole('link', { name: '순서 변경' }).click();
   const handle = page.getByRole('button', { name: '푸시업 순서 이동' });
-  await expect(page.getByRole('button', { name: '푸시업 아래로' })).toBeEnabled();
   await handle.focus();
   await page.keyboard.press('Space');
-  await expect(page.getByRole('button', { name: '푸시업 아래로' })).toBeDisabled();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(
@@ -154,10 +150,8 @@ test('키보드로 이동하고 Escape로 드래그를 취소한다', async ({ p
   await expect(page.getByRole('button', { name: '완료' })).toBeDisabled();
   await expect(page.locator('[data-dnd-dropping]')).toHaveCount(0);
   await expect(handle).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.getByRole('button', { name: '푸시업 아래로' })).toBeEnabled();
   await handle.focus();
   await page.keyboard.press('Space');
-  await expect(page.getByRole('button', { name: '푸시업 아래로' })).toBeDisabled();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
   await page.keyboard.press('Space');
@@ -189,7 +183,7 @@ for (const ids of [
 
 test('새로고침은 미저장 순서를 폐기하고 운동이 하나면 편집 진입을 숨긴다', async ({ page }) => {
   await page.getByRole('link', { name: '순서 변경' }).click();
-  await page.getByRole('button', { name: '푸시업 아래로' }).click();
+  await moveFirstDown(page);
   await page.reload();
   await expect(page.getByRole('heading', { name: '운동 순서 변경', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '완료' })).toBeDisabled();
@@ -204,3 +198,15 @@ test('새로고침은 미저장 순서를 폐기하고 운동이 하나면 편�
   await page.goto('/exercise');
   await expect(page.getByRole('link', { name: '순서 변경' })).toHaveCount(0);
 });
+
+async function moveFirstDown(page: Page) {
+  const handle = page.getByRole('button', { name: '푸시업 순서 이동' });
+  await handle.focus();
+  await page.keyboard.press('Space');
+  await expect(handle).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
+  await page.keyboard.press('Space');
+  await expect(handle).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('[data-dnd-dropping]')).toHaveCount(0);
+}

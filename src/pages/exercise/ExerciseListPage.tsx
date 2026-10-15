@@ -17,11 +17,12 @@ export default function ExerciseListPage() {
         title="내 운동"
         showBack={false}
         actions={
-          !error && exercises.length > 1 ? (
+          !error &&
+          exercises.length > 1 && (
             <Link className={styles['add-link']} to="/exercise/order">
               순서 변경
             </Link>
-          ) : undefined
+          )
         }
       />
       <div className={styles['content']}>

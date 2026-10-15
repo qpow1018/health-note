@@ -42,8 +42,7 @@
     }
   }
 
-  .handle,
-  .move-button {
+  .handle {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,12 +55,6 @@
     background: transparent;
     color: $text-secondary;
 
-    &:disabled {
-      opacity: 0.3;
-    }
-  }
-
-  .handle {
     touch-action: none;
     cursor: grab;
   }

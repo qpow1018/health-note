@@ -18,7 +18,7 @@ export default function ExerciseCreatePage() {
     } catch {
       toast.error(
         '저장하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
-        { duration: 10000, isShowCloseButton: true },
+        { isShowCloseButton: true },
       );
       return;
     }
