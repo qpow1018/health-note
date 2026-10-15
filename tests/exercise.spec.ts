@@ -258,7 +258,8 @@ test('상세에서 기존 데이터의 빈 항목, 없는 운동, 손상 데이�
   await expect(page.getByText('등록한 링크가 없어요.')).toBeVisible();
   await expect(page.getByText('등록한 메모가 없어요.')).toBeVisible();
   await page.goto('/exercise/missing');
-  await expect(page.getByRole('heading', { name: '운동을 찾을 수 없어요.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '운동 상세', exact: true })).toBeVisible();
+  await expect(page.getByText('운동을 찾을 수 없어요.', { exact: true })).toBeVisible();
   await page.evaluate((key) => localStorage.setItem(key, '{broken'), STORAGE_KEY);
   await page.reload();
   await expect(page.getByRole('alert')).toContainText('운동을 불러오지 못했어요.');
@@ -333,22 +334,30 @@ test('수정 취소는 기존 데이터를 바꾸지 않는다', async ({ page }
 
 test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한다', async ({ page }) => {
   await seedEditExercises(page);
-  page.once('dialog', async (dialog) => {
-    expect(dialog.message()).toContain('푸시업');
-    expect(dialog.message()).toContain('복구할 수 없어요');
-    await dialog.dismiss();
-  });
-  await page.getByRole('button', { name: '삭제', exact: true }).click();
+  const deleteButton = page.getByRole('button', { name: '삭제', exact: true });
+  await deleteButton.click();
+  const confirm = page.getByRole('dialog', { name: '운동 삭제' });
+  await expect(confirm).toContainText('푸시업');
+  await expect(confirm).toContainText('복구할 수 없어요');
+  await expect(confirm.getByRole('button', { name: '취소' })).toBeFocused();
+  await confirm.getByRole('button', { name: '취소' }).click();
+  await expect(confirm).not.toBeVisible();
+  await expect(deleteButton).toBeFocused();
   await expect(page.getByRole('heading', { name: '푸시업', exact: true })).toBeVisible();
-  page.once('dialog', (dialog) => dialog.accept());
-  await page.getByRole('button', { name: '삭제', exact: true }).click();
+  await deleteButton.click();
+  await page.keyboard.press('Escape');
+  await expect(confirm).not.toBeVisible();
+  await expect(deleteButton).toBeFocused();
+  await deleteButton.click();
+  await confirm.getByRole('button', { name: '삭제', exact: true }).click();
   await expect(page).toHaveURL('/exercise');
   await expect(page.getByRole('status')).toHaveText('운동을 삭제했어요.');
   await expect(page.getByRole('listitem')).toHaveCount(1);
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
   expect(stored[0]).toMatchObject(EXISTING[0]);
   await page.goto('/exercise/edit-target');
-  await expect(page.getByRole('heading', { name: '운동을 찾을 수 없어요.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '운동 상세', exact: true })).toBeVisible();
+  await expect(page.getByText('운동을 찾을 수 없어요.', { exact: true })).toBeVisible();
 });
 
 test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async ({ page }) => {
@@ -371,9 +380,16 @@ test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY),
   ).toEqual(EDIT_TARGET);
   await page.getByRole('link', { name: '취소', exact: true }).click();
-  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: '삭제', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: '운동 삭제' })
+    .getByRole('button', { name: '삭제', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.getByRole('alert')).toContainText('삭제하지 못했어요');
+  await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
+  await page.getByRole('button', { name: '토스트 닫기' }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page).toHaveURL('/exercise/edit-target');
   expect(
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY),
