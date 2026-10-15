@@ -29,11 +29,17 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 - 기본 타입 선언은 type, 타입 이름은 T 접두사, 타입 import는 import type.
 - 컴포넌트와 이름 있는 헬퍼는 함수 선언식.
 - 기본 내보내기 함수 컴포넌트는 `export default function ComponentName()` 형태로 선언한다.
+- 컴포넌트 파일은 import, 모듈 수준 타입·상수, 대표 컴포넌트, 보조 함수·지역 컴포넌트 순으로 배치한다. 이 순서를 맞추기 위해 함수의 책임이나 스코프를 변경하지 않는다.
 - boolean은 is..., 이벤트 props는 on..., 처리 함수는 handle....
 - 모듈 상수는 UPPER_SNAKE_CASE, any 대신 unknown과 타입 검사.
 - 조기 반환으로 중첩을 줄인다.
 - Vite 앱에 Next.js 서버·클라이언트 컴포넌트 규칙을 적용하지 않는다.
 - 브라우저 저장 코드는 화면과 분리해 feature에서 관리한다.
+
+## 포맷
+
+- `.prettierrc.json`을 기준으로 코드 작성·수정 후 변경한 코드 파일에 Prettier를 적용한다. 요청과 무관한 파일까지 일괄 포맷하지 않는다.
+- 프로젝트에 설치된 Prettier를 사용하고, 변경한 파일을 대상으로 `prettier --check`를 실행한다. import 그룹 순서는 위 지침에 따라 별도로 유지한다.
 
 ## 가독성과 훅 사용
 

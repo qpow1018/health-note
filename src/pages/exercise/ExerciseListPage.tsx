@@ -1,61 +1,55 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import { getExercises } from '@/features/exercise/exerciseStorage'
+import { getExercises } from '@/features/exercise/exerciseStorage';
 
-import Header from '@/components/common/header/Header'
+import Header from '@/components/common/header/Header';
 
-import styles from './ExerciseListPage.module.scss'
-
-function loadExercises() {
-  try {
-    return {
-      exercises: getExercises(),
-      error: '',
-    }
-  } catch {
-    return {
-      exercises: [],
-      error: '운동 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    }
-  }
-}
+import styles from './ExerciseListPage.module.scss';
 
 export default function ExerciseListPage() {
-  const [result, setResult] = useState(loadExercises)
-  const { exercises, error } = result
+  const [result, setResult] = useState(loadExercises);
+  const { exercises, error } = result;
 
   useEffect(function watchExerciseChanges() {
     function refreshExercises() {
-      setResult(loadExercises())
+      setResult(loadExercises());
     }
 
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') refreshExercises()
+      if (document.visibilityState === 'visible') refreshExercises();
     }
 
-    window.addEventListener('storage', refreshExercises)
-    window.addEventListener('focus', refreshExercises)
-    window.addEventListener('pageshow', refreshExercises)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    refreshExercises()
+    window.addEventListener('storage', refreshExercises);
+    window.addEventListener('focus', refreshExercises);
+    window.addEventListener('pageshow', refreshExercises);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    refreshExercises();
 
     return function stopWatching() {
-      window.removeEventListener('storage', refreshExercises)
-      window.removeEventListener('focus', refreshExercises)
-      window.removeEventListener('pageshow', refreshExercises)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [])
+      window.removeEventListener('storage', refreshExercises);
+      window.removeEventListener('focus', refreshExercises);
+      window.removeEventListener('pageshow', refreshExercises);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <section className={styles['exercise-page']}>
-      <Header title="내 운동" showBack={false} actions={
-        <Link className={styles['add-link']} to="/exercise/new">운동 추가</Link>
-      } />
+      <Header
+        title="내 운동"
+        showBack={false}
+        actions={
+          <Link className={styles['add-link']} to="/exercise/new">
+            운동 추가
+          </Link>
+        }
+      />
       <div className={styles['content']}>
         {error && (
-          <p role="alert" className={styles['error']}>{error}</p>
+          <p role="alert" className={styles['error']}>
+            {error}
+          </p>
         )}
         {!error && exercises.length === 0 && (
           <div className={styles['empty']}>
@@ -68,7 +62,10 @@ export default function ExerciseListPage() {
             {exercises.map(function renderExercise(exercise) {
               return (
                 <li key={exercise.id} className={styles['item']}>
-                  <Link className={styles['detail-link']} to={`/exercise/${encodeURIComponent(exercise.id)}`}>
+                  <Link
+                    className={styles['detail-link']}
+                    to={`/exercise/${encodeURIComponent(exercise.id)}`}
+                  >
                     <h2>{exercise.name}</h2>
                     <p>
                       {exercise.amount || '운동량 미입력'}
@@ -76,11 +73,25 @@ export default function ExerciseListPage() {
                     </p>
                   </Link>
                 </li>
-              )
+              );
             })}
           </ul>
         )}
       </div>
     </section>
-  )
+  );
+}
+
+function loadExercises() {
+  try {
+    return {
+      exercises: getExercises(),
+      error: '',
+    };
+  } catch {
+    return {
+      exercises: [],
+      error: '운동 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
+    };
+  }
 }
