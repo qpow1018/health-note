@@ -1,0 +1,212 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { DragDropProvider } from '@dnd-kit/react';
+import type { DragStartEvent } from '@dnd-kit/react';
+import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
+
+import { getExercises, reorderExercises } from '@/features/exercise/exerciseStorage';
+import toast from '@/utils/toast';
+import type { TExercise } from '@/features/exercise/exercise.types';
+
+import Button from '@/components/common/button/Button';
+import ButtonLink from '@/components/common/button/ButtonLink';
+import Header from '@/components/common/header/Header';
+
+import styles from './ExerciseOrderPage.module.scss';
+
+import { MdArrowDownward, MdArrowUpward, MdDragHandle } from 'react-icons/md';
+
+const ORDER_POINTER_SENSOR = PointerSensor.configure({
+  activationConstraints: [new PointerActivationConstraints.Distance({ value: 8 })],
+});
+
+const ORDER_ACCESSIBILITY = Accessibility.configure({
+  screenReaderInstructions: {
+    draggable:
+      '스페이스 또는 Enter로 이동을 시작하고, 방향키로 위치를 바꾼 뒤 다시 눌러 놓으세요. Escape로 이동을 취소할 수 있어요.',
+  },
+  announcements: {
+    dragstart: ({ operation }: DragStartEvent) =>
+      `${operation.source?.data.name ?? '운동'} 순서 이동을 시작했어요.`,
+    dragend: () => undefined,
+  },
+});
+
+type TSortableExerciseProps = {
+  exercise: TExercise;
+  index: number;
+  count: number;
+  isMoving: boolean;
+  onMove: (from: number, to: number) => void;
+};
+
+export default function ExerciseOrderPage() {
+  const navigate = useNavigate();
+  const [{ exercises, error }] = useState(loadExercises);
+  const [orderedIds, setOrderedIds] = useState(() => exercises.map((exercise) => exercise.id));
+  const [isDragging, setIsDragging] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  const isChanged = orderedIds.some((id, index) => id !== exercises[index].id);
+
+  function handleSave() {
+    try {
+      const saved = reorderExercises(
+        orderedIds,
+        exercises.map((exercise) => exercise.id),
+      );
+      if (saved === 'conflict') {
+        toast.error('운동 목록이 변경되었어요. 취소한 뒤 최신 목록에서 다시 순서를 바꿔주세요.', {
+          duration: 10000,
+          isShowCloseButton: true,
+        });
+        return;
+      }
+    } catch {
+      toast.error('순서를 저장하지 못했어요. 변경한 순서는 유지했어요. 다시 시도해 주세요.', {
+        duration: 10000,
+        isShowCloseButton: true,
+      });
+      return;
+    }
+    toast.success('운동 순서를 변경했어요.');
+    navigate('/exercise', { replace: true });
+  }
+
+  function handleMove(from: number, to: number) {
+    if (from === to) return;
+    const next = [...orderedIds];
+    const [id] = next.splice(from, 1);
+    next.splice(to, 0, id);
+    setOrderedIds(next);
+    const exercise = exercises.find((item) => item.id === id)!;
+    setAnnouncement(`${exercise.name}, ${exercises.length}개 중 ${to + 1}번째로 이동했어요.`);
+  }
+
+  return (
+    <section className={styles['order-page']}>
+      <Header
+        title="운동 순서 변경"
+        onBack={() => navigate('/exercise', { replace: true })}
+        actions={
+          <ButtonLink to="/exercise" replace color="gray" fill="outline">
+            취소
+          </ButtonLink>
+        }
+      />
+      <div className={styles['content']}>
+        {error && (
+          <p className={styles['error']} role="alert">
+            {error}
+          </p>
+        )}
+        {!error && exercises.length === 0 && (
+          <p className={styles['hint']}>순서를 변경할 운동이 없어요.</p>
+        )}
+        {!error && exercises.length > 0 && (
+          <>
+            <p className={styles['hint']}>
+              핸들을 잡고 옮기거나 위·아래 버튼으로 순서를 바꿔주세요.
+            </p>
+            <p className={styles['announcement']} role="status" aria-live="polite">
+              {announcement}
+            </p>
+            <DragDropProvider
+              sensors={(defaults) =>
+                defaults.map((sensor) => (sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor))
+              }
+              plugins={(defaults) =>
+                defaults.map((plugin) => (plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin))
+              }
+              onDragStart={() => setIsDragging(true)}
+              onDragEnd={(event) => {
+                setIsDragging(false);
+                if (event.canceled) {
+                  setAnnouncement('이동을 취소했어요.');
+                  return;
+                }
+                const { source } = event.operation;
+                if (isSortable(source)) handleMove(source.initialIndex, source.index);
+              }}
+            >
+              <ul className={styles['list']} aria-label="운동 순서">
+                {orderedIds.map((id, index) => (
+                  <SortableExercise
+                    key={id}
+                    exercise={exercises.find((exercise) => exercise.id === id)!}
+                    index={index}
+                    count={orderedIds.length}
+                    isMoving={isDragging}
+                    onMove={handleMove}
+                  />
+                ))}
+              </ul>
+            </DragDropProvider>
+            <div className={styles['actions']}>
+              <Button disabled={!isChanged || isDragging} onClick={handleSave}>
+                완료
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SortableExercise({ exercise, index, count, isMoving, onMove }: TSortableExerciseProps) {
+  const { ref, handleRef, isDragSource } = useSortable({
+    id: exercise.id,
+    index,
+    data: { name: exercise.name },
+  });
+
+  return (
+    <li ref={ref} className={`${styles['item']} ${isDragSource ? styles['dragging'] : ''}`}>
+      <button
+        ref={handleRef}
+        type="button"
+        className={styles['handle']}
+        aria-label={`${exercise.name} 순서 이동`}
+      >
+        <MdDragHandle size={24} aria-hidden="true" />
+      </button>
+      <div className={styles['info']}>
+        <h2>{exercise.name}</h2>
+        <p>
+          {exercise.amount || '운동량 미입력'}
+          {exercise.sets !== null && ` × ${exercise.sets}세트`}
+        </p>
+      </div>
+      <button
+        type="button"
+        className={styles['move-button']}
+        aria-label={`${exercise.name} 위로`}
+        disabled={index === 0 || isMoving}
+        onClick={() => onMove(index, index - 1)}
+      >
+        <MdArrowUpward size={20} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={styles['move-button']}
+        aria-label={`${exercise.name} 아래로`}
+        disabled={index === count - 1 || isMoving}
+        onClick={() => onMove(index, index + 1)}
+      >
+        <MdArrowDownward size={20} aria-hidden="true" />
+      </button>
+    </li>
+  );
+}
+
+function loadExercises() {
+  try {
+    return { exercises: getExercises(), error: '' };
+  } catch {
+    return {
+      exercises: [],
+      error: '운동 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
+    };
+  }
+}

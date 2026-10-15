@@ -69,3 +69,25 @@ export function deleteExercise(id: string): void {
   const remaining = exercises.filter((exercise) => exercise.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
 }
+
+export function reorderExercises(
+  orderedIds: string[],
+  expectedIds: string[],
+): TExercise[] | 'conflict' {
+  const exercises = getExercises();
+  const currentIds = exercises.map((exercise) => exercise.id);
+  if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) return 'conflict';
+
+  if (
+    orderedIds.length !== currentIds.length ||
+    new Set(orderedIds).size !== orderedIds.length ||
+    orderedIds.some((id) => !currentIds.includes(id))
+  ) {
+    throw new Error('Invalid exercise order');
+  }
+
+  const byId = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+  const reordered = orderedIds.map((id) => byId.get(id)!);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reordered));
+  return reordered;
+}
