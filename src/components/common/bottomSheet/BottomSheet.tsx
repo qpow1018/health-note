@@ -1,48 +1,57 @@
-import { useEffect, useId, useRef } from 'react'
-import type { MouseEvent, ReactNode } from 'react'
+import { useEffect, useId, useRef } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 
-import styles from './BottomSheet.module.scss'
+import styles from './BottomSheet.module.scss';
 
-import { MdClose } from 'react-icons/md'
+import { MdClose } from 'react-icons/md';
 
 type TBottomSheetProps = {
-  isOpen: boolean
-  title: string
-  onClose: () => void
-  children: ReactNode
-  footer?: ReactNode
-}
+  isOpen: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+};
 
-export default function BottomSheet({ isOpen, title, onClose, children, footer }: TBottomSheetProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const titleId = useId()
+export default function BottomSheet({
+  isOpen,
+  title,
+  onClose,
+  children,
+  footer,
+}: TBottomSheetProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
-  useEffect(function syncOpen() {
-    const dialog = dialogRef.current
-    if (!dialog) return
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
     if (!isOpen) {
-      dialog.close()
-      return
+      dialog.close();
+      return;
     }
 
-    dialog.showModal()
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    dialog.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-    return function restoreScroll() {
-      document.body.style.overflow = previousOverflow
-      dialog.close()
-    }
-  }, [isOpen])
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      dialog.close();
+    };
+  }, [isOpen]);
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target !== event.currentTarget) return
+    if (event.target !== event.currentTarget) return;
 
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const isOutside = event.clientX < bounds.left || event.clientX > bounds.right
-      || event.clientY < bounds.top || event.clientY > bounds.bottom
-    if (isOutside) onClose()
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const isOutside =
+      event.clientX < bounds.left ||
+      event.clientX > bounds.right ||
+      event.clientY < bounds.top ||
+      event.clientY > bounds.bottom;
+    if (isOutside) onClose();
   }
 
   return (
@@ -52,8 +61,8 @@ export default function BottomSheet({ isOpen, title, onClose, children, footer }
       aria-labelledby={titleId}
       onClick={handleBackdropClick}
       onCancel={function handleCancel(event) {
-        event.preventDefault()
-        onClose()
+        event.preventDefault();
+        onClose();
       }}
     >
       <div className={styles['panel']}>
@@ -67,5 +76,5 @@ export default function BottomSheet({ isOpen, title, onClose, children, footer }
         {footer && <footer className={styles['footer']}>{footer}</footer>}
       </div>
     </dialog>
-  )
+  );
 }

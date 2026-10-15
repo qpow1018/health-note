@@ -11,7 +11,7 @@ export default function ExerciseListPage() {
   const [result, setResult] = useState(loadExercises);
   const { exercises, error } = result;
 
-  useEffect(function watchExerciseChanges() {
+  useEffect(() => {
     function refreshExercises() {
       setResult(loadExercises());
     }
@@ -26,7 +26,7 @@ export default function ExerciseListPage() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     refreshExercises();
 
-    return function stopWatching() {
+    return () => {
       window.removeEventListener('storage', refreshExercises);
       window.removeEventListener('focus', refreshExercises);
       window.removeEventListener('pageshow', refreshExercises);
