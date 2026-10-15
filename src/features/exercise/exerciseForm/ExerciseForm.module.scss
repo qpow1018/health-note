@@ -9,14 +9,9 @@
       margin-bottom: 8px;
     }
 
-    span,
-    p {
+    span {
       color: $text-secondary;
       font-size: $font-size-caption;
-    }
-
-    p {
-      margin-top: 8px;
     }
   }
 
@@ -29,8 +24,12 @@
       margin-bottom: 0;
     }
 
-    .amount-field { flex: 2; }
-    .sets-field { flex: 1; }
+    .amount-field {
+      flex: 2;
+    }
+    .sets-field {
+      flex: 1;
+    }
   }
 
   .amount-hint {
@@ -69,34 +68,15 @@
         display: flex;
         gap: 8px;
 
-        input { min-width: 0; flex: 1; }
-        button { flex-shrink: 0; }
-      }
-
-      .link-error {
-        margin-top: 8px;
-        color: $error-accent;
-        font-size: $font-size-caption;
+        input {
+          min-width: 0;
+          flex: 1;
+        }
+        button {
+          flex-shrink: 0;
+        }
       }
     }
-  }
-
-  .memo {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    border: 1px solid $border-strong;
-    border-radius: $border-radius;
-    background: $bg-dark;
-    color: $text-primary;
-    resize: vertical;
-
-    &::placeholder { color: $text-secondary; }
-  }
-
-  .error {
-    margin-bottom: 16px;
-    color: $error-accent;
   }
 
   .actions {

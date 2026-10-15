@@ -1,26 +1,29 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 
-import toast from '@/utils/toast'
-import { createExercise } from '@/features/exercise/exerciseStorage'
-import type { TExerciseValues } from '@/features/exercise/exercise.types'
+import toast from '@/utils/toast';
+import { createExercise } from '@/features/exercise/exerciseStorage';
+import type { TExerciseValues } from '@/features/exercise/exercise.types';
 
-import Header from '@/components/common/header/Header'
-import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
+import Header from '@/components/common/header/Header';
+import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm';
 
-import styles from './ExerciseCreatePage.module.scss'
+import styles from './ExerciseCreatePage.module.scss';
 
 export default function ExerciseCreatePage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  function handleSave(values: TExerciseValues): string {
+  function handleSave(values: TExerciseValues): void {
     try {
-      createExercise(values)
+      createExercise(values);
     } catch {
-      return '저장하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.'
+      toast.error(
+        '저장하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
+        { duration: 10000, isShowCloseButton: true },
+      );
+      return;
     }
-    toast.success('운동을 등록했어요.')
-    navigate('/exercise')
-    return ''
+    toast.success('운동을 등록했어요.');
+    navigate('/exercise');
   }
 
   return (
@@ -30,5 +33,5 @@ export default function ExerciseCreatePage() {
         <ExerciseForm cancelTo="/exercise" onSave={handleSave} />
       </div>
     </section>
-  )
+  );
 }

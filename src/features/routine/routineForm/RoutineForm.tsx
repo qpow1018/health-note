@@ -7,7 +7,7 @@ import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routin
 import BottomSheet from '@/components/common/bottomSheet/BottomSheet';
 import Button from '@/components/common/button/Button';
 import ButtonLink from '@/components/common/button/ButtonLink';
-import Input from '@/components/common/input/Input';
+import Input from '@/components/common/form/Input';
 
 import styles from './RoutineForm.module.scss';
 

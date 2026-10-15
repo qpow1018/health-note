@@ -6,7 +6,9 @@ import type { TExerciseValues } from '@/features/exercise/exercise.types';
 
 import Button from '@/components/common/button/Button';
 import ButtonLink from '@/components/common/button/ButtonLink';
-import Input from '@/components/common/input/Input';
+import Input from '@/components/common/form/Input';
+import Textarea from '@/components/common/form/Textarea';
+import FieldError from '@/components/common/form/FieldError';
 
 import styles from './ExerciseForm.module.scss';
 
@@ -15,11 +17,12 @@ type TLinkInput = { id: string; value: string };
 type TExerciseFormProps = {
   initialValues?: TExerciseValues;
   cancelTo: string;
-  onSave: (values: TExerciseValues) => string;
+  onSave: (values: TExerciseValues) => void;
 };
 
 export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerciseFormProps) {
-  const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [setsError, setSetsError] = useState('');
   const [links, setLinks] = useState<TLinkInput[]>(() => createLinkInputs(initialValues));
   const [linkErrors, setLinkErrors] = useState<Record<string, string>>({});
 
@@ -47,35 +50,39 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get('name') ?? '').trim();
     const amount = String(formData.get('amount') ?? '').trim();
     const setsInput = String(formData.get('sets') ?? '').trim();
     const sets = setsInput === '' ? null : Number(setsInput);
     const memo = String(formData.get('memo') ?? '').trim();
-    setError('');
+    const youtubeLinks = links.map((link) => link.value.trim()).filter(Boolean);
+
+    setNameError('');
+    setSetsError('');
+
     const invalidLinks: Record<string, string> = {};
     for (const link of links) {
       if (link.value.trim() && !isYoutubeUrl(link.value.trim())) {
         invalidLinks[link.id] =
-          '유튜브 링크를 확인해 주세요. https://로 시작하는 전체 주소를 입력해 주세요.';
+          '유튜브 링크를 확인해 주세요. http:// 또는 https://로 시작하는 전체 주소를 입력해 주세요.';
       }
     }
     setLinkErrors(invalidLinks);
     if (Object.keys(invalidLinks).length > 0) return;
-    const youtubeLinks = links.map((link) => link.value.trim()).filter(Boolean);
+
     if (!name) {
-      setError('운동 이름을 입력해 주세요.');
+      setNameError('운동 이름을 입력해 주세요.');
       return;
     }
+
     if (sets !== null && (!Number.isSafeInteger(sets) || sets < 1)) {
-      setError('세트는 1 이상의 정수로 입력해 주세요.');
+      setSetsError('세트는 1 이상의 정수로 입력해 주세요.');
       return;
     }
-    const saveError = onSave({ name, amount, sets, youtubeLinks, memo });
-    if (saveError) {
-      setError(saveError);
-    }
+
+    onSave({ name, amount, sets, youtubeLinks, memo });
   }
 
   return (
@@ -90,7 +97,11 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
           defaultValue={initialValues?.name}
           required
           placeholder="예: 푸시업"
+          onChange={() => setNameError('')}
+          aria-invalid={Boolean(nameError)}
+          aria-describedby={nameError ? 'exercise-name-error' : undefined}
         />
+        <FieldError id="exercise-name-error" message={nameError} />
       </div>
       <div className={styles['amount-row']}>
         <div className={`${styles['field']} ${styles['amount-field']}`}>
@@ -116,7 +127,11 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
             min="1"
             step="1"
             placeholder="예: 3"
+            onChange={() => setSetsError('')}
+            aria-invalid={Boolean(setsError)}
+            aria-describedby={setsError ? 'exercise-sets-error' : undefined}
           />
+          <FieldError id="exercise-sets-error" message={setsError} />
         </div>
       </div>
       <p id="amount-hint" className={styles['amount-hint']}>
@@ -158,11 +173,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
                   </Button>
                 )}
               </div>
-              {linkErrors[link.id] && (
-                <p id={errorId} className={styles['link-error']} role="alert">
-                  {linkErrors[link.id]}
-                </p>
-              )}
+              <FieldError id={errorId} message={linkErrors[link.id]} />
             </div>
           );
         })}
@@ -174,20 +185,14 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
         <label htmlFor="exercise-memo">
           메모 <span>(선택)</span>
         </label>
-        <textarea
+        <Textarea
           id="exercise-memo"
           name="memo"
           defaultValue={initialValues?.memo}
           rows={4}
-          className={styles['memo']}
           placeholder="자세, 주의할 점 등 자유롭게 적어주세요."
         />
       </div>
-      {error && (
-        <p className={styles['error']} role="alert">
-          {error}
-        </p>
-      )}
       <div className={styles['actions']}>
         <ButtonLink className={styles['action']} color="gray" fill="outline" to={cancelTo}>
           취소

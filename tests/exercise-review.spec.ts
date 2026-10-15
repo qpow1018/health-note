@@ -27,6 +27,8 @@ test('오래 열린 수정 폼은 다른 탭의 운동량·세트·메모를 덮
   await expect(otherTab).toHaveURL('/exercise/a');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('다른 화면에서 변경');
+  await expect(page.locator('form').getByRole('alert')).toHaveCount(0);
+  await page.getByRole('button', { name: '토스트 닫기' }).click();
   await expect(page.getByLabel('운동 이름')).toHaveValue('내가 입력한 이름');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
