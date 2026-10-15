@@ -1,0 +1,9 @@
+.not-found {
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: $control-height;
+    margin: 16px $page-padding;
+    color: $mint-light;
+  }
+}

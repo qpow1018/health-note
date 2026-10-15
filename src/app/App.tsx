@@ -1,4 +1,4 @@
-import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import ToastContainer from "@/components/common/toast/ToastContainer";
 import BottomNavigation from "./BottomNavigation";
@@ -11,6 +11,7 @@ import ExerciseListPage from "@/pages/exercise/ExerciseListPage";
 import ExerciseDetailPage from "@/pages/exercise/ExerciseDetailPage";
 import ExerciseEditPage from "@/pages/exercise/ExerciseEditPage";
 import ExerciseCreatePage from "@/pages/exercise/ExerciseCreatePage";
+import NotFoundPage from "@/pages/notFound/NotFoundPage";
 
 import styles from "./App.module.scss";
 
@@ -43,15 +44,7 @@ function App() {
           />
           <Route path="/exercise/new" element={<ExerciseCreatePage />} />
 
-          <Route
-            path="*"
-            element={
-              <div className={styles["home"]}>
-                <h1>페이지를 찾을 수 없어요.</h1>
-                <Link to="/">메인으로</Link>
-              </div>
-            }
-          />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <ToastContainer />
