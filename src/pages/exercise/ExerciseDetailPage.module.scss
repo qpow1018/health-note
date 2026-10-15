@@ -17,14 +17,19 @@
 
       dt {
         color: $text-primary;
-        font-size: 18px;
+        font-size: $font-size-body;
         font-weight: 500;
       }
 
       dd {
         margin: 8px 0 0;
-        font-size: $font-size-title;
+        font-size: 18px;
         font-weight: 700;
+        color: $mint-light;
+
+        &.empty-value {
+          color: $text-secondary;
+        }
       }
     }
   }
@@ -34,7 +39,7 @@
 
     h2 {
       margin-bottom: 12px;
-      font-size: 18px;
+      font-size: $font-size-body;
       font-weight: 500;
     }
 

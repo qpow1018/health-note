@@ -101,11 +101,15 @@ function ExerciseDetailContent({ exercise }: TExerciseDetailContentProps) {
       <dl className={styles['amount-row']}>
         <div>
           <dt>운동량</dt>
-          <dd>{exercise.amount || '-'}</dd>
+          <dd className={!exercise.amount ? styles['empty-value'] : undefined}>
+            {exercise.amount || '-'}
+          </dd>
         </div>
         <div>
           <dt>세트</dt>
-          <dd>{exercise.sets === null ? '-' : `${exercise.sets}세트`}</dd>
+          <dd className={exercise.sets === null ? styles['empty-value'] : undefined}>
+            {exercise.sets === null ? '-' : `${exercise.sets}세트`}
+          </dd>
         </div>
       </dl>
 
