@@ -8,8 +8,6 @@ type TButtonLinkProps = ComponentProps<typeof Link> & {
   fill?: TButtonFill
 }
 
-function ButtonLink({ color = 'mint', fill = 'solid', className = '', ...props }: TButtonLinkProps) {
+export default function ButtonLink({ color = 'mint', fill = 'solid', className = '', ...props }: TButtonLinkProps) {
   return <Link {...props} className={`${styles['button']} ${styles[`color-${color}`]} ${styles[`fill-${fill}`]} ${className}`} />
 }
-
-export default ButtonLink

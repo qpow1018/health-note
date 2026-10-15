@@ -47,9 +47,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
   )
 }
 
-function ExerciseEditPage() {
+export default function ExerciseEditPage() {
   const { exerciseId } = useParams()
   return <ExerciseEditContent key={exerciseId} exerciseId={exerciseId} />
 }
-
-export default ExerciseEditPage

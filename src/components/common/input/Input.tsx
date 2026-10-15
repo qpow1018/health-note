@@ -3,8 +3,6 @@ import styles from './Input.module.scss'
 
 type TInputProps = ComponentProps<'input'>
 
-function Input({ className = '', ...props }: TInputProps) {
+export default function Input({ className = '', ...props }: TInputProps) {
   return <input {...props} className={`${styles['input']} ${className}`} />
 }
-
-export default Input

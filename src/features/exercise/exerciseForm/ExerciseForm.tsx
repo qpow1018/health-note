@@ -25,7 +25,7 @@ function createLinkInputs(values: TExerciseValues | undefined): TLinkInput[] {
   })
 }
 
-function ExerciseForm({ initialValues, cancelTo, onSave }: TExerciseFormProps) {
+export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerciseFormProps) {
   const [error, setError] = useState('')
   const [links, setLinks] = useState<TLinkInput[]>(() => createLinkInputs(initialValues))
   const [linkErrors, setLinkErrors] = useState<Record<string, string>>({})
@@ -137,5 +137,3 @@ function ExerciseForm({ initialValues, cancelTo, onSave }: TExerciseFormProps) {
     </form>
   )
 }
-
-export default ExerciseForm

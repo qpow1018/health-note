@@ -4,7 +4,7 @@ import { getToastSnapshot, removeToast, subscribeToast } from '@/utils/toast'
 import type { TToastItem } from '@/utils/toast'
 import styles from './ToastContainer.module.scss'
 
-function ToastContainer() {
+export default function ToastContainer() {
   const toasts = useSyncExternalStore(subscribeToast, getToastSnapshot)
 
   return (
@@ -40,5 +40,3 @@ function ToastItem({ toast }: { toast: TToastItem }) {
     </div>
   )
 }
-
-export default ToastContainer

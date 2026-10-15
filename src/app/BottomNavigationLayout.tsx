@@ -2,7 +2,7 @@ import { MdCalendarMonth, MdFitnessCenter } from "react-icons/md";
 import { NavLink, Outlet } from "react-router-dom";
 import styles from "./BottomNavigationLayout.module.scss";
 
-function BottomNavigationLayout() {
+export default function BottomNavigationLayout() {
   return (
     <div className={styles["layout"]}>
       <Outlet />
@@ -20,5 +20,3 @@ function BottomNavigationLayout() {
     </div>
   );
 }
-
-export default BottomNavigationLayout;

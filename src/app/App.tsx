@@ -15,7 +15,7 @@ import ExerciseCreatePage from "@/pages/exercise/ExerciseCreatePage";
 
 import styles from "./App.module.scss";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <main className={styles["app-shell"]}>
@@ -51,5 +51,3 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;

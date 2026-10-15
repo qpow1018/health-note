@@ -28,7 +28,7 @@ function formatDate(date: string) {
   return `${year}년 ${Number(month)}월 ${Number(day)}일`
 }
 
-function RoutineDetailPage() {
+export default function RoutineDetailPage() {
   const { routineId } = useParams()
   const today = useRoutineToday()
   const navigate = useNavigate()
@@ -121,5 +121,3 @@ function RoutineDetailPage() {
     </section>
   )
 }
-
-export default RoutineDetailPage

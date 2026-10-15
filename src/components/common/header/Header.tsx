@@ -13,7 +13,7 @@ type THeaderProps = {
   actions?: ReactNode
 }
 
-function Header({ title, showBack = true, fallbackTo = '/', backTo, onBack, actions }: THeaderProps) {
+export default function Header({ title, showBack = true, fallbackTo = '/', backTo, onBack, actions }: THeaderProps) {
   const navigate = useNavigate()
 
   function handleBack() {
@@ -48,5 +48,3 @@ function Header({ title, showBack = true, fallbackTo = '/', backTo, onBack, acti
     </header>
   )
 }
-
-export default Header

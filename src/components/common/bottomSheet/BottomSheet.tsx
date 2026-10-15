@@ -11,7 +11,7 @@ type TBottomSheetProps = {
   footer?: ReactNode
 }
 
-function BottomSheet({ isOpen, title, onClose, children, footer }: TBottomSheetProps) {
+export default function BottomSheet({ isOpen, title, onClose, children, footer }: TBottomSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
@@ -67,5 +67,3 @@ function BottomSheet({ isOpen, title, onClose, children, footer }: TBottomSheetP
     </dialog>
   )
 }
-
-export default BottomSheet

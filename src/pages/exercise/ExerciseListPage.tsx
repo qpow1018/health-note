@@ -18,7 +18,7 @@ function loadExercises() {
   }
 }
 
-function ExerciseListPage() {
+export default function ExerciseListPage() {
   const [result, setResult] = useState(loadExercises)
   const { exercises, error } = result
 
@@ -81,5 +81,3 @@ function ExerciseListPage() {
     </section>
   )
 }
-
-export default ExerciseListPage

@@ -16,7 +16,7 @@ function loadRoutines() {
   }
 }
 
-function RoutinePage() {
+export default function RoutinePage() {
   const [{ routines, error }] = useState(loadRoutines);
   return (
     <section className={styles["routine-page"]}>
@@ -57,5 +57,3 @@ function RoutinePage() {
     </section>
   );
 }
-
-export default RoutinePage;

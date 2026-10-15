@@ -42,9 +42,7 @@ function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
   )
 }
 
-function RoutineEditPage() {
+export default function RoutineEditPage() {
   const { routineId } = useParams()
   return <RoutineEditContent key={routineId} routineId={routineId} />
 }
-
-export default RoutineEditPage

@@ -32,7 +32,7 @@ type TRoutineFormProps = {
   onSave: (values: TRoutineValues) => string
 }
 
-function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
+export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
   const [result, setResult] = useState(loadExercises)
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? [])
   const [draftIds, setDraftIds] = useState<string[]>([])
@@ -179,5 +179,3 @@ function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
     </div>
   )
 }
-
-export default RoutineForm

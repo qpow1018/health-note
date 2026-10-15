@@ -9,7 +9,7 @@ type TButtonProps = ComponentProps<'button'> & {
   fill?: TButtonFill
 }
 
-function Button({ type = 'button', color = 'mint', fill = 'solid', className = '', ...props }: TButtonProps) {
+export default function Button({ type = 'button', color = 'mint', fill = 'solid', className = '', ...props }: TButtonProps) {
   return (
     <button
       {...props}
@@ -18,5 +18,3 @@ function Button({ type = 'button', color = 'mint', fill = 'solid', className = '
     />
   )
 }
-
-export default Button

@@ -5,7 +5,7 @@ import { createRoutine } from '@/features/routine/routineStorage'
 import type { TRoutineValues } from '@/features/routine/routineStorage'
 import toast from '@/utils/toast'
 
-function RoutineCreatePage() {
+export default function RoutineCreatePage() {
   const navigate = useNavigate()
 
   function handleSave(values: TRoutineValues): string {
@@ -26,5 +26,3 @@ function RoutineCreatePage() {
     </section>
   )
 }
-
-export default RoutineCreatePage

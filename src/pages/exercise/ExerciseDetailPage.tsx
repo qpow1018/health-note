@@ -9,7 +9,7 @@ import ButtonLink from '@/components/common/button/ButtonLink'
 import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
 import styles from './ExerciseDetailPage.module.scss'
 
-function ExerciseDetailPage() {
+export default function ExerciseDetailPage() {
   const { exerciseId } = useParams()
   const navigate = useNavigate()
   const [deleteError, setDeleteError] = useState('')
@@ -102,5 +102,3 @@ function ExerciseDetailPage() {
     </section>
   )
 }
-
-export default ExerciseDetailPage

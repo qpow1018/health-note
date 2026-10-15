@@ -6,7 +6,7 @@ import { createExercise } from '@/features/exercise/exerciseStorage'
 import styles from './ExerciseCreatePage.module.scss'
 import type { TExerciseValues } from '@/features/exercise/exercise.types'
 
-function ExerciseCreatePage() {
+export default function ExerciseCreatePage() {
   const navigate = useNavigate()
 
   function handleSave(values: TExerciseValues): string {
@@ -29,5 +29,3 @@ function ExerciseCreatePage() {
     </section>
   )
 }
-
-export default ExerciseCreatePage
