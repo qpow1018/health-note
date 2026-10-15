@@ -120,7 +120,7 @@ export default function RoutineDetailPage() {
               )}
               {exerciseResult && !exerciseResult.error && (
                 <ol className={styles['exercise-list']}>
-                  {routine.exerciseIds.map(function renderExercise(id) {
+                  {routine.exerciseIds.map((id) => {
                     const exercise = exerciseResult.exercises.find((item) => item.id === id);
                     return (
                       <li key={id}>

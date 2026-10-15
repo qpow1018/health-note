@@ -12,16 +12,16 @@ export default function ToastContainer() {
 
   return (
     <div className={styles['toast-container']}>
-      {toasts.map(function renderToast(toast) {
-        return <ToastItem key={toast.id} toast={toast} />;
-      })}
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} />
+      ))}
     </div>
   );
 }
 
 function ToastItem({ toast }: { toast: TToastItem }) {
   useEffect(() => {
-    const timeoutId = window.setTimeout(function dismissToast() {
+    const timeoutId = window.setTimeout(() => {
       removeToast(toast.id);
     }, toast.duration);
 

@@ -60,7 +60,7 @@ export default function BottomSheet({
       className={styles['bottom-sheet']}
       aria-labelledby={titleId}
       onClick={handleBackdropClick}
-      onCancel={function handleCancel(event) {
+      onCancel={(event) => {
         event.preventDefault();
         onClose();
       }}

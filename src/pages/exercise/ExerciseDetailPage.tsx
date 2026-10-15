@@ -1,39 +1,43 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import toast from '@/utils/toast'
-import { deleteExercise } from '@/features/exercise/exerciseStorage'
-import { loadExercise } from '@/features/exercise/exerciseLoader'
-import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
+import toast from '@/utils/toast';
+import { deleteExercise } from '@/features/exercise/exerciseStorage';
+import { loadExercise } from '@/features/exercise/exerciseLoader';
+import { isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 
-import Header from '@/components/common/header/Header'
-import Button from '@/components/common/button/Button'
-import ButtonLink from '@/components/common/button/ButtonLink'
+import Header from '@/components/common/header/Header';
+import Button from '@/components/common/button/Button';
+import ButtonLink from '@/components/common/button/ButtonLink';
 
-import styles from './ExerciseDetailPage.module.scss'
+import styles from './ExerciseDetailPage.module.scss';
 
 export default function ExerciseDetailPage() {
-  const { exerciseId } = useParams()
-  const navigate = useNavigate()
-  const [deleteError, setDeleteError] = useState('')
-  const result = loadExercise(exerciseId)
-  const { exercise, error } = result
-  let title = '운동 상세'
-  if (!error && !exercise) title = '운동을 찾을 수 없어요.'
-  if (!error && exercise) title = exercise.name
+  const { exerciseId } = useParams();
+  const navigate = useNavigate();
+  const [deleteError, setDeleteError] = useState('');
+  const result = loadExercise(exerciseId);
+  const { exercise, error } = result;
+  let title = '운동 상세';
+  if (!error && !exercise) title = '운동을 찾을 수 없어요.';
+  if (!error && exercise) title = exercise.name;
 
   function handleDelete() {
-    if (!exercise) return
-    const isConfirmed = window.confirm(`“${exercise.name}” 운동을 삭제할까요? 삭제하면 복구할 수 없어요.`)
-    if (!isConfirmed) return
+    if (!exercise) return;
+    const isConfirmed = window.confirm(
+      `“${exercise.name}” 운동을 삭제할까요? 삭제하면 복구할 수 없어요.`,
+    );
+    if (!isConfirmed) return;
     try {
-      deleteExercise(exercise.id)
+      deleteExercise(exercise.id);
     } catch {
-      setDeleteError('삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.')
-      return
+      setDeleteError(
+        '삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
+      );
+      return;
     }
-    toast.success('운동을 삭제했어요.')
-    navigate('/exercise', { replace: true })
+    toast.success('운동을 삭제했어요.');
+    navigate('/exercise', { replace: true });
   }
 
   return (
@@ -42,7 +46,9 @@ export default function ExerciseDetailPage() {
       <div className={styles['content']}>
         {error && (
           <>
-            <p className={styles['error']} role="alert">{error}</p>
+            <p className={styles['error']} role="alert">
+              {error}
+            </p>
           </>
         )}
         {!error && !exercise && (
@@ -69,8 +75,8 @@ export default function ExerciseDetailPage() {
               )}
               {exercise.youtubeLinks.length > 0 && (
                 <ul className={styles['links']}>
-                  {exercise.youtubeLinks.map(function renderLink(url, index) {
-                    const isValidLink = isYoutubeUrl(url)
+                  {exercise.youtubeLinks.map((url, index) => {
+                    const isValidLink = isYoutubeUrl(url);
 
                     return (
                       <li key={`${index}-${url}`}>
@@ -81,10 +87,12 @@ export default function ExerciseDetailPage() {
                           </a>
                         )}
                         {!isValidLink && (
-                          <p className={styles['hint']}>유튜브 링크 {index + 1}의 주소를 확인할 수 없어요.</p>
+                          <p className={styles['hint']}>
+                            유튜브 링크 {index + 1}의 주소를 확인할 수 없어요.
+                          </p>
                         )}
                       </li>
-                    )
+                    );
                   })}
                 </ul>
               )}
@@ -94,14 +102,20 @@ export default function ExerciseDetailPage() {
               {exercise.memo && <p className={styles['memo']}>{exercise.memo}</p>}
               {!exercise.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
             </section>
-            {deleteError && <p className={styles['error']} role="alert">{deleteError}</p>}
+            {deleteError && (
+              <p className={styles['error']} role="alert">
+                {deleteError}
+              </p>
+            )}
             <div className={styles['actions']}>
               <ButtonLink to={`/exercise/${encodeURIComponent(exercise.id)}/edit`}>수정</ButtonLink>
-              <Button color="rose" fill="outline" onClick={handleDelete}>삭제</Button>
+              <Button color="rose" fill="outline" onClick={handleDelete}>
+                삭제
+              </Button>
             </div>
           </>
         )}
       </div>
     </section>
-  )
+  );
 }

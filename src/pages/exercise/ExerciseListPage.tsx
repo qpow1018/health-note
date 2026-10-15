@@ -36,22 +36,20 @@ export default function ExerciseListPage() {
         )}
         {!error && exercises.length > 0 && (
           <ul className={styles['list']}>
-            {exercises.map(function renderExercise(exercise) {
-              return (
-                <li key={exercise.id} className={styles['item']}>
-                  <Link
-                    className={styles['detail-link']}
-                    to={`/exercise/${encodeURIComponent(exercise.id)}`}
-                  >
-                    <h2>{exercise.name}</h2>
-                    <p>
-                      {exercise.amount || '운동량 미입력'}
-                      {exercise.sets !== null && ` × ${exercise.sets}세트`}
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
+            {exercises.map((exercise) => (
+              <li key={exercise.id} className={styles['item']}>
+                <Link
+                  className={styles['detail-link']}
+                  to={`/exercise/${encodeURIComponent(exercise.id)}`}
+                >
+                  <h2>{exercise.name}</h2>
+                  <p>
+                    {exercise.amount || '운동량 미입력'}
+                    {exercise.sets !== null && ` × ${exercise.sets}세트`}
+                  </p>
+                </Link>
+              </li>
+            ))}
           </ul>
         )}
       </div>

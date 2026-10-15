@@ -29,7 +29,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
 
   function handleRemoveLink(id: string) {
     setLinks(links.filter((link) => link.id !== id));
-    setLinkErrors(function clearError(previous) {
+    setLinkErrors((previous) => {
       const next = { ...previous };
       delete next[id];
       return next;
@@ -38,7 +38,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
 
   function handleLinkChange(id: string, value: string) {
     setLinks(links.map((link) => (link.id === id ? { ...link, value } : link)));
-    setLinkErrors(function clearError(previous) {
+    setLinkErrors((previous) => {
       const next = { ...previous };
       delete next[id];
       return next;
@@ -126,7 +126,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
         <legend>
           유튜브 링크 <span>(선택)</span>
         </legend>
-        {links.map(function renderLink(link, index) {
+        {links.map((link, index) => {
           const inputId = `youtube-${link.id}`;
           const errorId = `${inputId}-error`;
           return (
@@ -205,7 +205,5 @@ function createLinkInputs(values: TExerciseValues | undefined): TLinkInput[] {
   if (links.length === 0) {
     return [{ id: crypto.randomUUID(), value: '' }];
   }
-  return links.map(function createLinkInput(value) {
-    return { id: crypto.randomUUID(), value };
-  });
+  return links.map((value) => ({ id: crypto.randomUUID(), value }));
 }

@@ -133,7 +133,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
           </Button>
           {exerciseIds.length > 0 && (
             <ol className={styles['selected-list']}>
-              {exerciseIds.map(function renderExercise(id, index) {
+              {exerciseIds.map((id, index) => {
                 const exercise = result.exercises.find((item) => item.id === id);
                 const exerciseName =
                   exercise?.name ?? (result.error ? '운동 정보 확인 불가' : '삭제된 운동');
@@ -298,7 +298,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
         footer={
           <Button
             className={styles['confirm-button']}
-            onClick={function handleConfirm() {
+            onClick={() => {
               setExerciseIds([
                 ...exerciseIds.filter((id) => draftIds.includes(id)),
                 ...draftIds.filter((id) => !exerciseIds.includes(id)),
