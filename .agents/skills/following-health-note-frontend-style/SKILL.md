@@ -21,6 +21,7 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 
 - 기본 타입 선언은 type, 타입 이름은 T 접두사, 타입 import는 import type.
 - 컴포넌트와 이름 있는 헬퍼는 함수 선언식.
+- 기본 내보내기 함수 컴포넌트는 `export default function ComponentName()` 형태로 선언한다.
 - boolean은 is..., 이벤트 props는 on..., 처리 함수는 handle....
 - 모듈 상수는 UPPER_SNAKE_CASE, any 대신 unknown과 타입 검사.
 - 조기 반환으로 중첩을 줄인다.
