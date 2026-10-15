@@ -34,7 +34,7 @@ test('오래 열린 수정 폼은 다른 탭의 운동량·세트·메모를 덮
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
     { ...EXERCISE, amount: '45분', sets: 2, memo: '다른 탭 메모' },
   ]);
-  await page.getByRole('link', { name: '취소', exact: true }).click();
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await expect(page.getByLabel('운동량')).toHaveValue('45분');
   await page.getByLabel('운동 이름').fill('최신 내용으로 수정');

@@ -30,7 +30,7 @@ export default function ExerciseCreatePage() {
     <section className={styles['exercise-create-page']}>
       <Header title="운동 등록" fallbackTo="/exercise" />
       <div className={styles['content']}>
-        <ExerciseForm cancelTo="/exercise" onSave={handleSave} />
+        <ExerciseForm onSave={handleSave} />
       </div>
     </section>
   );

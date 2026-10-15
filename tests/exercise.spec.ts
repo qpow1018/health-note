@@ -72,18 +72,14 @@ for (const sets of ['0', '-1', '1.5', '9007199254740992']) {
   });
 }
 
-test('취소와 목록으로 이동은 입력을 저장하지 않는다', async ({ page }) => {
-  for (const link of ['취소', '뒤로가기']) {
-    await page.goto('/exercise/new');
-    await page.getByLabel('운동 이름').fill('저장하지 않을 운동');
-    if (link === '뒤로가기') {
-      await page.getByRole('button', { name: link, exact: true }).click();
-    } else {
-      await page.getByRole('link', { name: link, exact: true }).click();
-    }
-    await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
-    expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBeNull();
-  }
+test('헤더 뒤로가기는 입력을 저장하지 않는다', async ({ page }) => {
+  await page.goto('/exercise');
+  await page.getByRole('link', { name: '운동 추가' }).click();
+  await page.getByLabel('운동 이름').fill('저장하지 않을 운동');
+  await expect(page.getByRole('link', { name: '취소', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
+  expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBeNull();
 });
 
 test('저장 공간 오류는 입력과 기존 데이터를 보존하고 재시도할 수 있다', async ({ page }) => {
@@ -327,7 +323,7 @@ test('수정 취소는 기존 데이터를 바꾸지 않는다', async ({ page }
   await page.getByRole('link', { name: '수정', exact: true }).click();
   await page.getByLabel('운동 이름').fill('취소할 이름');
   await page.getByLabel('메모').fill('취소할 메모');
-  await page.getByRole('link', { name: '취소', exact: true }).click();
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
   await expect(page).toHaveURL('/exercise/edit-target');
   expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBe(before);
 });
@@ -379,7 +375,7 @@ test('수정 저장과 삭제 실패는 기존 데이터를 유지한다', async
   expect(
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[1], STORAGE_KEY),
   ).toEqual(EDIT_TARGET);
-  await page.getByRole('link', { name: '취소', exact: true }).click();
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
   await page.getByRole('button', { name: '삭제', exact: true }).click();
   await page
     .getByRole('dialog', { name: '운동 삭제' })

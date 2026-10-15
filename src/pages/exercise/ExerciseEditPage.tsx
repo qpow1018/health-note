@@ -64,9 +64,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
             <Link to="/exercise">목록으로</Link>
           </div>
         )}
-        {!error && exercise && (
-          <ExerciseForm initialValues={exercise} cancelTo={detailTo} onSave={handleSave} />
-        )}
+        {!error && exercise && <ExerciseForm initialValues={exercise} onSave={handleSave} />}
       </div>
     </section>
   );

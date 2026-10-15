@@ -6,7 +6,7 @@
   border-radius: $border-radius;
   background: $bg-dark;
   color: $text-primary;
-  resize: vertical;
+  resize: none;
 
   &::placeholder {
     color: $text-secondary;

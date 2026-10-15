@@ -5,7 +5,6 @@ import { isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExerciseValues } from '@/features/exercise/exercise.types';
 
 import Button from '@/components/common/button/Button';
-import ButtonLink from '@/components/common/button/ButtonLink';
 import Input from '@/components/common/form/Input';
 import Textarea from '@/components/common/form/Textarea';
 import FieldError from '@/components/common/form/FieldError';
@@ -16,11 +15,10 @@ type TLinkInput = { id: string; value: string };
 
 type TExerciseFormProps = {
   initialValues?: TExerciseValues;
-  cancelTo: string;
   onSave: (values: TExerciseValues) => void;
 };
 
-export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerciseFormProps) {
+export default function ExerciseForm({ initialValues, onSave }: TExerciseFormProps) {
   const [nameError, setNameError] = useState('');
   const [setsError, setSetsError] = useState('');
   const [links, setLinks] = useState<TLinkInput[]>(() => createLinkInputs(initialValues));
@@ -89,7 +87,10 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
     <form className={styles['form']} onSubmit={handleSubmit}>
       <div className={styles['field']}>
         <label htmlFor="exercise-name">
-          운동 이름 <span>(필수)</span>
+          운동 이름{' '}
+          <span className={styles['required']} aria-hidden="true">
+            *
+          </span>
         </label>
         <Input
           id="exercise-name"
@@ -115,9 +116,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
           />
         </div>
         <div className={`${styles['field']} ${styles['sets-field']}`}>
-          <label htmlFor="exercise-sets">
-            세트 <span>(선택)</span>
-          </label>
+          <label htmlFor="exercise-sets">세트</label>
           <Input
             id="exercise-sets"
             name="sets"
@@ -138,20 +137,16 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
         횟수나 시간을 원하는 방식으로 적어주세요.
       </p>
       <fieldset className={styles['links-field']}>
-        <legend>
-          유튜브 링크 <span>(선택)</span>
-        </legend>
+        <legend>유튜브 링크</legend>
         {links.map((link, index) => {
           const inputId = `youtube-${link.id}`;
           const errorId = `${inputId}-error`;
           return (
             <div className={styles['link-item']} key={link.id}>
-              <label className={styles['link-label']} htmlFor={inputId}>
-                유튜브 링크 {index + 1}
-              </label>
               <div className={styles['link-row']}>
                 <Input
                   id={inputId}
+                  aria-label={`유튜브 링크 ${index + 1}`}
                   type="text"
                   inputMode="url"
                   autoCapitalize="none"
@@ -182,9 +177,7 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
         </Button>
       </fieldset>
       <div className={styles['field']}>
-        <label htmlFor="exercise-memo">
-          메모 <span>(선택)</span>
-        </label>
+        <label htmlFor="exercise-memo">메모</label>
         <Textarea
           id="exercise-memo"
           name="memo"
@@ -194,9 +187,6 @@ export default function ExerciseForm({ initialValues, cancelTo, onSave }: TExerc
         />
       </div>
       <div className={styles['actions']}>
-        <ButtonLink className={styles['action']} color="gray" fill="outline" to={cancelTo}>
-          취소
-        </ButtonLink>
         <Button className={styles['action']} type="submit" fill="solid">
           저장
         </Button>
