@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ToastContainer from "@/components/common/toast/ToastContainer";
 import BottomNavigationLayout from "./BottomNavigationLayout";
 import NotFoundPage from "@/pages/notFound/NotFoundPage";
-
 import RoutinePage from "@/pages/routine/RoutinePage";
 import RoutineDetailPage from "@/pages/routine/RoutineDetailPage";
 import RoutineEditPage from "@/pages/routine/RoutineEditPage";

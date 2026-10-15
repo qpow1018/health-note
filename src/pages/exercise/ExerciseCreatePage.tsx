@@ -1,10 +1,13 @@
-import toast from '@/utils/toast'
 import { useNavigate } from 'react-router-dom'
+
+import toast from '@/utils/toast'
+import { createExercise } from '@/features/exercise/exerciseStorage'
+import type { TExerciseValues } from '@/features/exercise/exercise.types'
+
 import Header from '@/components/common/header/Header'
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
-import { createExercise } from '@/features/exercise/exerciseStorage'
+
 import styles from './ExerciseCreatePage.module.scss'
-import type { TExerciseValues } from '@/features/exercise/exercise.types'
 
 export default function ExerciseCreatePage() {
   const navigate = useNavigate()

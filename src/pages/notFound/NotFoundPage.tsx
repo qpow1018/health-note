@@ -1,4 +1,5 @@
 import ButtonLink from '@/components/common/button/ButtonLink'
+
 import styles from './NotFoundPage.module.scss'
 
 export default function NotFoundPage() {

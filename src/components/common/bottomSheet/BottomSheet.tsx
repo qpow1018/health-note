@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
-import { MdClose } from 'react-icons/md'
+
 import styles from './BottomSheet.module.scss'
+
+import { MdClose } from 'react-icons/md'
 
 type TBottomSheetProps = {
   isOpen: boolean

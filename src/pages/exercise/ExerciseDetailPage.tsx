@@ -1,12 +1,15 @@
-import toast from '@/utils/toast'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+
+import toast from '@/utils/toast'
 import { deleteExercise } from '@/features/exercise/exerciseStorage'
 import { loadExercise } from '@/features/exercise/exerciseLoader'
+import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
+
 import Header from '@/components/common/header/Header'
 import Button from '@/components/common/button/Button'
 import ButtonLink from '@/components/common/button/ButtonLink'
-import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
+
 import styles from './ExerciseDetailPage.module.scss'
 
 export default function ExerciseDetailPage() {

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { ComponentProps } from 'react'
+
 import type { TButtonColor, TButtonFill } from './Button'
+
 import styles from './Button.module.scss'
 
 type TButtonLinkProps = ComponentProps<typeof Link> & {

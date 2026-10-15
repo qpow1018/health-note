@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react'
+
 import styles from './Button.module.scss'
 
 export type TButtonColor = 'mint' | 'gray' | 'rose'

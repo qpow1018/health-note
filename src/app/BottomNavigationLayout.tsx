@@ -1,6 +1,8 @@
-import { MdCalendarMonth, MdFitnessCenter } from "react-icons/md";
 import { NavLink, Outlet } from "react-router-dom";
+
 import styles from "./BottomNavigationLayout.module.scss";
+
+import { MdCalendarMonth, MdFitnessCenter } from "react-icons/md";
 
 export default function BottomNavigationLayout() {
   return (

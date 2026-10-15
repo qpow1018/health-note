@@ -17,6 +17,13 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 - 폴더명은 lower camel case, 컴포넌트 파일명은 PascalCase.
 - 같은 폴더나 하위 폴더 import는 ./를 허용한다. ../ 대신 src/ 기준 @/를 사용한다.
 
+## Import
+
+- import는 외부 라이브러리 → 내부 로직 → UI 컴포넌트 → 스타일 → 아이콘·이미지 등 시각 리소스 순으로 배치한다.
+- 그룹 사이는 빈 줄 하나로 구분하고, 없는 그룹은 생략한다.
+- 경로보다 가져오는 대상의 역할로 분류한다. 아이콘 라이브러리는 시각 리소스로 분류한다.
+- 타입 import는 관련 대상과 같은 그룹에 두고, 같은 모듈의 import끼리 인접하게 배치한다.
+
 ## TypeScript·React
 
 - 기본 타입 선언은 type, 타입 이름은 T 접두사, 타입 import는 import type.

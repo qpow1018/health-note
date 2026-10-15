@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
+
+import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
+import type { TExerciseValues } from '@/features/exercise/exercise.types'
+
 import Button from '@/components/common/button/Button'
 import ButtonLink from '@/components/common/button/ButtonLink'
 import Input from '@/components/common/input/Input'
-import { isYoutubeUrl } from '@/features/exercise/youtubeUrl'
-import type { TExerciseValues } from '@/features/exercise/exercise.types'
+
 import styles from './ExerciseForm.module.scss'
 
 type TLinkInput = { id: string; value: string }

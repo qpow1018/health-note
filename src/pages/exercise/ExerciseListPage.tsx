@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Header from '@/components/common/header/Header'
+
 import { getExercises } from '@/features/exercise/exerciseStorage'
+
+import Header from '@/components/common/header/Header'
+
 import styles from './ExerciseListPage.module.scss'
 
 function loadExercises() {

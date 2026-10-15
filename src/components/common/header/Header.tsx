@@ -1,8 +1,10 @@
-import { MdArrowBack } from 'react-icons/md'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { To } from 'react-router-dom'
+
 import styles from './Header.module.scss'
+
+import { MdArrowBack } from 'react-icons/md'
 
 type THeaderProps = {
   title: string

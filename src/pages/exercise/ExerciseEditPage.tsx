@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import toast from '@/utils/toast'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import Header from '@/components/common/header/Header'
-import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
+
+import toast from '@/utils/toast'
 import { loadExercise } from '@/features/exercise/exerciseLoader'
 import { updateExercise } from '@/features/exercise/exerciseStorage'
 import type { TExerciseValues } from '@/features/exercise/exercise.types'
+
+import Header from '@/components/common/header/Header'
+import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm'
+
 import styles from './ExerciseEditPage.module.scss'
 
 function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {

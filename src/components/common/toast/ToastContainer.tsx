@@ -1,8 +1,11 @@
 import { useEffect, useSyncExternalStore } from 'react'
-import { MdClose } from 'react-icons/md'
+
 import { getToastSnapshot, removeToast, subscribeToast } from '@/utils/toast'
 import type { TToastItem } from '@/utils/toast'
+
 import styles from './ToastContainer.module.scss'
+
+import { MdClose } from 'react-icons/md'
 
 export default function ToastContainer() {
   const toasts = useSyncExternalStore(subscribeToast, getToastSnapshot)
