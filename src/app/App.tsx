@@ -1,6 +1,8 @@
 import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+
 import ToastContainer from "@/components/common/toast/ToastContainer";
 import BottomNavigation from "./BottomNavigation";
+
 import RoutinePage from "@/pages/routine/RoutinePage";
 import RoutineDetailPage from "@/pages/routine/RoutineDetailPage";
 import RoutineEditPage from "@/pages/routine/RoutineEditPage";
@@ -9,6 +11,7 @@ import ExerciseListPage from "@/pages/exercise/ExerciseListPage";
 import ExerciseDetailPage from "@/pages/exercise/ExerciseDetailPage";
 import ExerciseEditPage from "@/pages/exercise/ExerciseEditPage";
 import ExerciseCreatePage from "@/pages/exercise/ExerciseCreatePage";
+
 import styles from "./App.module.scss";
 
 function App() {
