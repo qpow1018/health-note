@@ -65,12 +65,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
           </div>
         )}
         {!error && exercise && (
-          <ExerciseForm
-            key={exercise.id}
-            initialValues={exercise}
-            cancelTo={detailTo}
-            onSave={handleSave}
-          />
+          <ExerciseForm initialValues={exercise} cancelTo={detailTo} onSave={handleSave} />
         )}
       </div>
     </section>
