@@ -22,13 +22,13 @@ function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
   const [{ routine, error }] = useState(() => loadRoutine(routineId));
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;
 
-  function handleSave(values: TRoutineValues): void {
+  async function handleSave(values: TRoutineValues): Promise<void> {
     if (!routine) {
       toast.error('루틴을 찾을 수 없어요.');
       return;
     }
     try {
-      const result = updateRoutine(routine.id, values, routine);
+      const result = await updateRoutine(routine.id, values, routine);
       if (result === 'conflict') {
         toast.error(
           '다른 화면에서 변경된 루틴이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',

@@ -47,6 +47,7 @@ test('이름 수정은 미루기를 유지하고 반복 간격 변경은 내역�
   ).toBeVisible();
   await page.getByLabel('루틴 이름').fill('이름만 변경');
   await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page).toHaveURL('/routine/r');
   expect(
     await page.evaluate(
       (key) => JSON.parse(localStorage.getItem(key)!)[0].schedule.postponedDates,
@@ -56,6 +57,7 @@ test('이름 수정은 미루기를 유지하고 반복 간격 변경은 내역�
   await page.goto('/routine/r/edit');
   await page.getByLabel('반복 간격').fill('3');
   await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page).toHaveURL('/routine/r');
   expect(
     await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[0].schedule, KEY),
   ).toEqual({ type: 'interval', startDate: '2026-10-14', intervalDays: 3 });

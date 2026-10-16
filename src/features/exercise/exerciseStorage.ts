@@ -1,94 +1,102 @@
-import { getUserStorageKey } from '@/features/auth/userStorage';
+import { getSupabase } from '@/lib/supabase';
+import { queryClient } from '@/lib/queryClient';
+import { getRoutines } from '@/features/routine/routineStorage';
+import { getStorageUserId } from '@/features/auth/userStorage';
 import type { TExercise, TExerciseValues } from './exercise.types';
 
-type TStoredExercise = Omit<TExercise, 'youtubeLinks' | 'memo'> & {
-  youtubeLinks?: string[];
-  memo?: string;
+type TExerciseRow = {
+  id: string;
+  name: string;
+  amount: string;
+  sets: number | null;
+  youtube_links: string[];
+  memo: string;
+  version: number;
 };
 
-const STORAGE_KEY = 'health-note.exercises.v1';
-
-function isExercise(value: unknown): value is TStoredExercise {
-  if (typeof value !== 'object' || value === null) return false;
-  const exercise = value as Record<string, unknown>;
-  return (
-    typeof exercise.id === 'string' &&
-    typeof exercise.name === 'string' &&
-    typeof exercise.amount === 'string' &&
-    (exercise.memo === undefined || typeof exercise.memo === 'string') &&
-    (exercise.youtubeLinks === undefined ||
-      (Array.isArray(exercise.youtubeLinks) &&
-        exercise.youtubeLinks.every((link) => typeof link === 'string'))) &&
-    (exercise.sets === null ||
-      (typeof exercise.sets === 'number' &&
-        Number.isSafeInteger(exercise.sets) &&
-        exercise.sets > 0))
-  );
-}
-
-export function getExercises(): TExercise[] {
-  const stored = localStorage.getItem(getUserStorageKey(STORAGE_KEY));
-  if (stored === null) return [];
-  const exercises: unknown = JSON.parse(stored);
-  if (!Array.isArray(exercises) || !exercises.every(isExercise)) {
-    throw new Error('Invalid exercise data');
-  }
-  return exercises.map((exercise) => ({
+export async function getExercises(signal?: AbortSignal): Promise<TExercise[]> {
+  let query = getSupabase()
+    .from('exercises')
+    .select('id,name,amount,sets,youtube_links,memo,version')
+    .order('position')
+    .order('id')
+    .retry(false);
+  if (signal) query = query.abortSignal(signal);
+  const { data, error } = await query.returns<TExerciseRow[]>();
+  if (error) throw error;
+  return data.map(({ youtube_links, ...exercise }) => ({
     ...exercise,
-    youtubeLinks: exercise.youtubeLinks ?? [],
-    memo: exercise.memo ?? '',
+    youtubeLinks: youtube_links,
   }));
 }
 
-export function createExercise(exercise: TExerciseValues): void {
-  const exercises = getExercises();
-  exercises.push({ ...exercise, id: crypto.randomUUID() });
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(exercises));
+function toRow(values: TExerciseValues) {
+  const { youtubeLinks, ...rest } = values;
+  return { ...rest, youtube_links: youtubeLinks };
 }
 
-export function updateExercise(
+function invalidateExercises() {
+  return queryClient.invalidateQueries({ queryKey: ['exercises'], refetchType: 'none' });
+}
+
+export async function createExercise(values: TExerciseValues): Promise<void> {
+  const userId = getStorageUserId();
+  const { error } = await getSupabase()
+    .from('exercises')
+    .insert({ ...toRow(values), user_id: userId })
+    .select('id')
+    .single();
+  if (error) throw error;
+  await invalidateExercises();
+}
+
+export async function updateExercise(
   id: string,
   values: TExerciseValues,
   expectedExercise: TExercise,
-): 'updated' | 'conflict' {
-  const exercises = getExercises();
-  const index = exercises.findIndex((exercise) => exercise.id === id);
-  if (index === -1) {
-    throw new Error('Exercise not found');
+): Promise<'updated' | 'conflict'> {
+  const { data, error } = await getSupabase()
+    .from('exercises')
+    .update(toRow(values))
+    .eq('id', id)
+    .eq('version', expectedExercise.version)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    const exercises = await getExercises();
+    if (!exercises.some((exercise) => exercise.id === id)) throw new Error('Exercise not found');
+    return 'conflict';
   }
-  if (JSON.stringify(exercises[index]) !== JSON.stringify(expectedExercise)) return 'conflict';
-  exercises[index] = { ...values, id };
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(exercises));
+  await invalidateExercises();
   return 'updated';
 }
 
-export function deleteExercise(id: string): void {
-  const exercises = getExercises();
-  if (!exercises.some((exercise) => exercise.id === id)) {
-    throw new Error('Exercise not found');
-  }
-  const remaining = exercises.filter((exercise) => exercise.id !== id);
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(remaining));
+export async function deleteExercise(id: string): Promise<'deleted' | 'in-use'> {
+  // Routines remain browser-local until the next migration step.
+  if (getRoutines().some((routine) => routine.exerciseIds.includes(id))) return 'in-use';
+  const { data, error } = await getSupabase()
+    .from('exercises')
+    .delete()
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Exercise not found');
+  await invalidateExercises();
+  return 'deleted';
 }
 
-export function reorderExercises(
+export async function reorderExercises(
   orderedIds: string[],
   expectedIds: string[],
-): TExercise[] | 'conflict' {
-  const exercises = getExercises();
-  const currentIds = exercises.map((exercise) => exercise.id);
-  if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) return 'conflict';
-
-  if (
-    orderedIds.length !== currentIds.length ||
-    new Set(orderedIds).size !== orderedIds.length ||
-    orderedIds.some((id) => !currentIds.includes(id))
-  ) {
-    throw new Error('Invalid exercise order');
-  }
-
-  const byId = new Map(exercises.map((exercise) => [exercise.id, exercise]));
-  const reordered = orderedIds.map((id) => byId.get(id)!);
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(reordered));
-  return reordered;
+): Promise<'updated' | 'conflict'> {
+  const { data, error } = await getSupabase().rpc('reorder_exercises', {
+    ordered_ids: orderedIds,
+    expected_ids: expectedIds,
+  });
+  if (error) throw error;
+  if (!data) return 'conflict';
+  await invalidateExercises();
+  return 'updated';
 }

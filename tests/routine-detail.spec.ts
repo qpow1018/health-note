@@ -1,4 +1,4 @@
-import { expect, test } from './authFixture';
+import { expect, test, mockAuth } from './authFixture';
 
 const ROUTINE = {
   id: 'routine-1',
@@ -61,6 +61,7 @@ test('간격 반복과 빈 메모를 표시하고 직접 진입의 뒤로가기�
     ROUTINE,
   );
   const direct = await context.newPage();
+  await mockAuth(direct);
   await direct.goto('/routine/routine-1');
   await expect(direct.getByText('2일 간격', { exact: true })).toBeVisible();
   await expect(direct.getByText('-', { exact: true })).toBeVisible();

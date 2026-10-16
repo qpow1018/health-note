@@ -172,7 +172,7 @@ for (const ids of [
       const modulePath = '/src/features/exercise/exerciseStorage.ts';
       const { reorderExercises } = await import(modulePath);
       try {
-        reorderExercises(ids, ['0', '1', '2']);
+        await reorderExercises(ids, ['0', '1', '2']);
         return false;
       } catch {
         return true;

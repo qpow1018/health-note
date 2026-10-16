@@ -1,0 +1,108 @@
+import { test, expect } from './authFixture';
+
+const KEY = 'health-note.exercises.v1:test-user';
+const EXERCISE = {
+  id: 'db-exercise',
+  name: '스쿼트',
+  amount: '10회',
+  sets: 3,
+  youtubeLinks: [],
+  memo: '',
+};
+
+test('조회 중에는 빈 목록으로 오인시키지 않고 실패 후 재시도한다', async ({ page }) => {
+  let release: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    await pending;
+    await route.fulfill({ status: 503, json: { message: 'Unavailable' } });
+  });
+  await page.goto('/exercise');
+  await expect(page.getByRole('status')).toHaveText('운동을 불러오고 있어요.');
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toHaveCount(0);
+  release();
+  await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
+});
+
+test('저장 응답을 기다리는 동안 중복 제출을 막는다', async ({ page }) => {
+  let release: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let writes = 0;
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    writes++;
+    await pending;
+    await route.fallback();
+  });
+  await page.goto('/exercise/new');
+  await page.getByLabel('운동 이름').fill('스쿼트');
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.getByRole('button', { name: '저장 중…' })).toBeDisabled();
+  await page.getByLabel('운동 이름').press('Enter');
+  release();
+  await expect(page).toHaveURL('/exercise');
+  await expect(page.getByRole('listitem')).toHaveCount(1);
+  expect(writes).toBe(1);
+});
+
+test('현재 브라우저의 루틴에 포함된 운동은 삭제 요청을 보내지 않는다', async ({ page }) => {
+  await page.goto('/exercise');
+  await page.evaluate(
+    ({ key, exercise }) => {
+      localStorage.setItem(key, JSON.stringify([exercise]));
+      localStorage.setItem(
+        'health-note.routines.v1:test-user',
+        JSON.stringify([
+          {
+            id: 'r',
+            name: '하체',
+            exerciseIds: [exercise.id],
+            schedule: { type: 'weekdays', days: [1] },
+            memo: '',
+            isActive: false,
+          },
+        ]),
+      );
+    },
+    { key: KEY, exercise: EXERCISE },
+  );
+  let deletes = 0;
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    if (route.request().method() === 'DELETE') deletes++;
+    await route.fallback();
+  });
+  await page.goto('/exercise/db-exercise');
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
+  await page.getByRole('button', { name: '삭제', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('루틴에서 먼저 제외해 주세요.');
+  expect(deletes).toBe(0);
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
+    EXERCISE,
+  ]);
+});
+
+test('기존 브라우저 운동을 자동 업로드하거나 삭제하지 않는다', async ({ page }) => {
+  await page.addInitScript(
+    ({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])),
+    { key: KEY, exercise: EXERCISE },
+  );
+  let uploads = 0;
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    if (route.request().method() === 'POST') uploads++;
+    await route.fulfill({ json: [] });
+  });
+  await page.goto('/exercise');
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
+  expect(uploads).toBe(0);
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
+    EXERCISE,
+  ]);
+});

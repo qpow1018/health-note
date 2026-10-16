@@ -1,4 +1,4 @@
-import { expect, test } from './authFixture';
+import { expect, test, mockAuth } from './authFixture';
 
 const KEY = 'health-note.routines.v1:test-user';
 const ROUTINE = {
@@ -31,6 +31,7 @@ test('오래 열린 수정 폼은 다른 탭의 일정과 미루기 내역을 �
   await page.goto('/routine/r/edit');
   await page.getByLabel('루틴 이름').fill('내가 편집한 이름');
   const otherTab = await context.newPage();
+  await mockAuth(otherTab);
   await otherTab.goto('/routine');
   const updated = {
     ...ROUTINE,
@@ -63,6 +64,7 @@ test('운동 선택을 다시 열면 추가·삭제를 반영하고 폼 입력�
   await page.goto('/routine/r/edit');
   await page.getByLabel('메모').fill('유지할 입력');
   const otherTab = await context.newPage();
+  await mockAuth(otherTab);
   await otherTab.goto('/exercise');
   await otherTab.evaluate(() =>
     localStorage.setItem(

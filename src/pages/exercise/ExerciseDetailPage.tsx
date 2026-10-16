@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
 import { deleteExercise } from '@/features/exercise/exerciseStorage';
-import { loadExercise } from '@/features/exercise/exerciseLoader';
+import { useExercise } from '@/features/exercise/exerciseLoader';
 import { getYoutubeVideoId, isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExercise } from '@/features/exercise/exercise.types';
 
@@ -23,24 +23,32 @@ export default function ExerciseDetailPage() {
   const navigate = useNavigate();
 
   const { exerciseId } = useParams();
-  const result = loadExercise(exerciseId);
-  const { exercise, error } = result;
+  const result = useExercise(exerciseId);
+  const { exercise, error, isLoading, refetch } = result;
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  function handleDelete() {
-    if (!exercise) return;
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!exercise || isDeleting) return;
+    setIsDeleting(true);
 
     setIsDeleteConfirmOpen(false);
 
     try {
-      deleteExercise(exercise.id);
+      const result = await deleteExercise(exercise.id);
+      if (result === 'in-use') {
+        toast.error('루틴에서 사용 중인 운동이에요. 루틴에서 먼저 제외해 주세요.');
+        return;
+      }
     } catch {
-      toast.error(
-        '삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
-        { isShowCloseButton: true },
-      );
+      toast.error('삭제하지 못했어요. 인터넷 연결과 루틴 정보를 확인하고 다시 시도해 주세요.', {
+        isShowCloseButton: true,
+      });
       return;
+    } finally {
+      setIsDeleting(false);
     }
 
     toast.success('운동을 삭제했어요.');
@@ -65,13 +73,19 @@ export default function ExerciseDetailPage() {
       />
 
       <div className={styles['content']}>
+        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+        {error && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p className={styles['error']} role="alert">
             {error}
           </p>
         )}
 
-        {!error && !exercise && (
+        {!isLoading && !error && !exercise && (
           <div>
             <p className={styles['hint']}>운동을 찾을 수 없어요.</p>
             <p className={styles['hint']}>목록으로 돌아가 운동을 선택해 주세요.</p>

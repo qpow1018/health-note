@@ -10,12 +10,12 @@ export default defineConfig(({ mode }) => {
     const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
     if (mode === 'development' && !isLocal) {
       throw new Error(
-        '개발 환경은 로컬 Supabase에 연결해야 합니다. .env.development.local을 확인하세요.',
+        '개발 환경은 로컬 Supabase에 연결해야 합니다. .env.development을 확인하세요.',
       );
     }
     if (mode === 'production' && isLocal) {
       throw new Error(
-        '운영 빌드에는 클라우드 Supabase 주소가 필요합니다. .env.production.local 또는 배포 환경 변수를 확인하세요.',
+        '운영 빌드에는 클라우드 Supabase 주소가 필요합니다. .env.production 또는 배포 환경 변수를 확인하세요.',
       );
     }
   }

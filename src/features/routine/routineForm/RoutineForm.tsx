@@ -5,8 +5,8 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
+import { useExercises } from '@/features/exercise/useExercises';
 import type { TExercise } from '@/features/exercise/exercise.types';
-import { loadRoutineExercises } from '@/features/routine/routineLoader';
 import { getTodayDate } from '@/features/routine/routineSchedule';
 import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routineStorage';
 
@@ -50,11 +50,13 @@ const WEEKDAYS = [
 
 type TRoutineFormProps = {
   initialValues?: TRoutineValues;
-  onSave: (values: TRoutineValues) => void;
+  onSave: (values: TRoutineValues) => Promise<void>;
 };
 
 export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps) {
-  const [result, setResult] = useState(loadRoutineExercises);
+  const { exercises, error, isLoading, refetch } = useExercises();
+  const result = { exercises, error };
+  const [isSaving, setIsSaving] = useState(false);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -68,10 +70,9 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
   const [scheduleError, setScheduleError] = useState('');
   const [today] = useState(getTodayDate);
 
-  function handleOpenExercises() {
-    const latest = loadRoutineExercises();
-    setResult(latest);
-    if (latest.error) return;
+  async function handleOpenExercises() {
+    const latest = await refetch();
+    if (latest.isError) return;
     setDraftIds([...exerciseIds]);
     setIsSheetOpen(true);
   }
@@ -106,50 +107,64 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
     setExerciseError('');
   }
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSaving) return;
     const data = new FormData(event.currentTarget);
     const name = String(data.get('name') ?? '').trim();
     setNameError('');
     setExerciseError('');
     setScheduleError('');
-    const latest = loadRoutineExercises();
-    setResult(latest);
-    if (latest.error) return;
-    if (exerciseIds.some((id) => !latest.exercises.some((exercise) => exercise.id === id))) {
-      setExerciseError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.');
-      return;
-    }
-    if (!name) {
-      setNameError('루틴 이름을 입력해 주세요.');
-      return;
-    }
-    if (exerciseIds.length === 0) {
-      setExerciseError('운동을 하나 이상 선택해 주세요.');
-      return;
-    }
-    let schedule: TRoutineSchedule;
-    if (scheduleType === 'weekdays') {
-      const days = data.getAll('days').map(Number);
-      if (days.length === 0) {
-        setScheduleError('반복할 요일을 하나 이상 선택해 주세요.');
+    setIsSaving(true);
+    try {
+      const latest = await refetch();
+      if (latest.error) {
+        setExerciseError(
+          '운동 목록을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.',
+        );
         return;
       }
-      schedule = { type: 'weekdays', days };
-    } else {
-      const intervalDays = Number(data.get('intervalDays'));
-      if (!Number.isSafeInteger(intervalDays) || intervalDays < 1) {
-        setScheduleError('간격은 1 이상의 정수로 입력해 주세요.');
+      if (exerciseIds.some((id) => !(latest.data ?? []).some((exercise) => exercise.id === id))) {
+        setExerciseError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.');
         return;
       }
-      schedule = { type: 'interval', intervalDays, startDate: String(data.get('startDate') ?? '') };
+      if (!name) {
+        setNameError('루틴 이름을 입력해 주세요.');
+        return;
+      }
+      if (exerciseIds.length === 0) {
+        setExerciseError('운동을 하나 이상 선택해 주세요.');
+        return;
+      }
+      let schedule: TRoutineSchedule;
+      if (scheduleType === 'weekdays') {
+        const days = data.getAll('days').map(Number);
+        if (days.length === 0) {
+          setScheduleError('반복할 요일을 하나 이상 선택해 주세요.');
+          return;
+        }
+        schedule = { type: 'weekdays', days };
+      } else {
+        const intervalDays = Number(data.get('intervalDays'));
+        if (!Number.isSafeInteger(intervalDays) || intervalDays < 1) {
+          setScheduleError('간격은 1 이상의 정수로 입력해 주세요.');
+          return;
+        }
+        schedule = {
+          type: 'interval',
+          intervalDays,
+          startDate: String(data.get('startDate') ?? ''),
+        };
+      }
+      await onSave({
+        name,
+        exerciseIds,
+        schedule,
+        memo: String(data.get('memo') ?? '').trim(),
+      });
+    } finally {
+      setIsSaving(false);
     }
-    onSave({
-      name,
-      exerciseIds,
-      schedule,
-      memo: String(data.get('memo') ?? '').trim(),
-    });
   }
 
   return (
@@ -186,7 +201,7 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
               type="button"
               className={styles['select-button']}
               onClick={handleOpenExercises}
-              disabled={isDragging}
+              disabled={isDragging || isLoading || isSaving}
               aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
             >
               <MdAdd size={18} aria-hidden="true" />
@@ -348,7 +363,10 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
           />
         </div>
         <div className={styles['actions']}>
-          <Button type="submit" disabled={Boolean(result.error) || isDragging}>
+          <Button
+            type="submit"
+            disabled={Boolean(result.error) || isDragging || isSaving || isLoading}
+          >
             저장
           </Button>
         </div>

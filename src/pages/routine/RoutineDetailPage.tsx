@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from '@/utils/toast';
 import { deleteRoutine, setRoutineActive } from '@/features/routine/routineStorage';
 import type { TRoutineSchedule } from '@/features/routine/routineStorage';
-import { loadRoutine, loadRoutineExercises } from '@/features/routine/routineLoader';
+import { loadRoutine } from '@/features/routine/routineLoader';
+import { useExercises } from '@/features/exercise/useExercises';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
 
@@ -178,7 +179,7 @@ function RoutineSchedule({
 }
 
 function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
-  const { exercises, error } = loadRoutineExercises();
+  const { exercises, error, isLoading } = useExercises();
   return (
     <section className={styles['section']} aria-labelledby="exercises-heading">
       <h2 id="exercises-heading">
@@ -189,7 +190,8 @@ function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
           {error}
         </p>
       )}
-      {!error && (
+      {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+      {!error && !isLoading && (
         <ol className={styles['exercise-list']}>
           {exerciseIds.map((id) => {
             const exercise = exercises.find((item) => item.id === id);

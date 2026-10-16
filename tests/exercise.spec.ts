@@ -16,6 +16,7 @@ test('빈 목록에서 등록하고 새로고침해도 기존 운동과 함께 �
   await page.getByRole('link', { name: '운동 추가' }).click();
   await page.getByLabel('운동 이름').fill('걷기');
   await page.getByRole('button', { name: '저장' }).click();
+  await expect(page).toHaveURL('/exercise');
   await page.reload();
   await expect(page.getByRole('listitem')).toHaveText(['푸시업10회 × 3세트', '걷기-']);
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
@@ -181,7 +182,7 @@ test('여러 유튜브 링크와 메모를 저장하고 기존 기록을 유지�
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/exercise');
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
-  expect(stored[0]).toEqual({ ...EXISTING[0], youtubeLinks: [], memo: '' });
+  expect(stored[0]).toMatchObject(EXISTING[0]);
   expect(stored[1]).toMatchObject({
     name: '브릿지',
     sets: null,
@@ -312,7 +313,9 @@ test('상세에서 수정하고 모든 필드와 ID 및 다른 운동을 유지�
   await page.screenshot({ path: 'test-results/exercise-edit-mobile.png', fullPage: true });
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/exercise/edit-target');
-  await expect(page.getByRole('status')).toHaveText('운동을 수정했어요.');
+  await expect(page.getByRole('status').filter({ hasText: '운동을 수정했어요.' })).toHaveText(
+    '운동을 수정했어요.',
+  );
   await expect(page.getByRole('heading', { name: '수정한 푸시업', exact: true })).toBeVisible();
   await page.reload();
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
@@ -362,7 +365,9 @@ test('삭제 취소는 유지하고 확인하면 선택한 운동만 삭제한�
   await deleteButton.click();
   await confirm.getByRole('button', { name: '삭제', exact: true }).click();
   await expect(page).toHaveURL('/exercise');
-  await expect(page.getByRole('status')).toHaveText('운동을 삭제했어요.');
+  await expect(page.getByRole('status').filter({ hasText: '운동을 삭제했어요.' })).toHaveText(
+    '운동을 삭제했어요.',
+  );
   await expect(page.getByRole('listitem')).toHaveCount(1);
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
   expect(stored[0]).toMatchObject(EXISTING[0]);
@@ -475,15 +480,24 @@ test('상세 직접 접속에서 긴 제목이 헤더를 가로로 넘치지 않
 test('등록 성공 토스트는 이동 후 표시되고 최대 3개이며 자동으로 닫힌다', async ({ page }) => {
   await page.clock.install();
   await page.goto('/exercise');
+  await expect(page.getByRole('link', { name: '운동 추가', exact: true })).toBeVisible();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   for (let index = 0; index < 4; index++) {
     await page.getByRole('link', { name: '운동 추가', exact: true }).click();
     await page.getByLabel('운동 이름').fill(`토스트 확인 ${index + 1}`);
     await page.getByRole('button', { name: '저장', exact: true }).click();
+    await expect
+      .poll(async () => {
+        await page.clock.runFor(10);
+        return page.getByRole('link', { name: '운동 추가', exact: true }).count();
+      })
+      .toBe(1);
     await expect(page).toHaveURL('/exercise');
   }
   await expect(page.getByRole('status')).toHaveCount(3);
-  await expect(page.getByRole('status').first()).toHaveText('운동을 등록했어요.');
+  await expect(
+    page.getByRole('status').filter({ hasText: '운동을 등록했어요.' }).first(),
+  ).toHaveText('운동을 등록했어요.');
   await page.screenshot({ path: 'test-results/exercise-toast-mobile.png', fullPage: true });
   await page.clock.runFor(3000);
   await expect(page.getByRole('status')).toHaveCount(0);

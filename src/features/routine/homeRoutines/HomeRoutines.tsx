@@ -2,7 +2,7 @@ import { useReducer } from 'react';
 import { Link } from 'react-router-dom';
 
 import { getRoutines } from '@/features/routine/routineStorage';
-import { getExercises } from '@/features/exercise/exerciseStorage';
+import { useExercises } from '@/features/exercise/useExercises';
 import {
   getRoutineProgress,
   setExerciseCompleted,
@@ -22,7 +22,9 @@ import { MdChevronRight } from 'react-icons/md';
 
 export default function HomeRoutines({ today }: { today: string }) {
   const [, refresh] = useReducer((value: number) => value + 1, 0);
-  const { routines, exercises, progress, error } = loadHomeRoutines();
+  const { routines, progress, error: routineError } = loadHomeRoutines();
+  const { exercises, error: exerciseError, isLoading, refetch } = useExercises();
+  const error = routineError || exerciseError;
   const active = routines.filter((routine) => routine.isActive);
   const scheduled = active.filter((routine) => isRoutineScheduled(routine.schedule, today));
   const upcoming = active
@@ -50,12 +52,18 @@ export default function HomeRoutines({ today }: { today: string }) {
   return (
     <section className={styles['home-routines']} aria-label="오늘의 루틴">
       <div className={styles['content']}>
+        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+        {exerciseError && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p role="alert" className={styles['error']}>
             {error}
           </p>
         )}
-        {!error && scheduled.length > 0 && (
+        {!isLoading && !error && scheduled.length > 0 && (
           <ul className={styles['list']}>
             {scheduled.map((routine) => {
               const available = routine.exerciseIds.filter((id) =>
@@ -127,7 +135,7 @@ export default function HomeRoutines({ today }: { today: string }) {
             })}
           </ul>
         )}
-        {!error && scheduled.length === 0 && (
+        {!isLoading && !error && scheduled.length === 0 && (
           <div className={styles['empty']}>
             {routines.length === 0 && (
               <>
@@ -165,14 +173,12 @@ function loadHomeRoutines() {
   try {
     return {
       routines: getRoutines(),
-      exercises: getExercises(),
       progress: getRoutineProgress(),
       error: '',
     };
   } catch {
     return {
       routines: [],
-      exercises: [],
       progress: [],
       error: '데이터를 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
     };

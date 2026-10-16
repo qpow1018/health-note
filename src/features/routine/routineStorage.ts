@@ -91,26 +91,29 @@ export function getRoutines(): TRoutine[] {
   return routines.map((routine) => ({ ...routine, isActive: routine.isActive ?? false }));
 }
 
-function validateRoutine(routine: TRoutine): void {
+async function validateRoutine(routine: TRoutine): Promise<void> {
   if (!isRoutine(routine)) throw new Error('Invalid routine');
-  const exercises = getExercises();
+  const exercises = await getExercises();
   if (!routine.exerciseIds.every((id) => exercises.some((exercise) => exercise.id === id))) {
     throw new Error('Exercise not found');
   }
 }
 
-export function createRoutine(values: TRoutineValues): void {
+export async function createRoutine(values: TRoutineValues): Promise<void> {
+  const storageKey = getUserStorageKey(STORAGE_KEY);
   const routine = { ...values, id: crypto.randomUUID(), isActive: false };
-  validateRoutine(routine);
+  await validateRoutine(routine);
+  if (getUserStorageKey(STORAGE_KEY) !== storageKey) throw new Error('Account changed');
   const routines = getRoutines();
   localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify([...routines, routine]));
 }
 
-export function updateRoutine(
+export async function updateRoutine(
   id: string,
   values: TRoutineValues,
   expectedRoutine: TRoutine,
-): 'updated' | 'conflict' {
+): Promise<'updated' | 'conflict'> {
+  const storageKey = getUserStorageKey(STORAGE_KEY);
   const routines = getRoutines();
   const index = routines.findIndex((routine) => routine.id === id);
   if (index === -1) throw new Error('Routine not found');
@@ -130,9 +133,15 @@ export function updateRoutine(
     };
   }
   const routine = { ...values, id, schedule, isActive: routines[index].isActive };
-  validateRoutine(routine);
-  routines[index] = routine;
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
+  await validateRoutine(routine);
+  if (getUserStorageKey(STORAGE_KEY) !== storageKey) throw new Error('Account changed');
+  const latestRoutines = getRoutines();
+  const latestIndex = latestRoutines.findIndex((item) => item.id === id);
+  if (latestIndex === -1) throw new Error('Routine not found');
+  if (JSON.stringify(latestRoutines[latestIndex]) !== JSON.stringify(expectedRoutine))
+    return 'conflict';
+  latestRoutines[latestIndex] = routine;
+  localStorage.setItem(storageKey, JSON.stringify(latestRoutines));
   return 'updated';
 }
 

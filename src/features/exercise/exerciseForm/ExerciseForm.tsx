@@ -15,10 +15,11 @@ type TLinkInput = { id: string; value: string };
 
 type TExerciseFormProps = {
   initialValues?: TExerciseValues;
-  onSave: (values: TExerciseValues) => void;
+  onSave: (values: TExerciseValues) => Promise<void>;
 };
 
 export default function ExerciseForm({ initialValues, onSave }: TExerciseFormProps) {
+  const [isSaving, setIsSaving] = useState(false);
   const [nameError, setNameError] = useState('');
   const [setsError, setSetsError] = useState('');
   const [links, setLinks] = useState<TLinkInput[]>(() => createLinkInputs(initialValues));
@@ -46,8 +47,9 @@ export default function ExerciseForm({ initialValues, onSave }: TExerciseFormPro
     });
   }
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSaving) return;
 
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get('name') ?? '').trim();
@@ -80,7 +82,12 @@ export default function ExerciseForm({ initialValues, onSave }: TExerciseFormPro
       return;
     }
 
-    onSave({ name, amount, sets, youtubeLinks, memo });
+    setIsSaving(true);
+    try {
+      await onSave({ name, amount, sets, youtubeLinks, memo });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -187,8 +194,8 @@ export default function ExerciseForm({ initialValues, onSave }: TExerciseFormPro
         />
       </div>
       <div className={styles['actions']}>
-        <Button className={styles['action']} type="submit" fill="solid">
-          저장
+        <Button className={styles['action']} type="submit" fill="solid" disabled={isSaving}>
+          {isSaving ? '저장 중…' : '저장'}
         </Button>
       </div>
     </form>

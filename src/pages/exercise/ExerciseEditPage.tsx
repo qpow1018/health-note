@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { loadExercise } from '@/features/exercise/exerciseLoader';
+import { useExercise } from '@/features/exercise/exerciseLoader';
 import { updateExercise } from '@/features/exercise/exerciseStorage';
 import type { TExerciseValues } from '@/features/exercise/exercise.types';
 
@@ -20,17 +19,17 @@ export default function ExerciseEditPage() {
 function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {
   const navigate = useNavigate();
 
-  const [{ exercise, error }] = useState(() => loadExercise(exerciseId));
+  const { exercise, error, isLoading, refetch } = useExercise(exerciseId, true);
 
   const detailTo = `/exercise/${encodeURIComponent(exerciseId ?? '')}`;
 
-  function handleSave(values: TExerciseValues): void {
+  async function handleSave(values: TExerciseValues): Promise<void> {
     if (!exercise) {
       toast.error('운동을 찾을 수 없어요.');
       return;
     }
     try {
-      const result = updateExercise(exercise.id, values, exercise);
+      const result = await updateExercise(exercise.id, values, exercise);
       if (result === 'conflict') {
         toast.error(
           '다른 화면에서 변경된 운동이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',
@@ -39,10 +38,9 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
         return;
       }
     } catch {
-      toast.error(
-        '저장하지 못했어요. 운동이 삭제되었거나 브라우저 저장 공간에 문제가 있을 수 있어요.',
-        { isShowCloseButton: true },
-      );
+      toast.error('저장하지 못했어요. 운동이 삭제되었거나 인터넷 연결에 문제가 있을 수 있어요.', {
+        isShowCloseButton: true,
+      });
       return;
     }
     toast.success('운동을 수정했어요.');
@@ -53,12 +51,18 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
     <section className={styles['exercise-edit-page']}>
       <Header title="운동 수정" fallbackTo={detailTo} />
       <div className={styles['content']}>
+        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+        {error && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p className={styles['error']} role="alert">
             {error}
           </p>
         )}
-        {!error && !exercise && (
+        {!isLoading && !error && !exercise && (
           <div className={styles['missing']}>
             <p>운동을 찾을 수 없어요.</p>
             <Link to="/exercise">목록으로</Link>

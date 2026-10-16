@@ -12,14 +12,13 @@ import styles from './ExerciseCreatePage.module.scss';
 export default function ExerciseCreatePage() {
   const navigate = useNavigate();
 
-  function handleSave(values: TExerciseValues): void {
+  async function handleSave(values: TExerciseValues): Promise<void> {
     try {
-      createExercise(values);
+      await createExercise(values);
     } catch {
-      toast.error(
-        '저장하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
-        { isShowCloseButton: true },
-      );
+      toast.error('저장하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', {
+        isShowCloseButton: true,
+      });
       return;
     }
     toast.success('운동을 등록했어요.');

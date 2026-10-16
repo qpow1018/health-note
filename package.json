@@ -15,13 +15,16 @@
     "db:network": "docker network create -o com.docker.network.bridge.host_binding_ipv4=127.0.0.1 health-note-local",
     "db:start": "supabase start --network-id health-note-local",
     "db:status": "supabase status",
-    "db:stop": "supabase stop --project-id health-note-local"
+    "db:stop": "supabase stop --project-id health-note-local",
+    "db:migrate": "supabase migration up --local",
+    "db:test": "supabase test db --local --network-id health-note-local"
   },
   "dependencies": {
     "@dnd-kit/dom": "^0.5.1",
     "@dnd-kit/react": "^0.5.1",
     "@fontsource/noto-sans-kr": "^5.3.1",
     "@supabase/supabase-js": "2.118.0",
+    "@tanstack/react-query": "5.104.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",

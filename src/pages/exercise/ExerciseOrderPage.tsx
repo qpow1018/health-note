@@ -5,7 +5,8 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { getExercises, reorderExercises } from '@/features/exercise/exerciseStorage';
+import { reorderExercises } from '@/features/exercise/exerciseStorage';
+import { useExercises } from '@/features/exercise/useExercises';
 import toast from '@/utils/toast';
 import type { TExercise } from '@/features/exercise/exercise.types';
 
@@ -38,16 +39,41 @@ type TSortableExerciseProps = {
 };
 
 export default function ExerciseOrderPage() {
+  const { exercises, error, isLoading, refetch } = useExercises(true);
+  if (isLoading || error)
+    return (
+      <section className={styles['order-page']}>
+        <Header title="운동 순서 변경" fallbackTo="/exercise" />
+        <div className={styles['content']}>
+          {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+          {error && (
+            <>
+              <p role="alert">{error}</p>
+              <button type="button" onClick={() => void refetch()}>
+                다시 시도
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    );
+  return <ExerciseOrderContent initialExercises={exercises} />;
+}
+
+function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercise[] }) {
   const navigate = useNavigate();
-  const [{ exercises, error }] = useState(loadExercises);
+  const [exercises] = useState(initialExercises);
+  const [isSaving, setIsSaving] = useState(false);
   const [orderedIds, setOrderedIds] = useState(() => exercises.map((exercise) => exercise.id));
   const [isDragging, setIsDragging] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const isChanged = orderedIds.some((id, index) => id !== exercises[index].id);
 
-  function handleSave() {
+  async function handleSave() {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
-      const saved = reorderExercises(
+      const saved = await reorderExercises(
         orderedIds,
         exercises.map((exercise) => exercise.id),
       );
@@ -62,6 +88,8 @@ export default function ExerciseOrderPage() {
         isShowCloseButton: true,
       });
       return;
+    } finally {
+      setIsSaving(false);
     }
     toast.success('운동 순서를 변경했어요.');
     navigate('/exercise', { replace: true });
@@ -81,15 +109,8 @@ export default function ExerciseOrderPage() {
     <section className={styles['order-page']}>
       <Header title="운동 순서 변경" onBack={() => navigate('/exercise', { replace: true })} />
       <div className={styles['content']}>
-        {error && (
-          <p className={styles['error']} role="alert">
-            {error}
-          </p>
-        )}
-        {!error && exercises.length === 0 && (
-          <p className={styles['hint']}>순서를 변경할 운동이 없어요.</p>
-        )}
-        {!error && exercises.length > 0 && (
+        {exercises.length === 0 && <p className={styles['hint']}>순서를 변경할 운동이 없어요.</p>}
+        {exercises.length > 0 && (
           <>
             <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
             <p className={styles['announcement']} role="status" aria-live="polite">
@@ -124,7 +145,7 @@ export default function ExerciseOrderPage() {
               </ul>
             </DragDropProvider>
             <div className={styles['actions']}>
-              <Button disabled={!isChanged || isDragging} onClick={handleSave}>
+              <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
                 완료
               </Button>
             </div>
@@ -161,15 +182,4 @@ function SortableExercise({ exercise, index }: TSortableExerciseProps) {
       </div>
     </li>
   );
-}
-
-function loadExercises() {
-  try {
-    return { exercises: getExercises(), error: '' };
-  } catch {
-    return {
-      exercises: [],
-      error: '운동 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    };
-  }
 }

@@ -12,9 +12,9 @@ import styles from './RoutineCreatePage.module.scss';
 export default function RoutineCreatePage() {
   const navigate = useNavigate();
 
-  function handleSave(values: TRoutineValues): void {
+  async function handleSave(values: TRoutineValues): Promise<void> {
     try {
-      createRoutine(values);
+      await createRoutine(values);
     } catch {
       toast.error(
         '저장하지 못했어요. 선택한 운동이 삭제되었거나 브라우저 저장에 문제가 있을 수 있어요. 운동 목록과 저장 공간을 확인해 주세요.',
