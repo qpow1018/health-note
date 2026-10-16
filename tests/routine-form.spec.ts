@@ -64,6 +64,7 @@ test('핸들로 정렬하고 Escape는 순서를 복구하며 선택 변경 취�
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-dnd-dropping]')).toHaveCount(0);
   await expect(handle).toHaveAttribute('aria-pressed', 'false');
+  await expect(handle).toBeFocused();
   await expect(page.locator('[data-dnd-dragging]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '저장', exact: true })).toBeEnabled();
   await expect(page.getByRole('listitem').locator('strong')).toHaveText([
@@ -87,6 +88,7 @@ test('핸들로 정렬하고 Escape는 순서를 복구하며 선택 변경 취�
     '운동 1',
     '운동 3',
   ]);
+  await expect(handle).toBeFocused();
   await page.getByRole('button', { name: '운동 선택', exact: true }).click();
   await sheet.getByRole('checkbox', { name: '운동 2 10회 × 3세트', exact: true }).uncheck();
   await sheet.getByRole('button', { name: '닫기' }).click();

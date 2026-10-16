@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { DragDropProvider } from '@dnd-kit/react';
-import type { DragStartEvent } from '@dnd-kit/react';
-import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/react';
+import type { DragDropManager } from '@dnd-kit/dom';
+import { Accessibility, Feedback, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
 import { useExercises } from '@/features/exercise/useExercises';
@@ -25,6 +26,9 @@ import { MdAdd, MdDragHandle } from 'react-icons/md';
 const ORDER_POINTER_SENSOR = PointerSensor.configure({
   activationConstraints: [new PointerActivationConstraints.Distance({ value: 8 })],
 });
+
+// Avoid delayed keyboard focus restoration stealing input after a drop.
+const ORDER_FEEDBACK = Feedback.configure({ dropAnimation: null });
 
 const ORDER_ACCESSIBILITY = Accessibility.configure({
   screenReaderInstructions: {
@@ -105,6 +109,24 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
   function handleRemoveExercise(id: string) {
     setExerciseIds(exerciseIds.filter((value) => value !== id));
     setExerciseError('');
+  }
+
+  function handleDragEnd(event: DragEndEvent, manager: DragDropManager) {
+    setIsDragging(false);
+    const { source, activatorEvent } = event.operation;
+    const handle = source?.handle;
+    if (activatorEvent instanceof KeyboardEvent && handle instanceof HTMLElement) {
+      void manager.renderer.rendering.then(() => {
+        requestAnimationFrame(() => {
+          if (handle.ownerDocument.activeElement === handle.ownerDocument.body) handle.focus();
+        });
+      });
+    }
+    if (event.canceled) {
+      setAnnouncement('이동을 취소했어요.');
+      return;
+    }
+    if (isSortable(source)) handleMoveExercise(source.initialIndex, source.index);
   }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -230,20 +252,14 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
                   )
                 }
                 plugins={(defaults) =>
-                  defaults.map((plugin) =>
-                    plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin,
-                  )
+                  defaults.map((plugin) => {
+                    if (plugin === Accessibility) return ORDER_ACCESSIBILITY;
+                    if (plugin === Feedback) return ORDER_FEEDBACK;
+                    return plugin;
+                  })
                 }
                 onDragStart={() => setIsDragging(true)}
-                onDragEnd={(event) => {
-                  setIsDragging(false);
-                  if (event.canceled) {
-                    setAnnouncement('이동을 취소했어요.');
-                    return;
-                  }
-                  const { source } = event.operation;
-                  if (isSortable(source)) handleMoveExercise(source.initialIndex, source.index);
-                }}
+                onDragEnd={handleDragEnd}
               >
                 <ol className={styles['selected-list']} aria-label="선택한 운동 순서">
                   {exerciseIds.map((id, index) => (

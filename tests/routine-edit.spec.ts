@@ -45,6 +45,7 @@ test('상세에서 수정해 모든 입력과 ID·다른 루틴을 유지하고 
   await page.getByLabel('시작일').fill('2026-10-14');
   await page.getByLabel('반복 간격').fill('3');
   await page.getByLabel('메모').fill('바뀐 메모');
+  await expect(page.getByLabel('메모')).toHaveValue('바뀐 메모');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/routine/r1');
   await expect(page.getByText('3일 간격', { exact: true })).toBeVisible();
@@ -191,4 +192,27 @@ test('없는 루틴·손상 데이터는 폼을 제공하지 않으며 수정 �
   await expect(page.getByRole('alert')).toContainText('루틴을 불러오지 못했어요.');
   await expect(page.getByRole('button', { name: '저장', exact: true })).toHaveCount(0);
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY)).toBe('{broken');
+});
+
+test('키보드 정렬 직후 메모에 입력한 내용과 포커스를 유지해 저장한다', async ({ page }) => {
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
+  await page.getByRole('link', { name: '수정', exact: true }).click();
+  const memo = page.getByRole('textbox', { name: '메모', exact: true });
+  await expect(memo).toHaveValue('기존 메모');
+  await memo.fill('');
+  const handle = page.getByRole('button', { name: '스쿼트 순서 이동', exact: true });
+  await handle.focus();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Space');
+  await memo.focus();
+  await memo.pressSequentially('정렬 직후 작성한 메모', { delay: 40 });
+  await expect(memo).toBeFocused();
+  await expect(memo).toHaveValue('정렬 직후 작성한 메모');
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page).toHaveURL('/routine/r1');
+  await expect(page.getByText('정렬 직후 작성한 메모', { exact: true })).toBeVisible();
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[0].memo, KEY)).toBe(
+    '정렬 직후 작성한 메모',
+  );
 });
