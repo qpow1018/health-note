@@ -181,7 +181,7 @@ for (const ids of [
       const modulePath = '/src/features/routine/routineStorage.ts';
       const { reorderRoutines } = await import(modulePath);
       try {
-        reorderRoutines(ids, ['0', '1', '2']);
+        await reorderRoutines(ids, ['0', '1', '2']);
         return false;
       } catch {
         return true;

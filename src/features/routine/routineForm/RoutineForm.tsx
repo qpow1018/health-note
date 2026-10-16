@@ -221,7 +221,8 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
             {exerciseIds.length === 0 && (
               <p className={styles['empty-exercises']}>선택한 운동이 없어요.</p>
             )}
-            {exerciseIds.length > 0 && (
+            {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+            {exerciseIds.length > 0 && !isLoading && (
               <DragDropProvider
                 sensors={(defaults) =>
                   defaults.map((sensor) =>

@@ -52,7 +52,7 @@ test('저장 응답을 기다리는 동안 중복 제출을 막는다', async ({
   expect(writes).toBe(1);
 });
 
-test('현재 브라우저의 루틴에 포함된 운동은 삭제 요청을 보내지 않는다', async ({ page }) => {
+test('DB가 루틴에 포함된 운동의 삭제를 거부하면 데이터를 유지한다', async ({ page }) => {
   await page.goto('/exercise');
   await page.evaluate(
     ({ key, exercise }) => {
@@ -83,7 +83,7 @@ test('현재 브라우저의 루틴에 포함된 운동은 삭제 요청을 보�
   await page.getByRole('button', { name: '삭제', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('루틴에서 먼저 제외해 주세요.');
-  expect(deletes).toBe(0);
+  expect(deletes).toBe(1);
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
     EXERCISE,
   ]);

@@ -1,7 +1,7 @@
 import { useReducer } from 'react';
 import { Link } from 'react-router-dom';
 
-import { getRoutines } from '@/features/routine/routineStorage';
+import { useRoutines } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
 import {
   getRoutineProgress,
@@ -22,9 +22,16 @@ import { MdChevronRight } from 'react-icons/md';
 
 export default function HomeRoutines({ today }: { today: string }) {
   const [, refresh] = useReducer((value: number) => value + 1, 0);
-  const { routines, progress, error: routineError } = loadHomeRoutines();
-  const { exercises, error: exerciseError, isLoading, refetch } = useExercises();
-  const error = routineError || exerciseError;
+  const { progress, error: progressError } = loadHomeRoutines();
+  const {
+    routines,
+    error: routineError,
+    isLoading: isRoutineLoading,
+    refetch: refetchRoutines,
+  } = useRoutines();
+  const { exercises, error: exerciseError, isLoading: isExerciseLoading, refetch } = useExercises();
+  const isLoading = isRoutineLoading || isExerciseLoading;
+  const error = progressError || routineError || exerciseError;
   const active = routines.filter((routine) => routine.isActive);
   const scheduled = active.filter((routine) => isRoutineScheduled(routine.schedule, today));
   const upcoming = active
@@ -52,9 +59,15 @@ export default function HomeRoutines({ today }: { today: string }) {
   return (
     <section className={styles['home-routines']} aria-label="오늘의 루틴">
       <div className={styles['content']}>
-        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-        {exerciseError && (
-          <button type="button" onClick={() => void refetch()}>
+        {isLoading && <p role="status">오늘의 루틴을 불러오고 있어요.</p>}
+        {(exerciseError || routineError) && (
+          <button
+            type="button"
+            onClick={() => {
+              void refetch();
+              void refetchRoutines();
+            }}
+          >
             다시 시도
           </button>
         )}
@@ -172,13 +185,11 @@ export default function HomeRoutines({ today }: { today: string }) {
 function loadHomeRoutines() {
   try {
     return {
-      routines: getRoutines(),
       progress: getRoutineProgress(),
       error: '',
     };
   } catch {
     return {
-      routines: [],
       progress: [],
       error: '데이터를 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
     };

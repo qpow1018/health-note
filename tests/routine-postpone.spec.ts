@@ -89,7 +89,7 @@ async function postpone(page: Page, date: string) {
     const modulePath = '/src/features/routine/routineStorage.ts';
     const { postponeRoutine } = await import(modulePath);
     try {
-      postponeRoutine('r', date);
+      await postponeRoutine('r', date);
       return true;
     } catch {
       return false;

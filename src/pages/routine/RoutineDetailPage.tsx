@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from '@/utils/toast';
 import { deleteRoutine, setRoutineActive } from '@/features/routine/routineStorage';
 import type { TRoutineSchedule } from '@/features/routine/routineStorage';
-import { loadRoutine } from '@/features/routine/routineLoader';
+import { useRoutine } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
@@ -25,44 +25,49 @@ export default function RoutineDetailPage() {
 
 function RoutineDetail({ routineId }: { routineId: string | undefined }) {
   const navigate = useNavigate();
-  const [{ routine, error }, setResult] = useState(() => loadRoutine(routineId));
+  const { routine, error, isLoading, refetch } = useRoutine(routineId);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   let title = '루틴 상세';
-  if (!error && !routine) title = '루틴을 찾을 수 없어요.';
+  if (!isLoading && !error && !routine) title = '루틴을 찾을 수 없어요.';
   if (routine) title = routine.name;
 
-  function handleToggleActive() {
-    if (!routine) return;
+  async function handleToggleActive() {
+    if (!routine || isSaving) return;
+    setIsSaving(true);
     try {
-      const updated = setRoutineActive(routine.id, !routine.isActive, routine.isActive);
+      const updated = await setRoutineActive(routine.id, !routine.isActive, routine.isActive);
       if (updated === 'conflict') {
-        setResult(loadRoutine(routineId));
+        await refetch();
         toast.error('다른 화면에서 활성 상태가 변경되었어요. 현재 상태를 확인해 주세요.', {
           isShowCloseButton: true,
         });
         return;
       }
-      setResult({ routine: updated, error: '' });
-      toast.success(updated.isActive ? '루틴을 활성화했어요.' : '루틴을 비활성화했어요.');
+      await refetch();
+      toast.success(!routine.isActive ? '루틴을 활성화했어요.' : '루틴을 비활성화했어요.');
     } catch {
-      toast.error(
-        '활성 상태를 변경하지 못했어요. 저장된 데이터와 브라우저 저장 공간을 확인해 주세요.',
-        { isShowCloseButton: true },
-      );
+      toast.error('활성 상태를 변경하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', {
+        isShowCloseButton: true,
+      });
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  function handleDelete() {
-    if (!routine) return;
+  async function handleDelete() {
+    if (!routine || isSaving) return;
+    setIsSaving(true);
     setIsDeleteConfirmOpen(false);
     try {
-      deleteRoutine(routine.id);
+      await deleteRoutine(routine.id);
     } catch {
-      toast.error(
-        '삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
-        { isShowCloseButton: true },
-      );
+      toast.error('삭제하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', {
+        isShowCloseButton: true,
+      });
       return;
+    } finally {
+      setIsSaving(false);
     }
     toast.success('루틴을 삭제했어요.');
     navigate('/routine', { replace: true });
@@ -85,12 +90,18 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
         }
       />
       <div className={styles['content']}>
+        {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+        {error && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p className={styles['error']} role="alert">
             {error}
           </p>
         )}
-        {!error && !routine && (
+        {!isLoading && !error && !routine && (
           <p className={styles['hint']}>목록으로 돌아가 루틴을 선택해 주세요.</p>
         )}
         {routine && (
@@ -109,6 +120,7 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
                 aria-checked={routine.isActive}
                 className={styles['activation-switch']}
                 onClick={handleToggleActive}
+                disabled={isSaving}
               >
                 <span aria-hidden="true" />
               </button>

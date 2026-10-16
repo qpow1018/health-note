@@ -1,6 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/queryClient';
-import { getRoutines } from '@/features/routine/routineStorage';
 import { getStorageUserId } from '@/features/auth/userStorage';
 import type { TExercise, TExerciseValues } from './exercise.types';
 
@@ -73,14 +72,13 @@ export async function updateExercise(
 }
 
 export async function deleteExercise(id: string): Promise<'deleted' | 'in-use'> {
-  // Routines remain browser-local until the next migration step.
-  if (getRoutines().some((routine) => routine.exerciseIds.includes(id))) return 'in-use';
   const { data, error } = await getSupabase()
     .from('exercises')
     .delete()
     .eq('id', id)
     .select('id')
     .maybeSingle();
+  if (error?.code === '23503') return 'in-use';
   if (error) throw error;
   if (!data) throw new Error('Exercise not found');
   await invalidateExercises();

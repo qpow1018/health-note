@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { loadRoutines } from '@/features/routine/routineLoader';
+import { useRoutines } from '@/features/routine/routineLoader';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
 import Header from '@/components/common/header/Header';
@@ -10,7 +10,7 @@ import styles from './RoutinePage.module.scss';
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function RoutinePage() {
-  const { routines, error } = loadRoutines();
+  const { routines, error, isLoading, refetch } = useRoutines();
 
   return (
     <section className={styles['routine-page']}>
@@ -27,12 +27,18 @@ export default function RoutinePage() {
         }
       />
       <div className={styles['content']}>
+        {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+        {error && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p role="alert" className={styles['error']}>
             {error}
           </p>
         )}
-        {!error && routines.length === 0 && (
+        {!isLoading && !error && routines.length === 0 && (
           <div className={styles['empty']}>
             <p>아직 등록한 루틴이 없어요.</p>
             <p className={styles['hint']}>운동을 묶어 나만의 반복 일정을 만들어보세요.</p>
@@ -42,7 +48,7 @@ export default function RoutinePage() {
             </ButtonLink>
           </div>
         )}
-        {!error && routines.length > 0 && (
+        {!isLoading && !error && routines.length > 0 && (
           <>
             <div className={styles['list-toolbar']}>
               <p>총 {routines.length}개</p>

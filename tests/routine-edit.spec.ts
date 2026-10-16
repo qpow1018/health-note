@@ -176,6 +176,7 @@ test('없는 루틴·손상 데이터는 폼을 제공하지 않으며 수정 �
   await expect(page.getByText('루틴을 찾을 수 없어요.')).toBeVisible();
   await expect(page.getByRole('button', { name: '저장', exact: true })).toHaveCount(0);
   await page.goto('/routine/r1/edit');
+  await expect(page.getByLabel('루틴 이름')).toHaveValue(ROUTINE.name);
   await page.evaluate(({ key, other }) => localStorage.setItem(key, JSON.stringify([other])), {
     key: KEY,
     other: OTHER,

@@ -1,12 +1,7 @@
-import { getUserStorageKey } from '@/features/auth/userStorage';
-import {
-  getNextRoutineDate,
-  getTodayDate,
-  isRoutineDate,
-  isRoutineScheduled,
-  moveRoutineDate,
-} from './routineSchedule';
-import { getExercises } from '@/features/exercise/exerciseStorage';
+import { getStorageUserId } from '@/features/auth/userStorage';
+import { getSupabase } from '@/lib/supabase';
+import { queryClient } from '@/lib/queryClient';
+import { getNextRoutineDate, getTodayDate } from './routineSchedule';
 
 export type TRoutineSchedule =
   | { type: 'weekdays'; days: number[] }
@@ -19,93 +14,59 @@ export type TRoutineValues = {
   memo: string;
 };
 
-export type TRoutine = TRoutineValues & { id: string; isActive: boolean };
+export type TRoutine = TRoutineValues & { id: string; isActive: boolean; version: number };
 
-type TStoredRoutine = Omit<TRoutine, 'isActive'> & { isActive?: boolean };
+type TRoutineRow = {
+  id: string;
+  name: string;
+  schedule: TRoutineSchedule;
+  memo: string;
+  is_active: boolean;
+  version: number;
+  routine_exercises: { exercise_id: string; position: number }[];
+};
 
-const STORAGE_KEY = 'health-note.routines.v1';
-
-function isDate(value: unknown): value is string {
-  return typeof value === 'string' && isRoutineDate(value);
+export async function getRoutines(signal?: AbortSignal): Promise<TRoutine[]> {
+  let query = getSupabase()
+    .from('routines')
+    .select('id,name,schedule,memo,is_active,version,routine_exercises(exercise_id,position)')
+    .order('position')
+    .order('id')
+    .retry(false);
+  if (signal) query = query.abortSignal(signal);
+  const { data, error } = await query.returns<TRoutineRow[]>();
+  if (error) throw error;
+  return data.map(({ is_active, routine_exercises, ...routine }) => ({
+    ...routine,
+    isActive: is_active,
+    exerciseIds: [...routine_exercises]
+      .sort((a, b) => a.position - b.position)
+      .map((item) => item.exercise_id),
+  }));
 }
 
-function isSchedule(value: unknown): value is TRoutineSchedule {
-  if (typeof value !== 'object' || value === null) return false;
-  const schedule = value as Record<string, unknown>;
-  if (schedule.type === 'weekdays') {
-    return (
-      Array.isArray(schedule.days) &&
-      schedule.days.length > 0 &&
-      schedule.days.every((day) => Number.isInteger(day) && day >= 0 && day <= 6) &&
-      new Set(schedule.days).size === schedule.days.length
-    );
-  }
-  if (
-    schedule.type !== 'interval' ||
-    !isDate(schedule.startDate) ||
-    typeof schedule.intervalDays !== 'number' ||
-    !Number.isSafeInteger(schedule.intervalDays) ||
-    schedule.intervalDays < 1
-  )
-    return false;
-  if (schedule.postponedDates === undefined) return true;
-  if (!Array.isArray(schedule.postponedDates)) return false;
-  let anchor = schedule.startDate;
-  for (const date of schedule.postponedDates) {
-    if (!isDate(date) || date >= '9999-12-31') return false;
-    if (
-      !isRoutineScheduled(
-        { type: 'interval', startDate: anchor, intervalDays: schedule.intervalDays },
-        date,
-      )
-    )
-      return false;
-    anchor = moveRoutineDate(date, 1);
-  }
-  return true;
+function invalidateRoutines() {
+  return queryClient.invalidateQueries({ queryKey: ['routines'], refetchType: 'none' });
 }
 
-function isRoutine(value: unknown): value is TStoredRoutine {
-  if (typeof value !== 'object' || value === null) return false;
-  const routine = value as Record<string, unknown>;
-  return (
-    typeof routine.id === 'string' &&
-    (routine.isActive === undefined || typeof routine.isActive === 'boolean') &&
-    typeof routine.name === 'string' &&
-    Boolean(routine.name.trim()) &&
-    typeof routine.memo === 'string' &&
-    Array.isArray(routine.exerciseIds) &&
-    routine.exerciseIds.length > 0 &&
-    routine.exerciseIds.every((id) => typeof id === 'string') &&
-    new Set(routine.exerciseIds).size === routine.exerciseIds.length &&
-    isSchedule(routine.schedule)
-  );
-}
-
-export function getRoutines(): TRoutine[] {
-  const stored = localStorage.getItem(getUserStorageKey(STORAGE_KEY));
-  if (stored === null) return [];
-  const routines: unknown = JSON.parse(stored);
-  if (!Array.isArray(routines) || !routines.every(isRoutine))
-    throw new Error('Invalid routine data');
-  return routines.map((routine) => ({ ...routine, isActive: routine.isActive ?? false }));
-}
-
-async function validateRoutine(routine: TRoutine): Promise<void> {
-  if (!isRoutine(routine)) throw new Error('Invalid routine');
-  const exercises = await getExercises();
-  if (!routine.exerciseIds.every((id) => exercises.some((exercise) => exercise.id === id))) {
-    throw new Error('Exercise not found');
-  }
+async function saveRoutine(id: string, values: TRoutineValues, expectedVersion: number | null) {
+  const { data, error } = await getSupabase().rpc('save_routine', {
+    routine_id: id,
+    owner_id: getStorageUserId(),
+    routine_name: values.name,
+    routine_schedule: values.schedule,
+    routine_memo: values.memo,
+    exercise_ids: values.exerciseIds,
+    expected_version: expectedVersion,
+  });
+  if (error) throw error;
+  if (!data) return 'conflict';
+  await invalidateRoutines();
+  return 'updated';
 }
 
 export async function createRoutine(values: TRoutineValues): Promise<void> {
-  const storageKey = getUserStorageKey(STORAGE_KEY);
-  const routine = { ...values, id: crypto.randomUUID(), isActive: false };
-  await validateRoutine(routine);
-  if (getUserStorageKey(STORAGE_KEY) !== storageKey) throw new Error('Account changed');
-  const routines = getRoutines();
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify([...routines, routine]));
+  await saveRoutine(crypto.randomUUID(), values, null);
 }
 
 export async function updateRoutine(
@@ -113,12 +74,7 @@ export async function updateRoutine(
   values: TRoutineValues,
   expectedRoutine: TRoutine,
 ): Promise<'updated' | 'conflict'> {
-  const storageKey = getUserStorageKey(STORAGE_KEY);
-  const routines = getRoutines();
-  const index = routines.findIndex((routine) => routine.id === id);
-  if (index === -1) throw new Error('Routine not found');
-  if (JSON.stringify(routines[index]) !== JSON.stringify(expectedRoutine)) return 'conflict';
-  const previousSchedule = routines[index].schedule;
+  const previousSchedule = expectedRoutine.schedule;
   let schedule = values.schedule;
   if (schedule.type === 'interval') {
     const isSameSchedule =
@@ -132,78 +88,78 @@ export async function updateRoutine(
       postponedDates: isSameSchedule ? previousSchedule.postponedDates : undefined,
     };
   }
-  const routine = { ...values, id, schedule, isActive: routines[index].isActive };
-  await validateRoutine(routine);
-  if (getUserStorageKey(STORAGE_KEY) !== storageKey) throw new Error('Account changed');
-  const latestRoutines = getRoutines();
-  const latestIndex = latestRoutines.findIndex((item) => item.id === id);
-  if (latestIndex === -1) throw new Error('Routine not found');
-  if (JSON.stringify(latestRoutines[latestIndex]) !== JSON.stringify(expectedRoutine))
-    return 'conflict';
-  latestRoutines[latestIndex] = routine;
-  localStorage.setItem(storageKey, JSON.stringify(latestRoutines));
-  return 'updated';
+  const result = await saveRoutine(id, { ...values, schedule }, expectedRoutine.version);
+  if (result === 'conflict' && !(await getRoutines()).some((item) => item.id === id))
+    throw new Error('Routine not found');
+  return result;
 }
 
-export function deleteRoutine(id: string): void {
-  const routines = getRoutines();
-  if (!routines.some((routine) => routine.id === id)) throw new Error('Routine not found');
-  localStorage.setItem(
-    getUserStorageKey(STORAGE_KEY),
-    JSON.stringify(routines.filter((routine) => routine.id !== id)),
-  );
+export async function deleteRoutine(id: string): Promise<void> {
+  const { data, error } = await getSupabase()
+    .from('routines')
+    .delete()
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Routine not found');
+  await invalidateRoutines();
 }
 
-export function postponeRoutine(id: string, expectedDate: string): void {
-  const routines = getRoutines();
-  const index = routines.findIndex((routine) => routine.id === id);
-  if (index === -1) throw new Error('Routine not found');
-  const routine = routines[index];
-  if (routine.schedule.type !== 'interval') throw new Error('Interval routine required');
+export async function postponeRoutine(id: string, expectedDate: string): Promise<void> {
+  const routine = (await getRoutines()).find((item) => item.id === id);
+  if (!routine || routine.schedule.type !== 'interval')
+    throw new Error('Interval routine required');
   const nextDate = getNextRoutineDate(routine.schedule, getTodayDate());
-  if (nextDate === null || nextDate !== expectedDate || nextDate >= '9999-12-31') {
+  if (nextDate === null || nextDate !== expectedDate || nextDate >= '9999-12-31')
     throw new Error('Schedule changed or date out of range');
-  }
-  const schedule: TRoutineSchedule = {
+  const schedule = {
     ...routine.schedule,
     postponedDates: [...(routine.schedule.postponedDates ?? []), nextDate],
   };
-  if (!isSchedule(schedule)) throw new Error('Invalid schedule');
-  routines[index] = { ...routine, schedule };
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
+  const { data, error } = await getSupabase()
+    .from('routines')
+    .update({ schedule })
+    .eq('id', id)
+    .eq('version', routine.version)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Schedule changed');
+  await invalidateRoutines();
 }
 
-export function reorderRoutines(
+export async function reorderRoutines(
   orderedIds: string[],
   expectedIds: string[],
-): TRoutine[] | 'conflict' {
-  const routines = getRoutines();
-  const currentIds = routines.map((routine) => routine.id);
-  if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) return 'conflict';
-  if (
-    orderedIds.length !== currentIds.length ||
-    new Set(orderedIds).size !== orderedIds.length ||
-    orderedIds.some((id) => !currentIds.includes(id))
-  ) {
-    throw new Error('Invalid routine order');
-  }
-  const byId = new Map(routines.map((routine) => [routine.id, routine]));
-  const reordered = orderedIds.map((id) => byId.get(id)!);
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(reordered));
-  return reordered;
+): Promise<'updated' | 'conflict'> {
+  const { data, error } = await getSupabase().rpc('reorder_routines', {
+    ordered_ids: orderedIds,
+    expected_ids: expectedIds,
+  });
+  if (error) throw error;
+  if (!data) return 'conflict';
+  await invalidateRoutines();
+  return 'updated';
 }
 
-export function setRoutineActive(
+export async function setRoutineActive(
   id: string,
   isActive: boolean,
   expectedIsActive: boolean,
-): TRoutine | 'conflict' {
-  const routines = getRoutines();
-  const index = routines.findIndex((routine) => routine.id === id);
-  if (index === -1) throw new Error('Routine not found');
-  if (routines[index].isActive !== expectedIsActive) return 'conflict';
-  const routine = { ...routines[index], isActive };
-  routines[index] = routine;
-  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
-  return routine;
+): Promise<'updated' | 'conflict'> {
+  const { data, error } = await getSupabase()
+    .from('routines')
+    .update({ is_active: isActive })
+    .eq('id', id)
+    .eq('is_active', expectedIsActive)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    if (!(await getRoutines()).some((item) => item.id === id)) throw new Error('Routine not found');
+    return 'conflict';
+  }
+  await invalidateRoutines();
+  return 'updated';
 }

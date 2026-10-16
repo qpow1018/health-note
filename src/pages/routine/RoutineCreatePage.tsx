@@ -17,7 +17,7 @@ export default function RoutineCreatePage() {
       await createRoutine(values);
     } catch {
       toast.error(
-        '저장하지 못했어요. 선택한 운동이 삭제되었거나 브라우저 저장에 문제가 있을 수 있어요. 운동 목록과 저장 공간을 확인해 주세요.',
+        '저장하지 못했어요. 선택한 운동이 삭제되었거나 인터넷 연결에 문제가 있을 수 있어요. 운동 목록과 연결을 확인해 주세요.',
         { isShowCloseButton: true },
       );
       return;

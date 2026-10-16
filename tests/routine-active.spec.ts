@@ -31,6 +31,7 @@ test.beforeEach(async ({ page }) => {
     { key: KEY, routines: [LEGACY, OTHER] },
   );
   await page.goto('/routine/r');
+  await expect(page.getByRole('switch', { name: '루틴 활성화' })).toBeVisible();
 });
 
 test('기존 필드가 없는 데이터는 비활성으로 읽고 조회만으로 원본을 쓰지 않는다', async ({
@@ -136,7 +137,7 @@ test('활성 루틴 수정은 상태를 유지하고 편집 도중 상태 변경
   await page.evaluate(async () => {
     const modulePath = '/src/features/routine/routineStorage.ts';
     const { setRoutineActive } = await import(modulePath);
-    setRoutineActive('r', false, true);
+    await setRoutineActive('r', false, true);
   });
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('다른 화면에서 변경된 루틴');

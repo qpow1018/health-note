@@ -104,9 +104,28 @@ export async function mockExerciseApi(page: Page) {
             return input.method === 'DELETE' ? [] : [next];
           });
         }
+        if (input.method === 'DELETE' && changed.length) {
+          const owner = input.key.slice('health-note.exercises.v1:'.length);
+          const routines = JSON.parse(
+            localStorage.getItem(`health-note.routines.v1:${owner}`) ?? '[]',
+          );
+          if (
+            routines.some((routine: { exerciseIds: string[] }) =>
+              changed.some((item) => routine.exerciseIds.includes(item.id)),
+            )
+          )
+            return { data: [], isInUse: true };
+        }
         localStorage.setItem(input.key, JSON.stringify(items));
         return { data: changed.map(row) };
       }, input);
+      if ('isInUse' in result && result.isInUse) {
+        await route.fulfill({
+          status: 409,
+          json: { code: '23503', message: 'Exercise is in use' },
+        });
+        return;
+      }
       if (Array.isArray(result.data) && request.headers().accept?.includes('vnd.pgrst.object')) {
         if (result.data.length !== 1) {
           await route.fulfill({

@@ -7,7 +7,7 @@ import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
 import { reorderRoutines } from '@/features/routine/routineStorage';
 import type { TRoutine } from '@/features/routine/routineStorage';
-import { loadRoutines } from '@/features/routine/routineLoader';
+import { useRoutines } from '@/features/routine/routineLoader';
 import toast from '@/utils/toast';
 
 import Button from '@/components/common/button/Button';
@@ -39,16 +39,43 @@ type TSortableRoutineProps = {
 };
 
 export default function RoutineOrderPage() {
+  const { routines, error, isLoading, refetch } = useRoutines(true);
+  if (isLoading || error)
+    return (
+      <section className={styles['order-page']}>
+        <Header title="루틴 순서 변경" fallbackTo="/routine" />
+        <div className={styles['content']}>
+          {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+          {error && (
+            <>
+              <p className={styles['error']} role="alert">
+                {error}
+              </p>
+              <button type="button" onClick={() => void refetch()}>
+                다시 시도
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    );
+  return <RoutineOrderContent initialRoutines={routines} />;
+}
+
+function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] }) {
   const navigate = useNavigate();
-  const [{ routines, error }] = useState(loadRoutines);
+  const [routines] = useState(initialRoutines);
+  const [isSaving, setIsSaving] = useState(false);
   const [orderedIds, setOrderedIds] = useState(() => routines.map((routine) => routine.id));
   const [isDragging, setIsDragging] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const isChanged = orderedIds.some((id, index) => id !== routines[index].id);
 
-  function handleSave() {
+  async function handleSave() {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
-      const saved = reorderRoutines(
+      const saved = await reorderRoutines(
         orderedIds,
         routines.map((routine) => routine.id),
       );
@@ -63,6 +90,8 @@ export default function RoutineOrderPage() {
         isShowCloseButton: true,
       });
       return;
+    } finally {
+      setIsSaving(false);
     }
     toast.success('루틴 순서를 변경했어요.');
     navigate('/routine', { replace: true });
@@ -82,15 +111,8 @@ export default function RoutineOrderPage() {
     <section className={styles['order-page']}>
       <Header title="루틴 순서 변경" onBack={() => navigate('/routine', { replace: true })} />
       <div className={styles['content']}>
-        {error && (
-          <p className={styles['error']} role="alert">
-            {error}
-          </p>
-        )}
-        {!error && routines.length === 0 && (
-          <p className={styles['hint']}>순서를 변경할 루틴이 없어요.</p>
-        )}
-        {!error && routines.length > 0 && (
+        {routines.length === 0 && <p className={styles['hint']}>순서를 변경할 루틴이 없어요.</p>}
+        {routines.length > 0 && (
           <>
             <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
             <p className={styles['announcement']} role="status" aria-live="polite">
@@ -125,7 +147,7 @@ export default function RoutineOrderPage() {
               </ul>
             </DragDropProvider>
             <div className={styles['actions']}>
-              <Button disabled={!isChanged || isDragging} onClick={handleSave}>
+              <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
                 완료
               </Button>
             </div>

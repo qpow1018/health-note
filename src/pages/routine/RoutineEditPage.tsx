@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { loadRoutine } from '@/features/routine/routineLoader';
+import { useRoutine } from '@/features/routine/routineLoader';
 import { updateRoutine } from '@/features/routine/routineStorage';
 import type { TRoutineValues } from '@/features/routine/routineStorage';
 import toast from '@/utils/toast';
@@ -19,7 +18,7 @@ export default function RoutineEditPage() {
 
 function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
   const navigate = useNavigate();
-  const [{ routine, error }] = useState(() => loadRoutine(routineId));
+  const { routine, error, isLoading, refetch } = useRoutine(routineId, true);
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;
 
   async function handleSave(values: TRoutineValues): Promise<void> {
@@ -38,7 +37,7 @@ function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
       }
     } catch {
       toast.error(
-        '저장하지 못했어요. 루틴 또는 선택한 운동이 삭제되었거나 브라우저 저장에 문제가 있을 수 있어요.',
+        '저장하지 못했어요. 루틴 또는 선택한 운동이 삭제되었거나 인터넷 연결에 문제가 있을 수 있어요.',
         { isShowCloseButton: true },
       );
       return;
@@ -51,12 +50,18 @@ function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
     <section className={styles['routine-edit-page']}>
       <Header title="루틴 수정" backTo={detailTo} />
       <div className={styles['content']}>
+        {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+        {error && (
+          <button type="button" onClick={() => void refetch()}>
+            다시 시도
+          </button>
+        )}
         {error && (
           <p role="alert" className={styles['error']}>
             {error}
           </p>
         )}
-        {!error && !routine && (
+        {!isLoading && !error && !routine && (
           <div className={styles['missing']}>
             <p>루틴을 찾을 수 없어요.</p>
             <ButtonLink to="/routine" color="gray" fill="outline">
