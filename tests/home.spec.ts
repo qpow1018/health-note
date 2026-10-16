@@ -84,11 +84,12 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
   await expect(page.getByText('완료', { exact: true })).toBeVisible();
   await page.getByRole('checkbox', { name: '로우 완료' }).uncheck();
   await expect(page.getByText('운동 2개 중 1개 완료')).toBeVisible();
+  await page.screenshot({ path: '/tmp/health-note-home-redesign.png' });
   await page.setViewportSize({ width: 320, height: 740 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await page.getByRole('link', { name: '상체 루틴' }).click();
+  await page.getByRole('link', { name: '상체 루틴 관리' }).click();
   await expect(page).toHaveURL('/routine/upper');
   await expect(page.getByRole('switch', { name: '루틴 활성화' })).toBeVisible();
   await page.goBack();
@@ -97,4 +98,33 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
   await page.clock.setSystemTime(new Date('2026-10-17T12:00:00'));
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(page.getByRole('checkbox', { name: '푸시업 완료' })).not.toBeChecked();
+});
+
+test('긴 운동 이름과 여러 루틴, 행 클릭과 키보드 체크', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    const exercises = JSON.parse(localStorage.getItem('health-note.exercises.v1')!);
+    exercises[0].name = '아주 긴 운동 이름과 운동량이 들어가도 읽을 수 있는 덤벨 숄더 프레스';
+    exercises[0].amount = '천천히 15회, 마지막 반복에서 3초 유지';
+    localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises));
+    const routines = JSON.parse(localStorage.getItem('health-note.routines.v1')!);
+    routines[1].isActive = true;
+    localStorage.setItem('health-note.routines.v1', JSON.stringify(routines));
+  });
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.reload();
+  const firstRoutine = page.getByRole('list').first().locator(':scope > li').first();
+  await firstRoutine
+    .getByText('아주 긴 운동 이름과 운동량이 들어가도 읽을 수 있는 덤벨 숄더 프레스', {
+      exact: true,
+    })
+    .click();
+  const checkbox = firstRoutine.getByRole('checkbox').first();
+  await expect(checkbox).toBeChecked();
+  await checkbox.focus();
+  await page.keyboard.press('Space');
+  await expect(checkbox).not.toBeChecked();
+  await expect(page.getByText('시작 전', { exact: true })).toHaveCount(2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '/tmp/health-note-home-long.png', fullPage: true });
 });

@@ -1,0 +1,180 @@
+.home-routines {
+  min-width: 0;
+  .date {
+    color: $gray-300;
+    font-size: $font-size-caption;
+  }
+  .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      color: $gray-300;
+      font-size: 13px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+  }
+  .list {
+    display: grid;
+    gap: 24px;
+    padding: 0;
+    margin-top: 20px;
+    list-style: none;
+  }
+  .card {
+    overflow-wrap: anywhere;
+  }
+  .routine-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    h3 {
+      min-width: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      flex-shrink: 0;
+      color: $gray-300;
+      font-size: 13px;
+      text-decoration: none;
+    }
+  }
+  .routine-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: $gray-300;
+    > span {
+      padding: 3px 8px;
+      background: $bg-light;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .completed-status {
+      color: $mint-light;
+      background: $mint-tint;
+    }
+  }
+  progress {
+    display: block;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    margin: 14px 0 16px;
+    border: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: $border-soft;
+    color: $mint-accent;
+    &::-webkit-progress-bar {
+      background: $border-soft;
+    }
+    &::-webkit-progress-value {
+      background: $mint-accent;
+    }
+    &::-moz-progress-bar {
+      background: $mint-accent;
+    }
+  }
+  .exercises {
+    padding: 0;
+    list-style: none;
+    border: 1px solid $border-soft;
+    border-radius: 10px;
+    overflow: hidden;
+    li {
+      background: $bg;
+      & + li {
+        border-top: 1px solid $border-soft;
+      }
+    }
+    .completed {
+      background: $mint-tint;
+      .exercise-name,
+      .order {
+        color: $gray-400;
+      }
+      .exercise-name {
+        text-decoration: line-through;
+      }
+    }
+  }
+  .exercise-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 88px;
+    padding: 16px 14px;
+    cursor: pointer;
+    &:has(input:focus-visible) {
+      outline: 2px solid $mint-light;
+      outline-offset: -3px;
+    }
+    input {
+      width: 24px;
+      height: 24px;
+      margin: 0 0 0 4px;
+      flex-shrink: 0;
+      accent-color: $mint-accent;
+      cursor: pointer;
+    }
+  }
+  .order {
+    color: $gray-400;
+    font-size: 13px;
+    min-width: 16px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .exercise-info {
+    display: grid;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  .exercise-name {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .amount {
+    color: $gray-300;
+    font-size: 13px;
+  }
+  .missing {
+    padding: 20px 16px;
+    color: $gray-300;
+    font-size: 13px;
+  }
+  .empty {
+    padding: 32px 0;
+    p {
+      margin-bottom: 24px;
+    }
+  }
+  .upcoming {
+    color: $gray-300;
+    overflow-wrap: anywhere;
+  }
+  .error {
+    margin-top: 24px;
+    color: $error-accent;
+  }
+}
