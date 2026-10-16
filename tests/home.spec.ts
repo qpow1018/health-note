@@ -74,6 +74,19 @@ test('빈 상태, 다음 일정, 삭제된 운동', async ({ page }) => {
 
 test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: '헬스노트', exact: true })).toBeVisible();
+  const logo = page.locator('header img');
+  await expect(logo).toHaveJSProperty('complete', true);
+  expect(await logo.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(
+    0,
+  );
+  const manifest = await page.request.get('/manifest.webmanifest');
+  expect(manifest.ok()).toBe(true);
+  for (const icon of (await manifest.json()).icons) {
+    expect((await page.request.get(icon.src)).ok()).toBe(true);
+  }
+  expect((await page.request.get('/brand/apple-touch-icon.png')).ok()).toBe(true);
+  await page.screenshot({ path: '/tmp/health-note-logo-home.png' });
   await expect(page.getByText('10회 × 3세트')).toBeVisible();
   await page.getByRole('checkbox', { name: '푸시업 완료' }).check();
   await expect(page).toHaveURL('/');
