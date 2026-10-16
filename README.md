@@ -15,11 +15,72 @@ npm ci
 npm run dev
 ```
 
+## 개발·운영 Supabase 분리
+
+| 환경           | Supabase                        | 환경 파일                                     |
+| -------------- | ------------------------------- | --------------------------------------------- |
+| 로컬 개발      | Docker의 `health-note-local`    | `.env.development.local`                      |
+| 운영 빌드·배포 | 클라우드 `scehcbhewfztqfhxgpsh` | `.env.production.local` 또는 호스팅 환경 변수 |
+
+현재 화면과 운동·루틴 저장은 아직 localStorage를 사용합니다. 아래 설정은 DB 전환에 앞선 환경 준비이며 로그인 화면·DB 저장 연동은 다음 단계입니다.
+
+### 로컬 실행
+
+Docker Desktop을 실행한 뒤, 처음 한 번만 로컬 전용 네트워크를 만듭니다.
+
+```sh
+npm run db:network
+```
+
+네트워크는 `127.0.0.1` 바인딩 옵션을 사용합니다. 다만 macOS Docker Desktop에서는 이 옵션만으로 제한되지 않는 현상이 있어 **Settings → Resources → Network → Port binding behavior → Localhost by default** 설정도 필요합니다. 이는 Docker 전체 설정이므로 직접 변경합니다. 이 PC에서는 설정 변경 후 재시작하여 API·DB·Studio의 실제 macOS 수신 주소가 모두 `127.0.0.1`임을 확인했습니다. [관련 Supabase 이슈](https://github.com/supabase/supabase/issues/51027)
+
+다른 프로젝트의 Supabase와 충돌하지 않도록 Health Note는 별도 이름과 5532x 포트를 사용합니다.
+
+```sh
+npm run db:start
+npm run db:status
+cp .env.example .env.development.local
+```
+
+실행 후 `docker ps --filter label=com.supabase.cli.project=health-note-local --format '{{.Names}} {{.Ports}}'`에서 호스트 포트가 `127.0.0.1`인지 확인합니다. Docker가 IPv6 `[::]`도 함께 표시할 수 있으므로 macOS에서는 `lsof -nP -iTCP:55321 -iTCP:55322 -iTCP:55323 -sTCP:LISTEN`으로 실제 수신 주소를 확인합니다. 실제 수신 주소가 `*`라면 바인딩 설정을 다시 확인하고 재시작합니다.
+
+`.env.development.local`의 공개 키를 `db:status`에 표시되는 로컬 Publishable key로 바꿉니다. 로컬 환경에서 Publishable key가 표시되지 않는 경우 로컬 anon key를 사용할 수 있습니다. Secret key와 service_role key는 넣지 않습니다. 이 PC에는 실행 검증 후 로컬 환경 파일이 작성되어 있습니다.
+
+- 데이터 API: `http://127.0.0.1:55321`
+- PostgreSQL: `127.0.0.1:55322`
+- 로컬 관리 화면(Studio): `http://127.0.0.1:55323`
+- 앱: `npm run dev` → `http://localhost:5173`
+
+종료할 때는 `npm run db:stop`을 실행합니다. 이 명령은 Health Note 컨테이너만 종료하고 데이터를 보존합니다. 데이터 삭제 옵션과 전체 프로젝트 종료 옵션은 사용하지 않습니다.
+
+### 로컬 구글 로그인
+
+클라우드에서 활성화한 Google 설정은 로컬 Supabase에 자동 반영되지 않습니다. 환경 준비 단계에서는 로컬 Google 제공자를 비활성화해 두었습니다. 로그인 구현 시 다음 설정을 진행합니다.
+
+1. Google OAuth 웹 클라이언트의 승인된 리디렉션 URI에 `http://127.0.0.1:55321/auth/v1/callback`을 추가합니다. 기존 클라우드 콜백 주소는 유지합니다.
+2. `supabase/.env.example`을 저장소 루트의 `.env`로 복사하고 Client ID와 Secret을 입력합니다. `.env`는 Git에서 제외되며, 이 값에는 `VITE_` 접두사를 붙이지 않습니다.
+3. `supabase/config.toml`의 `[auth.external.google]`에서 `enabled = true`로 바꿉니다.
+4. `npm run db:stop` 후 `npm run db:start`로 재시작합니다.
+
+### 운영 설정
+
+이 PC의 기존 클라우드 URL·공개 키는 `.env.local`에서 `.env.production.local`로 이동했습니다. 다른 PC에서는 `.env.production.example`을 `.env.production.local`로 복사하고 운영 공개 키를 입력합니다.
+
+호스팅에서는 `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`를 **Production 환경에만** 설정합니다. `npm run build`는 production 모드이고, `npm run dev`는 development 모드입니다. 환경 파일을 바꾸면 Vite를 재시작합니다. 모든 모드에서 읽는 `.env.local`에는 Supabase 연결 값을 넣지 않습니다.
+
+개발 모드에서 클라우드 주소를 사용하거나 운영 모드에서 로컬 주소를 사용하면 Vite 설정이 오류를 표시합니다. 미리보기 배포는 Docker의 localhost에 접근할 수 없으므로, DB 연동 테스트가 필요해지면 별도 클라우드 개발 프로젝트를 연결합니다. 운영 프로젝트를 미리보기용으로 공유하지 않습니다.
+
+현재 `supabase/schema.sql`은 적용되지 않은 설계 초안입니다. 로컬 시작 시 실행되지 않습니다. 실제 테이블·RLS 도입 시 CLI의 `supabase migration new`로 마이그레이션을 만들고 로컬에서 검증한 뒤 운영에 적용합니다. 운영 DB의 변경·배포·데이터 이전은 이번 환경 설정에 포함하지 않습니다.
+
+공식 참고: [Supabase 로컬 개발](https://supabase.com/docs/guides/local-development), [로컬 비밀 설정](https://supabase.com/docs/guides/local-development/managing-config), [Vite 환경 파일](https://vite.dev/guide/env-and-mode).
+
 같은 Wi-Fi의 Android 휴대폰에서 확인하려면 아래 명령으로 실행하고 출력된 Network 주소에 접속합니다.
 
 ```sh
 npm run dev -- --host 0.0.0.0
 ```
+
+위 명령은 현재 화면 확인용입니다. 로컬 Supabase는 PC의 loopback에만 공개하므로, Android에서 DB까지 연결하려면 USB 포트 전달 등 별도 구성이 필요합니다.
 
 ## 검증
 
