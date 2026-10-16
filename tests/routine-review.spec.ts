@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINE = {
   id: 'r',
   name: '기존 루틴',
@@ -17,8 +17,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
     ({ routine, exercise }) => {
-      localStorage.setItem('health-note.routines.v1', JSON.stringify([routine]));
-      localStorage.setItem('health-note.exercises.v1', JSON.stringify([exercise]));
+      localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify([routine]));
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify([exercise]));
     },
     { routine: ROUTINE, exercise: EXERCISE },
   );
@@ -66,7 +66,7 @@ test('운동 선택을 다시 열면 추가·삭제를 반영하고 폼 입력�
   await otherTab.goto('/exercise');
   await otherTab.evaluate(() =>
     localStorage.setItem(
-      'health-note.exercises.v1',
+      'health-note.exercises.v1:test-user',
       JSON.stringify([{ id: 'b', name: '스쿼트', amount: '10회', sets: 3 }]),
     ),
   );
@@ -91,11 +91,12 @@ test('운동 선택을 다시 열면 추가·삭제를 반영하고 폼 입력�
 test('운동 목록 읽기 실패 후 다시 선택하면 복구하고 입력을 유지한다', async ({ page }) => {
   await page.goto('/routine/r/edit');
   await page.getByLabel('메모').fill('복구 후 유지');
-  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1', '{broken'));
+  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1:test-user', '{broken'));
   await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
   await page.evaluate(
-    (exercise) => localStorage.setItem('health-note.exercises.v1', JSON.stringify([exercise])),
+    (exercise) =>
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify([exercise])),
     EXERCISE,
   );
   await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();

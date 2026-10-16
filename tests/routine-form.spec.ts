@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 const EXERCISES = Array.from({ length: 24 }, (_, index) => ({
   id: String(index),
@@ -10,7 +10,7 @@ const EXERCISES = Array.from({ length: 24 }, (_, index) => ({
 test.beforeEach(async ({ page }) => {
   await page.goto('/routine/new');
   await page.evaluate(
-    (items) => localStorage.setItem('health-note.exercises.v1', JSON.stringify(items)),
+    (items) => localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(items)),
     EXERCISES,
   );
   await page.reload();
@@ -102,7 +102,7 @@ test('핸들로 정렬하고 Escape는 순서를 복구하며 선택 변경 취�
   await expect(page).toHaveURL('/routine');
   expect(
     await page.evaluate(
-      () => JSON.parse(localStorage.getItem('health-note.routines.v1')!)[0].exerciseIds,
+      () => JSON.parse(localStorage.getItem('health-note.routines.v1:test-user')!)[0].exerciseIds,
     ),
   ).toEqual(['1', '0', '2']);
 });
@@ -136,7 +136,7 @@ test('마우스로 순서를 바꾸고 작은 화면에서도 선택 목록과 �
     true,
   );
   await page.evaluate(
-    (item) => localStorage.setItem('health-note.exercises.v1', JSON.stringify([item])),
+    (item) => localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify([item])),
     EXERCISES[0],
   );
   await page.getByRole('button', { name: '운동 선택', exact: true }).click();

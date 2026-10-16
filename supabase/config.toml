@@ -36,9 +36,9 @@ enable_anonymous_sign_ins = false
 [auth.email]
 enable_signup = false
 
-# Enable after adding the OAuth credentials to the root .env (not VITE_ variables).
+# OAuth credentials are read from the root .env (not VITE_ variables).
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = "http://127.0.0.1:55321/auth/v1/callback"

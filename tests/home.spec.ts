@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './authFixture';
 
 const exercises = [
   { id: 'push', name: '푸시업', amount: '10회', sets: 3, youtubeLinks: [], memo: '' },
@@ -9,10 +9,10 @@ test.beforeEach(async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T12:00:00') });
   await page.addInitScript(
     ({ exercises }) => {
-      if (localStorage.getItem('health-note.exercises.v1')) return;
-      localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises));
+      if (localStorage.getItem('health-note.exercises.v1:test-user')) return;
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(exercises));
       localStorage.setItem(
-        'health-note.routines.v1',
+        'health-note.routines.v1:test-user',
         JSON.stringify([
           {
             id: 'upper',
@@ -48,17 +48,19 @@ test('저장 실패와 손상 데이터 보존', async ({ page }) => {
   await expect(page.getByRole('checkbox', { name: '푸시업 완료' })).not.toBeChecked();
   await expect(page.getByText(/완료 상태를 저장하지 못했어요/)).toBeVisible();
   await page.reload();
-  await page.evaluate(() => localStorage.setItem('health-note.routine-progress.v1', '{broken'));
+  await page.evaluate(() =>
+    localStorage.setItem('health-note.routine-progress.v1:test-user', '{broken'),
+  );
   await page.reload();
   await expect(page.getByRole('alert')).toContainText('데이터를 불러오지 못했어요');
-  expect(await page.evaluate(() => localStorage.getItem('health-note.routine-progress.v1'))).toBe(
-    '{broken',
-  );
+  expect(
+    await page.evaluate(() => localStorage.getItem('health-note.routine-progress.v1:test-user')),
+  ).toBe('{broken');
 });
 
 test('빈 상태, 다음 일정, 삭제된 운동', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1', '[]'));
+  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1:test-user', '[]'));
   await page.reload();
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   await expect(page.getByText('삭제된 운동이에요. 완료 대상에서 제외됩니다.')).toHaveCount(2);
@@ -67,7 +69,7 @@ test('빈 상태, 다음 일정, 삭제된 운동', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('오늘 예정된 루틴이 없어요.')).toBeVisible();
   await expect(page.getByText(/다음 예정/)).toContainText('2026-10-23');
-  await page.evaluate(() => localStorage.setItem('health-note.routines.v1', '[]'));
+  await page.evaluate(() => localStorage.setItem('health-note.routines.v1:test-user', '[]'));
   await page.reload();
   await expect(page.getByText('아직 등록한 루틴이 없어요.')).toBeVisible();
 });
@@ -135,13 +137,13 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
 test('긴 운동 이름과 여러 루틴, 행 클릭과 키보드 체크', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
-    const exercises = JSON.parse(localStorage.getItem('health-note.exercises.v1')!);
+    const exercises = JSON.parse(localStorage.getItem('health-note.exercises.v1:test-user')!);
     exercises[0].name = '아주 긴 운동 이름과 운동량이 들어가도 읽을 수 있는 덤벨 숄더 프레스';
     exercises[0].amount = '천천히 15회, 마지막 반복에서 3초 유지';
-    localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises));
-    const routines = JSON.parse(localStorage.getItem('health-note.routines.v1')!);
+    localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(exercises));
+    const routines = JSON.parse(localStorage.getItem('health-note.routines.v1:test-user')!);
     routines[1].isActive = true;
-    localStorage.setItem('health-note.routines.v1', JSON.stringify(routines));
+    localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(routines));
   });
   await page.setViewportSize({ width: 320, height: 740 });
   await page.reload();

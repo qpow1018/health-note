@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 import { getYoutubeVideoId } from '../src/features/exercise/youtubeUrl';
 
 const ID = 'M7lc1UVf-VE';
@@ -40,7 +40,7 @@ test('영상 주소는 플레이어와 원본 링크를, 채널 주소는 링크
   await page.evaluate(
     (urls) =>
       localStorage.setItem(
-        'health-note.exercises.v1',
+        'health-note.exercises.v1:test-user',
         JSON.stringify([
           { id: 'embed', name: '푸시업', amount: '', sets: null, youtubeLinks: urls, memo: '' },
         ]),

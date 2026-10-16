@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 const EXERCISES = [
   { id: 'walk', name: '걷기', amount: '30분', sets: null },
@@ -8,7 +8,7 @@ const EXERCISES = [
 test('공용 입력과 요일 타일은 키보드로 선택하고 활성 일정 값만 제출한다', async ({ page }) => {
   await page.goto('/routine/new');
   await page.evaluate(
-    (items) => localStorage.setItem('health-note.exercises.v1', JSON.stringify(items)),
+    (items) => localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(items)),
     EXERCISES,
   );
   await page.reload();
@@ -43,7 +43,9 @@ test('공용 입력과 요일 타일은 키보드로 선택하고 활성 일정 
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/routine');
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('health-note.routines.v1')!)[0]),
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem('health-note.routines.v1:test-user')!)[0],
+    ),
   ).toMatchObject({
     exerciseIds: ['walk'],
     schedule: { type: 'weekdays', days: [1, 5] },

@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 import type { Page } from '@playwright/test';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINE = {
   id: 'r',
   name: '격일 루틴',
@@ -18,9 +18,9 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
     (routines) => {
-      localStorage.setItem('health-note.routines.v1', JSON.stringify(routines));
+      localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(routines));
       localStorage.setItem(
-        'health-note.exercises.v1',
+        'health-note.exercises.v1:test-user',
         JSON.stringify([{ id: 'a', name: '걷기', amount: '30분', sets: null }]),
       );
     },

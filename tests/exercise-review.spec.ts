@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.exercises.v1';
+const KEY = 'health-note.exercises.v1:test-user';
 const EXERCISE = { id: 'a', name: '걷기', amount: '30분', sets: null, youtubeLinks: [], memo: '' };
 
 test.beforeEach(async ({ page }) => {

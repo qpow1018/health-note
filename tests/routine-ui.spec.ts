@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 const ROUTINES = ['상체 루틴', '하체 루틴'].map((name, index) => ({
   id: String(index),
@@ -11,9 +11,9 @@ const ROUTINES = ['상체 루틴', '하체 루틴'].map((name, index) => ({
 test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate((routines) => {
-    localStorage.setItem('health-note.routines.v1', JSON.stringify(routines));
+    localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(routines));
     localStorage.setItem(
-      'health-note.exercises.v1',
+      'health-note.exercises.v1:test-user',
       JSON.stringify([{ id: 'walk', name: '걷기', amount: '30분', sets: null }]),
     );
   }, ROUTINES);
@@ -72,7 +72,7 @@ test('모바일 목록·정렬·상세·삭제 모달과 좁은 화면의 긴 �
   await page.evaluate(
     (routines) =>
       localStorage.setItem(
-        'health-note.routines.v1',
+        'health-note.routines.v1:test-user',
         JSON.stringify(routines.map((item) => ({ ...item, name: '긴루틴이름'.repeat(20) }))),
       ),
     ROUTINES,

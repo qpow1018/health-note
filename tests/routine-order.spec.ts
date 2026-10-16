@@ -1,6 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
-const KEY = 'health-note.routines.v1';
+import { expect, test } from './authFixture';
+
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINES = ['푸시업', '스쿼트', '걷기'].map((name, index) => ({
   id: String(index),
   name,
@@ -24,7 +26,7 @@ test('핸들로 순서를 변경하고 완료하면 내용과 운동을 보존�
 }) => {
   const routine = { marker: '기존 운동 순서 보존' };
   await page.evaluate(
-    (value) => localStorage.setItem('health-note.exercises.v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(value)),
     routine,
   );
   await page.getByRole('link', { name: '순서 변경' }).click();
@@ -45,7 +47,9 @@ test('핸들로 순서를 변경하고 완료하면 내용과 운동을 보존�
     ROUTINES[2],
   ]);
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('health-note.exercises.v1')!)),
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('health-note.exercises.v1:test-user')!),
+    ),
   ).toEqual(routine);
 });
 

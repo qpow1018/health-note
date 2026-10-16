@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINE = {
   id: 'r',
   name: '3일 간격 루틴',
@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
     ({ key, routine }) => {
       localStorage.setItem(key, JSON.stringify([routine]));
       localStorage.setItem(
-        'health-note.exercises.v1',
+        'health-note.exercises.v1:test-user',
         JSON.stringify([{ id: 'walk', name: '걷기', amount: '30분', sets: null }]),
       );
     },

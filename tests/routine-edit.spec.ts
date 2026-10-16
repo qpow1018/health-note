@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINE = {
   id: 'r1',
   name: '기존 루틴',
@@ -19,8 +19,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
     ({ routines, exercises }) => {
-      localStorage.setItem('health-note.routines.v1', JSON.stringify(routines));
-      localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises));
+      localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(routines));
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(exercises));
     },
     { routines: [ROUTINE, OTHER], exercises: EXERCISES },
   );
@@ -113,13 +113,16 @@ test('삭제 취소는 보존하고 확인하면 해당 루틴만 삭제한다',
     OTHER,
   ]);
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('health-note.exercises.v1')!)),
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('health-note.exercises.v1:test-user')!),
+    ),
   ).toEqual(EXERCISES);
 });
 
 test('삭제된 운동은 직접 제거한 뒤 저장할 수 있다', async ({ page }) => {
   await page.evaluate(
-    (exercises) => localStorage.setItem('health-note.exercises.v1', JSON.stringify([exercises[0]])),
+    (exercises) =>
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify([exercises[0]])),
     EXERCISES,
   );
   await page.getByRole('button', { name: '더보기', exact: true }).click();

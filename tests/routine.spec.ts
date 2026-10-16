@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const EXERCISES = [
   { id: 'squat', name: '스쿼트', amount: '10회', sets: 3 },
   { id: 'walk', name: '걷기', amount: '30분', sets: null },
@@ -9,7 +9,8 @@ const EXERCISES = [
 test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
-    (exercises) => localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises)),
+    (exercises) =>
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(exercises)),
     EXERCISES,
   );
   await page.getByRole('link', { name: '루틴 생성' }).click();
@@ -95,7 +96,7 @@ for (const failure of ['quota', 'corrupt', 'deleted']) {
             throw new DOMException('Full', 'QuotaExceededError');
           };
         if (failure === 'corrupt') localStorage.setItem(key, '{broken');
-        if (failure === 'deleted') localStorage.setItem('health-note.exercises.v1', '[]');
+        if (failure === 'deleted') localStorage.setItem('health-note.exercises.v1:test-user', '[]');
       },
       { key: KEY, failure },
     );

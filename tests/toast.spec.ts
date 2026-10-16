@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 test('성공·안내는 3초, 오류는 5초 후 닫히며 개별 duration을 우선한다', async ({ page }) => {
   await page.clock.install();

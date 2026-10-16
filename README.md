@@ -22,7 +22,7 @@ npm run dev
 | 로컬 개발      | Docker의 `health-note-local`    | `.env.development.local`                      |
 | 운영 빌드·배포 | 클라우드 `scehcbhewfztqfhxgpsh` | `.env.production.local` 또는 호스팅 환경 변수 |
 
-현재 화면과 운동·루틴 저장은 아직 localStorage를 사용합니다. 아래 설정은 DB 전환에 앞선 환경 준비이며 로그인 화면·DB 저장 연동은 다음 단계입니다.
+구글 로그인 후에만 앱 화면에 진입할 수 있습니다. 운동·루틴·완료 상태는 아직 계정별 localStorage에 저장되며, DB 저장·기기 간 연동은 다음 단계입니다. 로그인 세션은 Supabase SDK가 유지합니다.
 
 ### 로컬 실행
 
@@ -55,12 +55,14 @@ cp .env.example .env.development.local
 
 ### 로컬 구글 로그인
 
-클라우드에서 활성화한 Google 설정은 로컬 Supabase에 자동 반영되지 않습니다. 환경 준비 단계에서는 로컬 Google 제공자를 비활성화해 두었습니다. 로그인 구현 시 다음 설정을 진행합니다.
+클라우드에서 활성화한 Google 설정은 로컬 Supabase에 자동 반영되지 않습니다. 초기 설정에서는 로컬 Google 제공자를 비활성화해 두었습니다. 실제 로그인을 테스트하려면 다음 설정을 진행합니다.
 
-1. Google OAuth 웹 클라이언트의 승인된 리디렉션 URI에 `http://127.0.0.1:55321/auth/v1/callback`을 추가합니다. 기존 클라우드 콜백 주소는 유지합니다.
+1. Google OAuth 웹 클라이언트의 승인된 리디렉션 URI에 `http://127.0.0.1:55321/auth/v1/callback`을 추가합니다. 기존 클라우드 콜백 주소는 유지합니다. Google 앱이 테스트 상태이면 로그인할 계정을 테스트 사용자로 등록합니다.
 2. `supabase/.env.example`을 저장소 루트의 `.env`로 복사하고 Client ID와 Secret을 입력합니다. `.env`는 Git에서 제외되며, 이 값에는 `VITE_` 접두사를 붙이지 않습니다.
 3. `supabase/config.toml`의 `[auth.external.google]`에서 `enabled = true`로 바꿉니다.
 4. `npm run db:stop` 후 `npm run db:start`로 재시작합니다.
+
+앱은 PKCE 방식으로 구글 로그인을 시작하고 현재 origin의 `/`로 복귀합니다. `localhost:5173`, `127.0.0.1:5173`, E2E용 `127.0.0.1:4173`가 로컬 복귀 주소입니다. 운영에서는 Supabase 대시보드의 URL Configuration에도 실제 운영 origin의 `/`를 등록합니다. 로그인 취소·실패는 로그인 화면에서 안내하고 다시 시도할 수 있습니다. 홈 오른쪽의 로그아웃은 현재 세션만 종료합니다.
 
 ### 운영 설정
 
@@ -93,10 +95,13 @@ npm run test:e2e
 
 E2E 테스트는 설치된 Google Chrome이 필요합니다.
 모바일 폭의 PC 브라우저에서 실행하며, Android 실기기의 키보드·터치 등은 별도로 확인해야 합니다.
+자동 테스트는 격리된 브라우저와 모의 Supabase Auth 응답을 사용합니다. 실제 Google 동의 화면과 자격 증명·콜백 설정은 별도로 확인해야 합니다.
 
 ## 저장과 배포
 
-- 기록은 현재 브라우저의 localStorage에 저장됩니다. 기기·브라우저 간 동기화는 제공하지 않습니다.
+- 기록은 현재 브라우저의 계정별 localStorage에 저장됩니다. 기기·브라우저 간 동기화는 아직 제공하지 않습니다.
+- 기존 비로그인 기록은 로그인 계정으로 가져오거나 삭제하지 않습니다. 새 계정은 빈 상태로 시작합니다.
+- 이 계정 구분은 DB 전환 전의 임시 처리입니다. 실제 서버 데이터 접근 권한은 DB 전환 때 RLS로 제한합니다.
 - 브라우저 데이터를 삭제하면 기록도 사라집니다. 같은 브라우저라도 접속 주소의 origin이 달라지면 저장소가 분리됩니다.
 - 운동 삭제는 복구할 수 없습니다.
 - BrowserRouter를 사용하므로 배포 환경에 SPA fallback을 설정해야 합니다. `/exercise` 같은 페이지 경로에 직접 접속해도 `index.html`을 반환해야 합니다.

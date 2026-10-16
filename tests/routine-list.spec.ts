@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const KEY = 'health-note.routines.v1';
+const KEY = 'health-note.routines.v1:test-user';
 const ROUTINES = [
   {
     id: 'w',
@@ -21,7 +21,8 @@ const ROUTINES = [
 test('날짜와 관계없이 전체 루틴을 표시하고 상세에서 목록으로 돌아온다', async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
-    (routines) => localStorage.setItem('health-note.routines.v1', JSON.stringify(routines)),
+    (routines) =>
+      localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(routines)),
     ROUTINES,
   );
   await page.goto('/routine?date=2026-10-15');

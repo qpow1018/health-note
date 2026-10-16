@@ -1,10 +1,11 @@
+import { getUserStorageKey } from '@/features/auth/userStorage';
 import { isRoutineDate } from './routineSchedule';
 
 type TRoutineProgress = { routineId: string; date: string; exerciseIds: string[] };
 const STORAGE_KEY = 'health-note.routine-progress.v1';
 
 export function getRoutineProgress(): TRoutineProgress[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = localStorage.getItem(getUserStorageKey(STORAGE_KEY));
   if (raw === null) return [];
   const entries: unknown = JSON.parse(raw);
   if (!Array.isArray(entries) || !entries.every(isProgress)) {
@@ -28,7 +29,7 @@ export function setExerciseCompleted(
   }
   entry.exerciseIds = entry.exerciseIds.filter((id) => id !== exerciseId);
   if (isCompleted) entry.exerciseIds.push(exerciseId);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(entries));
 }
 
 function isProgress(value: unknown): value is TRoutineProgress {

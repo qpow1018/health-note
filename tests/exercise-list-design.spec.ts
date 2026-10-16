@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 test('목록의 버튼 배치와 정보 표현은 빈 값과 긴 이름을 처리한다', async ({ page }) => {
   await page.goto('/exercise');
@@ -7,7 +7,7 @@ test('목록의 버튼 배치와 정보 표현은 빈 값과 긴 이름을 처�
   await page.screenshot({ path: '/tmp/health-note-list-empty.png' });
   await page.evaluate(() => {
     localStorage.setItem(
-      'health-note.exercises.v1',
+      'health-note.exercises.v1:test-user',
       JSON.stringify([
         { id: 'a', name: '푸시업', amount: '10회', sets: 3, youtubeLinks: [], memo: '' },
         { id: 'b', name: '스쿼트', amount: '', sets: 3, youtubeLinks: [], memo: '' },

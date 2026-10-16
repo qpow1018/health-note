@@ -1,6 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
-const KEY = 'health-note.exercises.v1';
+import { expect, test } from './authFixture';
+
+const KEY = 'health-note.exercises.v1:test-user';
 const EXERCISES = ['푸시업', '스쿼트', '걷기'].map((name, index) => ({
   id: String(index),
   name,
@@ -24,7 +26,7 @@ test('핸들로 순서를 변경하고 완료하면 내용과 루틴을 보존�
 }) => {
   const routine = { marker: '기존 루틴 순서 보존' };
   await page.evaluate(
-    (value) => localStorage.setItem('health-note.routines.v1', JSON.stringify(value)),
+    (value) => localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify(value)),
     routine,
   );
   await page.getByRole('link', { name: '순서 변경' }).click();
@@ -36,7 +38,7 @@ test('핸들로 순서를 변경하고 완료하면 내용과 루틴을 보존�
     EXERCISES,
   );
   await page.getByRole('button', { name: '완료' }).click();
-  await expect(page.getByRole('heading', { name: '내 운동', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '내 운동 관리', exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
@@ -45,7 +47,9 @@ test('핸들로 순서를 변경하고 완료하면 내용과 루틴을 보존�
     EXERCISES[2],
   ]);
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('health-note.routines.v1')!)),
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('health-note.routines.v1:test-user')!),
+    ),
   ).toEqual(routine);
 });
 
@@ -82,7 +86,7 @@ test('저장 실패는 임시 순서를 유지하고 재시도할 수 있다', a
     EXERCISES,
   );
   await page.getByRole('button', { name: '완료' }).click();
-  await expect(page.getByRole('heading', { name: '내 운동', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '내 운동 관리', exact: true })).toBeVisible();
 });
 
 for (const change of ['추가', '삭제', '순서']) {

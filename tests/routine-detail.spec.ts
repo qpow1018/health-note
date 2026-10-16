@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
 const ROUTINE = {
   id: 'routine-1',
@@ -17,8 +17,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/routine');
   await page.evaluate(
     ({ routine, exercises }) => {
-      localStorage.setItem('health-note.routines.v1', JSON.stringify([routine]));
-      localStorage.setItem('health-note.exercises.v1', JSON.stringify(exercises));
+      localStorage.setItem('health-note.routines.v1:test-user', JSON.stringify([routine]));
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify(exercises));
     },
     { routine: ROUTINE, exercises: EXERCISES },
   );
@@ -49,7 +49,7 @@ test('간격 반복과 빈 메모를 표시하고 직접 진입의 뒤로가기�
   await page.evaluate(
     (routine) =>
       localStorage.setItem(
-        'health-note.routines.v1',
+        'health-note.routines.v1:test-user',
         JSON.stringify([
           {
             ...routine,
@@ -70,13 +70,16 @@ test('간격 반복과 빈 메모를 표시하고 직접 진입의 뒤로가기�
 
 test('삭제된 운동의 자리를 유지하며 다른 운동과 루틴 데이터는 보존한다', async ({ page }) => {
   await page.evaluate(
-    (exercises) => localStorage.setItem('health-note.exercises.v1', JSON.stringify([exercises[0]])),
+    (exercises) =>
+      localStorage.setItem('health-note.exercises.v1:test-user', JSON.stringify([exercises[0]])),
     EXERCISES,
   );
   await page.goto('/routine/routine-1');
   await expect(page.getByRole('listitem')).toHaveText(['삭제된 운동이에요.', '스쿼트10회 × 3세트']);
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('health-note.routines.v1')!)),
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('health-note.routines.v1:test-user')!),
+    ),
   ).toEqual([ROUTINE]);
 });
 
@@ -86,21 +89,21 @@ test('없는 루틴과 손상된 루틴 저장 데이터를 구분한다', async
   await expect(page.getByRole('heading', { name: '운동', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: '뒤로가기' }).click();
   await expect(page).toHaveURL('/routine');
-  await page.evaluate(() => localStorage.setItem('health-note.routines.v1', '{broken'));
+  await page.evaluate(() => localStorage.setItem('health-note.routines.v1:test-user', '{broken'));
   await page.goto('/routine/routine-1');
   await expect(page.getByRole('alert')).toContainText('루틴을 불러오지 못했어요.');
-  expect(await page.evaluate(() => localStorage.getItem('health-note.routines.v1'))).toBe(
+  expect(await page.evaluate(() => localStorage.getItem('health-note.routines.v1:test-user'))).toBe(
     '{broken',
   );
 });
 
 test('운동 저장 데이터 손상은 삭제 안내로 처리하지 않고 루틴 정보는 표시한다', async ({ page }) => {
-  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1', '{broken'));
+  await page.evaluate(() => localStorage.setItem('health-note.exercises.v1:test-user', '{broken'));
   await page.goto('/routine/routine-1');
   await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
   await expect(page.getByText('삭제된 운동이에요.')).toHaveCount(0);
   await expect(page.getByText('매주 월 · 금 · 일', { exact: true })).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('health-note.exercises.v1'))).toBe(
-    '{broken',
-  );
+  expect(
+    await page.evaluate(() => localStorage.getItem('health-note.exercises.v1:test-user')),
+  ).toBe('{broken');
 });

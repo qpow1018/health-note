@@ -1,3 +1,4 @@
+import { getUserStorageKey } from '@/features/auth/userStorage';
 import type { TExercise, TExerciseValues } from './exercise.types';
 
 type TStoredExercise = Omit<TExercise, 'youtubeLinks' | 'memo'> & {
@@ -26,7 +27,7 @@ function isExercise(value: unknown): value is TStoredExercise {
 }
 
 export function getExercises(): TExercise[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(getUserStorageKey(STORAGE_KEY));
   if (stored === null) return [];
   const exercises: unknown = JSON.parse(stored);
   if (!Array.isArray(exercises) || !exercises.every(isExercise)) {
@@ -42,7 +43,7 @@ export function getExercises(): TExercise[] {
 export function createExercise(exercise: TExerciseValues): void {
   const exercises = getExercises();
   exercises.push({ ...exercise, id: crypto.randomUUID() });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(exercises));
 }
 
 export function updateExercise(
@@ -57,7 +58,7 @@ export function updateExercise(
   }
   if (JSON.stringify(exercises[index]) !== JSON.stringify(expectedExercise)) return 'conflict';
   exercises[index] = { ...values, id };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(exercises));
   return 'updated';
 }
 
@@ -67,7 +68,7 @@ export function deleteExercise(id: string): void {
     throw new Error('Exercise not found');
   }
   const remaining = exercises.filter((exercise) => exercise.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(remaining));
 }
 
 export function reorderExercises(
@@ -88,6 +89,6 @@ export function reorderExercises(
 
   const byId = new Map(exercises.map((exercise) => [exercise.id, exercise]));
   const reordered = orderedIds.map((id) => byId.get(id)!);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reordered));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(reordered));
   return reordered;
 }

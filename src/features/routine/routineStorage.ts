@@ -1,3 +1,4 @@
+import { getUserStorageKey } from '@/features/auth/userStorage';
 import {
   getNextRoutineDate,
   getTodayDate,
@@ -82,7 +83,7 @@ function isRoutine(value: unknown): value is TStoredRoutine {
 }
 
 export function getRoutines(): TRoutine[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(getUserStorageKey(STORAGE_KEY));
   if (stored === null) return [];
   const routines: unknown = JSON.parse(stored);
   if (!Array.isArray(routines) || !routines.every(isRoutine))
@@ -102,7 +103,7 @@ export function createRoutine(values: TRoutineValues): void {
   const routine = { ...values, id: crypto.randomUUID(), isActive: false };
   validateRoutine(routine);
   const routines = getRoutines();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...routines, routine]));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify([...routines, routine]));
 }
 
 export function updateRoutine(
@@ -131,7 +132,7 @@ export function updateRoutine(
   const routine = { ...values, id, schedule, isActive: routines[index].isActive };
   validateRoutine(routine);
   routines[index] = routine;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
   return 'updated';
 }
 
@@ -139,7 +140,7 @@ export function deleteRoutine(id: string): void {
   const routines = getRoutines();
   if (!routines.some((routine) => routine.id === id)) throw new Error('Routine not found');
   localStorage.setItem(
-    STORAGE_KEY,
+    getUserStorageKey(STORAGE_KEY),
     JSON.stringify(routines.filter((routine) => routine.id !== id)),
   );
 }
@@ -160,7 +161,7 @@ export function postponeRoutine(id: string, expectedDate: string): void {
   };
   if (!isSchedule(schedule)) throw new Error('Invalid schedule');
   routines[index] = { ...routine, schedule };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
 }
 
 export function reorderRoutines(
@@ -179,7 +180,7 @@ export function reorderRoutines(
   }
   const byId = new Map(routines.map((routine) => [routine.id, routine]));
   const reordered = orderedIds.map((id) => byId.get(id)!);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reordered));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(reordered));
   return reordered;
 }
 
@@ -194,6 +195,6 @@ export function setRoutineActive(
   if (routines[index].isActive !== expectedIsActive) return 'conflict';
   const routine = { ...routines[index], isActive };
   routines[index] = routine;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines));
+  localStorage.setItem(getUserStorageKey(STORAGE_KEY), JSON.stringify(routines));
   return routine;
 }

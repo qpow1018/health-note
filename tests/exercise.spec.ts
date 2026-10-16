@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './authFixture';
 
-const STORAGE_KEY = 'health-note.exercises.v1';
+const STORAGE_KEY = 'health-note.exercises.v1:test-user';
 const EXISTING = [{ id: 'existing', name: '걷기', amount: '30분', sets: null }];
 
 test('빈 목록에서 등록하고 새로고침해도 기존 운동과 함께 유지된다', async ({ page }) => {
@@ -137,10 +137,12 @@ for (const raw of ['{broken', '{}', '[{"id":"x","name":"걷기","amount":"30분"
   });
 }
 
-test('저장소 읽기 차단 시 목록 오류를 표시한다', async ({ page }) => {
+test('운동 저장소 읽기 차단 시 목록 오류를 표시한다', async ({ page }) => {
   await page.addInitScript(() => {
-    Storage.prototype.getItem = function () {
-      throw new DOMException('Blocked', 'SecurityError');
+    const original = Storage.prototype.getItem;
+    Storage.prototype.getItem = function (key) {
+      if (key.startsWith('health-note.')) throw new DOMException('Blocked', 'SecurityError');
+      return original.call(this, key);
     };
   });
   await page.goto('/exercise');
