@@ -4,12 +4,13 @@ import { useRoutineActivity } from '@/features/routine/useRoutineActivity';
 import { getNextRoutineDate, isRoutineScheduled } from '@/features/routine/routineSchedule';
 
 import Header from '@/components/common/header/Header';
+import Checkbox from '@/components/common/form/Checkbox';
 import ButtonLink from '@/components/common/button/ButtonLink';
 
 import styles from './HomePage.module.scss';
 
 export default function HomePage() {
-  const { today, routines, exercises, progress, error } = useRoutineActivity();
+  const { today, routines, exercises, progress, error, completeExercise } = useRoutineActivity();
   const active = routines.filter((routine) => routine.isActive);
   const scheduled = active.filter((routine) => isRoutineScheduled(routine.schedule, today));
   const upcoming = active
@@ -48,12 +49,11 @@ export default function HomePage() {
               const isComplete = available.length > 0 && count === available.length;
               return (
                 <li key={routine.id}>
-                  <Link
-                    to={`/routine/${encodeURIComponent(routine.id)}/use`}
-                    className={styles['card']}
-                  >
+                  <div className={styles['card']}>
                     <span className={styles['status']}>{isComplete ? '완료' : '오늘 예정'}</span>
-                    <h2>{routine.name}</h2>
+                    <h2>
+                      <Link to={`/routine/${encodeURIComponent(routine.id)}`}>{routine.name}</Link>
+                    </h2>
                     <p>
                       {available.length > 0
                         ? `운동 ${available.length}개 중 ${count}개 완료`
@@ -64,14 +64,33 @@ export default function HomePage() {
                       max={Math.max(available.length, 1)}
                       value={count}
                     />
-                    <p className={styles['preview']}>
-                      {routine.exerciseIds
-                        .map((id) => exercises.find((exercise) => exercise.id === id)?.name)
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </p>
-                    <span className={styles['action']}>루틴 보기 →</span>
-                  </Link>
+                    <ol className={styles['exercises']}>
+                      {routine.exerciseIds.map((id) => {
+                        const exercise = exercises.find((item) => item.id === id);
+                        return (
+                          <li key={id}>
+                            {exercise && (
+                              <>
+                                <Checkbox
+                                  checked={checked.includes(id)}
+                                  onChange={(event) =>
+                                    completeExercise(routine.id, id, event.target.checked)
+                                  }
+                                >
+                                  {exercise.name} 완료
+                                </Checkbox>
+                                <p className={styles['amount']}>
+                                  {exercise.amount || '운동량 미입력'}
+                                  {exercise.sets !== null && ` × ${exercise.sets}세트`}
+                                </p>
+                              </>
+                            )}
+                            {!exercise && <p>삭제된 운동이에요. 완료 대상에서 제외됩니다.</p>}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
                 </li>
               );
             })}

@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import HomePage from '@/pages/home/HomePage';
-import RoutineUsePage from '@/pages/routine/RoutineUsePage';
 
 import ToastContainer from '@/components/common/toast/ToastContainer';
 import BottomNavigationLayout from './BottomNavigationLayout';
@@ -30,7 +29,6 @@ export default function App() {
             <Route path="/exercise" element={<ExerciseListPage />} />
           </Route>
 
-          <Route path="/routine/:routineId/use" element={<RoutineUsePage />} />
           <Route path="/routine/:routineId" element={<RoutineDetailPage />} />
           <Route path="/routine/:routineId/edit" element={<RoutineEditPage />} />
           <Route path="/routine/order" element={<RoutineOrderPage />} />
