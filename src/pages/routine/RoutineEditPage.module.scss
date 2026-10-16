@@ -1,17 +1,22 @@
 .routine-edit-page {
-  .error,
-  .missing {
-    margin: 24px max($page-padding, env(safe-area-inset-right)) $page-padding
-      max($page-padding, env(safe-area-inset-left));
+  .content {
+    padding: 0 max($page-padding, env(safe-area-inset-right))
+      max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
   .error {
+    margin-top: 24px;
     color: $error-accent;
   }
 
   .missing {
-    p {
-      margin-bottom: 16px;
+    margin-top: 24px;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
+      color: $mint-accent;
     }
   }
 }

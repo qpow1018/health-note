@@ -1,7 +1,7 @@
 .routine-detail-page {
   .content {
     padding: 0 max($page-padding, env(safe-area-inset-right))
-      max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
+      calc(32px + env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
   .section {
@@ -9,7 +9,7 @@
 
     h2 {
       margin-bottom: 12px;
-      font-size: 18px;
+      font-size: $font-size-body;
       font-weight: 500;
     }
   }
@@ -54,15 +54,5 @@
   .error {
     margin-top: 24px;
     color: $error-accent;
-  }
-
-  .actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 32px;
-
-    > * {
-      flex: 1;
-    }
   }
 }

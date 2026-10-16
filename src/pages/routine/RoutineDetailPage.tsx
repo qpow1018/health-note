@@ -10,7 +10,8 @@ import { useRoutineToday } from '@/features/routine/useRoutineToday';
 
 import Button from '@/components/common/button/Button';
 import Header from '@/components/common/header/Header';
-import ButtonLink from '@/components/common/button/ButtonLink';
+import MoreMenu from '@/components/common/moreMenu/MoreMenu';
+import Confirm from '@/components/common/modal/Confirm';
 
 import styles from './RoutineDetailPage.module.scss';
 
@@ -21,7 +22,7 @@ export default function RoutineDetailPage() {
   const { routineId } = useParams();
   const today = useRoutineToday();
   const navigate = useNavigate();
-  const [deleteError, setDeleteError] = useState('');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [postponeResult, setPostponeResult] = useState({ message: '', error: '' });
   const { routine, error } = loadRoutine(routineId);
   const nextDate =
@@ -53,12 +54,13 @@ export default function RoutineDetailPage() {
 
   function handleDelete() {
     if (!routine) return;
-    if (!window.confirm(`“${routine.name}” 루틴을 삭제할까요? 삭제하면 복구할 수 없어요.`)) return;
+    setIsDeleteConfirmOpen(false);
     try {
       deleteRoutine(routine.id);
     } catch {
-      setDeleteError(
+      toast.error(
         '삭제하지 못했어요. 브라우저 저장 공간과 기존 데이터를 확인하고 다시 시도해 주세요.',
+        { isShowCloseButton: true },
       );
       return;
     }
@@ -68,7 +70,20 @@ export default function RoutineDetailPage() {
 
   return (
     <section className={styles['routine-detail-page']}>
-      <Header title={title} fallbackTo="/routine" />
+      <Header
+        title={title}
+        fallbackTo="/routine"
+        actions={
+          !error && routine ? (
+            <MoreMenu
+              items={[
+                { label: '수정', to: `/routine/${encodeURIComponent(routine.id)}/edit` },
+                { label: '삭제', color: 'rose', onClick: () => setIsDeleteConfirmOpen(true) },
+              ]}
+            />
+          ) : undefined
+        }
+      />
       <div className={styles['content']}>
         {error && (
           <p className={styles['error']} role="alert">
@@ -147,25 +162,17 @@ export default function RoutineDetailPage() {
             </section>
           </>
         )}
-        {deleteError && (
-          <p role="alert" className={styles['error']}>
-            {deleteError}
-          </p>
-        )}
-        {!error && routine && (
-          <div className={styles['actions']}>
-            <ButtonLink to={`/routine/${encodeURIComponent(routine.id)}/edit`}>수정</ButtonLink>
-            <Button color="rose" fill="outline" onClick={handleDelete}>
-              삭제
-            </Button>
-          </div>
-        )}
-        <div className={styles['actions']}>
-          <ButtonLink to="/routine" color="gray" fill="outline">
-            루틴 목록으로
-          </ButtonLink>
-        </div>
       </div>
+      {!error && routine && (
+        <Confirm
+          isOpen={isDeleteConfirmOpen}
+          title="루틴 삭제"
+          message={`“${routine.name}” 루틴을 삭제할까요? 삭제하면 복구할 수 없어요.`}
+          confirmLabel="삭제"
+          onClose={() => setIsDeleteConfirmOpen(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </section>
   );
 }

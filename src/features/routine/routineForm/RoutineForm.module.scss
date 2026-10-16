@@ -1,8 +1,11 @@
 .routine-form {
   .form {
-    padding: 16px max($page-padding, env(safe-area-inset-right))
-      max($page-padding, env(safe-area-inset-bottom))
-      max($page-padding, env(safe-area-inset-left));
+    margin-top: 32px;
+    padding-bottom: calc(#{$control-height} + 48px + env(safe-area-inset-bottom));
+  }
+
+  .required {
+    color: $mint-accent;
   }
 
   .field {
@@ -11,21 +14,13 @@
     margin: 0 0 24px;
     border: 0;
 
-    > label, legend, h2 {
+    > label,
+    legend,
+    h2 {
       display: block;
       margin-bottom: 8px;
       font-size: $font-size-body;
       font-weight: 500;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid $border;
-      border-radius: $border-radius;
-      background: $bg-dark;
-      color: $text-primary;
-      resize: vertical;
     }
   }
 
@@ -52,6 +47,7 @@
   .exercise-info {
     flex: 1;
     min-width: 0;
+    overflow-wrap: anywhere;
 
     p {
       margin-top: 4px;
@@ -93,16 +89,25 @@
     }
   }
 
-  input[type='checkbox'], input[type='radio'] {
+  input[type='checkbox'],
+  input[type='radio'] {
     accent-color: $mint;
   }
 
   .actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-
-    > * { flex: 1; }
+    @include app-width;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    z-index: 1;
+    transform: translateX(-50%);
+    padding: 16px max($page-padding, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
+    border-top: 1px solid $border-soft;
+    background: $bg;
+    button {
+      width: 100%;
+    }
   }
 
   .error {
@@ -110,7 +115,9 @@
     color: $error-accent;
   }
 
-  .confirm-button { width: 100%; }
+  .confirm-button {
+    width: 100%;
+  }
 
   .exercise-options {
     label {
@@ -123,6 +130,7 @@
 
       > span {
         min-width: 0;
+        overflow-wrap: anywhere;
 
         > span {
           display: block;

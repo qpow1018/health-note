@@ -7,7 +7,8 @@ import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routin
 
 import BottomSheet from '@/components/common/bottomSheet/BottomSheet';
 import Button from '@/components/common/button/Button';
-import ButtonLink from '@/components/common/button/ButtonLink';
+import Textarea from '@/components/common/form/Textarea';
+import FieldError from '@/components/common/form/FieldError';
 import Input from '@/components/common/form/Input';
 
 import styles from './RoutineForm.module.scss';
@@ -24,11 +25,10 @@ const WEEKDAYS = [
 
 type TRoutineFormProps = {
   initialValues?: TRoutineValues;
-  cancelTo: string;
-  onSave: (values: TRoutineValues) => string;
+  onSave: (values: TRoutineValues) => void;
 };
 
-export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
+export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps) {
   const [result, setResult] = useState(loadRoutineExercises);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
@@ -36,7 +36,9 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
   const [scheduleType, setScheduleType] = useState<TRoutineSchedule['type']>(
     initialValues?.schedule.type ?? 'weekdays',
   );
-  const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [exerciseError, setExerciseError] = useState('');
+  const [scheduleError, setScheduleError] = useState('');
   const [today] = useState(getTodayDate);
 
   function handleOpenExercises() {
@@ -58,6 +60,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
       ...exerciseIds.filter((id) => draftIds.includes(id)),
       ...draftIds.filter((id) => !exerciseIds.includes(id)),
     ]);
+    setExerciseError('');
     setIsSheetOpen(false);
   }
 
@@ -73,62 +76,77 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const name = String(data.get('name') ?? '').trim();
-    setError('');
+    setNameError('');
+    setExerciseError('');
+    setScheduleError('');
     const latest = loadRoutineExercises();
     setResult(latest);
     if (latest.error) return;
     if (exerciseIds.some((id) => !latest.exercises.some((exercise) => exercise.id === id))) {
-      setError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.');
+      setExerciseError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.');
       return;
     }
     if (!name) {
-      setError('루틴 이름을 입력해 주세요.');
+      setNameError('루틴 이름을 입력해 주세요.');
       return;
     }
     if (exerciseIds.length === 0) {
-      setError('운동을 하나 이상 선택해 주세요.');
+      setExerciseError('운동을 하나 이상 선택해 주세요.');
       return;
     }
     let schedule: TRoutineSchedule;
     if (scheduleType === 'weekdays') {
       const days = data.getAll('days').map(Number);
       if (days.length === 0) {
-        setError('반복할 요일을 하나 이상 선택해 주세요.');
+        setScheduleError('반복할 요일을 하나 이상 선택해 주세요.');
         return;
       }
       schedule = { type: 'weekdays', days };
     } else {
       const intervalDays = Number(data.get('intervalDays'));
       if (!Number.isSafeInteger(intervalDays) || intervalDays < 1) {
-        setError('간격은 1 이상의 정수로 입력해 주세요.');
+        setScheduleError('간격은 1 이상의 정수로 입력해 주세요.');
         return;
       }
       schedule = { type: 'interval', intervalDays, startDate: String(data.get('startDate') ?? '') };
     }
-    const saveError = onSave({
+    onSave({
       name,
       exerciseIds,
       schedule,
       memo: String(data.get('memo') ?? '').trim(),
     });
-    if (saveError) setError(saveError);
   }
 
   return (
     <div className={styles['routine-form']}>
       <form className={styles['form']} onSubmit={handleSubmit}>
         <div className={styles['field']}>
-          <label htmlFor="routine-name">루틴 이름 (필수)</label>
+          <label htmlFor="routine-name">
+            루틴 이름{' '}
+            <span className={styles['required']} aria-hidden="true">
+              *
+            </span>
+          </label>
           <Input
             id="routine-name"
             name="name"
             defaultValue={initialValues?.name}
             required
             placeholder="예: 상체 루틴"
+            onChange={() => setNameError('')}
+            aria-invalid={Boolean(nameError)}
+            aria-describedby={nameError ? 'routine-name-error' : undefined}
           />
+          <FieldError id="routine-name-error" message={nameError} />
         </div>
         <div className={styles['field']}>
-          <h2>운동 (필수)</h2>
+          <h2>
+            운동{' '}
+            <span className={styles['required']} aria-hidden="true">
+              *
+            </span>
+          </h2>
           <p className={styles['hint']}>
             등록한 운동량과 세트를 사용해요. 순서는 보기 편하게 바꿀 수 있어요.
           </p>
@@ -137,9 +155,15 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
               {result.error}
             </p>
           )}
-          <Button color="gray" fill="outline" onClick={handleOpenExercises}>
+          <Button
+            color="gray"
+            fill="outline"
+            onClick={handleOpenExercises}
+            aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
+          >
             운동 선택
           </Button>
+          <FieldError id="routine-exercises-error" message={exerciseError} />
           {exerciseIds.length > 0 && (
             <ol className={styles['selected-list']}>
               {exerciseIds.map((id, index) => {
@@ -160,9 +184,10 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
                         <Button
                           color="gray"
                           fill="outline"
-                          onClick={() =>
-                            setExerciseIds(exerciseIds.filter((value) => value !== id))
-                          }
+                          onClick={() => {
+                            setExerciseIds(exerciseIds.filter((value) => value !== id));
+                            setExerciseError('');
+                          }}
                         >
                           삭제된 운동 제거
                         </Button>
@@ -194,8 +219,18 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
             </ol>
           )}
         </div>
-        <fieldset className={styles['field']}>
-          <legend>반복 일정 (필수)</legend>
+        <fieldset
+          className={styles['field']}
+          onChange={() => setScheduleError('')}
+          aria-describedby={scheduleError ? 'routine-schedule-error' : undefined}
+          aria-invalid={Boolean(scheduleError)}
+        >
+          <legend>
+            반복 일정{' '}
+            <span className={styles['required']} aria-hidden="true">
+              *
+            </span>
+          </legend>
           {initialValues?.schedule.type === 'interval' &&
             Boolean(initialValues.schedule.postponedDates?.length) && (
               <p className={styles['hint']}>
@@ -275,10 +310,11 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
               <p className={styles['hint']}>2일 간격이면 시작일, 2일 후, 4일 후에 반복해요.</p>
             </div>
           </div>
+          <FieldError id="routine-schedule-error" message={scheduleError} />
         </fieldset>
         <div className={styles['field']}>
-          <label htmlFor="routine-memo">메모 (선택)</label>
-          <textarea
+          <label htmlFor="routine-memo">메모</label>
+          <Textarea
             id="routine-memo"
             name="memo"
             defaultValue={initialValues?.memo}
@@ -286,15 +322,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
             placeholder="루틴에 대해 자유롭게 적어주세요."
           />
         </div>
-        {error && (
-          <p role="alert" className={styles['error']}>
-            {error}
-          </p>
-        )}
         <div className={styles['actions']}>
-          <ButtonLink to={cancelTo} color="gray" fill="outline">
-            취소
-          </ButtonLink>
           <Button type="submit" disabled={Boolean(result.error)}>
             저장
           </Button>

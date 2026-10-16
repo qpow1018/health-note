@@ -6,6 +6,7 @@ import NotFoundPage from '@/pages/notFound/NotFoundPage';
 import RoutinePage from '@/pages/routine/RoutinePage';
 import RoutineDetailPage from '@/pages/routine/RoutineDetailPage';
 import RoutineEditPage from '@/pages/routine/RoutineEditPage';
+import RoutineOrderPage from '@/pages/routine/RoutineOrderPage';
 import RoutineCreatePage from '@/pages/routine/RoutineCreatePage';
 import ExerciseListPage from '@/pages/exercise/ExerciseListPage';
 import ExerciseDetailPage from '@/pages/exercise/ExerciseDetailPage';
@@ -29,6 +30,7 @@ export default function App() {
 
           <Route path="/routine/:routineId" element={<RoutineDetailPage />} />
           <Route path="/routine/:routineId/edit" element={<RoutineEditPage />} />
+          <Route path="/routine/order" element={<RoutineOrderPage />} />
           <Route path="/routine/new" element={<RoutineCreatePage />} />
 
           <Route path="/exercise/:exerciseId" element={<ExerciseDetailPage />} />
