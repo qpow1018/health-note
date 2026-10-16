@@ -37,7 +37,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test('저장 실패와 손상 데이터 보존', async ({ page }) => {
+test('완료 API 저장 실패와 조회 실패에서 기존 상태를 보존', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     Storage.prototype.setItem = () => {
@@ -52,7 +52,7 @@ test('저장 실패와 손상 데이터 보존', async ({ page }) => {
     localStorage.setItem('health-note.routine-progress.v1:test-user', '{broken'),
   );
   await page.reload();
-  await expect(page.getByRole('alert')).toContainText('데이터를 불러오지 못했어요');
+  await expect(page.getByRole('alert')).toContainText('완료 상태를 불러오지 못했어요');
   expect(
     await page.evaluate(() => localStorage.getItem('health-note.routine-progress.v1:test-user')),
   ).toBe('{broken');
@@ -95,7 +95,7 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
   expect((await page.request.get('/brand/apple-touch-icon.png')).ok()).toBe(true);
   await page.screenshot({ path: '/tmp/health-note-date-bar.png' });
   await expect(page.getByText('10회 × 3세트')).toBeVisible();
-  await page.getByRole('checkbox', { name: '푸시업 완료' }).check();
+  await page.getByRole('checkbox', { name: '푸시업 완료' }).click();
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('progressbar', { name: '상체 루틴 진행 상태' })).toHaveAttribute(
     'aria-valuetext',
@@ -104,7 +104,7 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
   await expect(page.getByText('운동 2개 중 1개 완료', { exact: true })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('checkbox', { name: '푸시업 완료' })).toBeChecked();
-  await page.getByRole('checkbox', { name: '로우 완료' }).check();
+  await page.getByRole('checkbox', { name: '로우 완료' }).click();
   await expect(
     page
       .getByRole('heading', { name: '상체 루틴' })
@@ -112,7 +112,7 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
       .getByText('완료', { exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: '/tmp/health-note-compact.png' });
-  await page.getByRole('checkbox', { name: '로우 완료' }).uncheck();
+  await page.getByRole('checkbox', { name: '로우 완료' }).click();
   await expect(page.getByRole('progressbar', { name: '상체 루틴 진행 상태' })).toHaveAttribute(
     'aria-valuetext',
     '운동 2개 중 1개 완료',

@@ -1,12 +1,10 @@
-import { useReducer } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useRoutines } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
-import {
-  getRoutineProgress,
-  setExerciseCompleted,
-} from '@/features/routine/routineProgressStorage';
+import { setExerciseCompleted } from '@/features/routine/routineProgressStorage';
+import { useRoutineProgress } from '@/features/routine/useRoutineProgress';
 import toast from '@/utils/toast';
 import {
   getNextRoutineDate,
@@ -21,8 +19,13 @@ import styles from './HomeRoutines.module.scss';
 import { MdChevronRight } from 'react-icons/md';
 
 export default function HomeRoutines({ today }: { today: string }) {
-  const [, refresh] = useReducer((value: number) => value + 1, 0);
-  const { progress, error: progressError } = loadHomeRoutines();
+  const [isSaving, setIsSaving] = useState(false);
+  const {
+    progress,
+    error: progressError,
+    isLoading: isProgressLoading,
+    refetch: refetchProgress,
+  } = useRoutineProgress(today);
   const {
     routines,
     error: routineError,
@@ -30,7 +33,7 @@ export default function HomeRoutines({ today }: { today: string }) {
     refetch: refetchRoutines,
   } = useRoutines();
   const { exercises, error: exerciseError, isLoading: isExerciseLoading, refetch } = useExercises();
-  const isLoading = isRoutineLoading || isExerciseLoading;
+  const isLoading = isRoutineLoading || isExerciseLoading || isProgressLoading;
   const error = progressError || routineError || exerciseError;
   const active = routines.filter((routine) => routine.isActive);
   const scheduled = active.filter((routine) => isRoutineScheduled(routine.schedule, today));
@@ -40,32 +43,47 @@ export default function HomeRoutines({ today }: { today: string }) {
     .sort((a, b) => a.date!.localeCompare(b.date!));
   const next = upcoming[0];
 
-  function handleExerciseCompleted(routineId: string, exerciseId: string, isCompleted: boolean) {
+  async function handleExerciseCompleted(
+    routineId: string,
+    exerciseId: string,
+    isCompleted: boolean,
+  ) {
+    if (isSaving) return;
     if (today !== getTodayDate()) {
-      refresh();
       toast.error('날짜가 바뀌었어요. 오늘의 루틴을 다시 확인해 주세요.');
       return;
     }
+    setIsSaving(true);
     try {
-      setExerciseCompleted(routineId, today, exerciseId, isCompleted);
-      refresh();
+      await setExerciseCompleted(routineId, today, exerciseId, isCompleted);
+      await refetchProgress();
     } catch {
-      toast.error('완료 상태를 저장하지 못했어요. 브라우저 저장 공간과 데이터를 확인해 주세요.', {
-        isShowCloseButton: true,
-      });
+      toast.error(
+        '완료 상태를 저장하지 못했어요. 인터넷 연결과 루틴 정보를 확인하고 다시 시도해 주세요.',
+        {
+          isShowCloseButton: true,
+        },
+      );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
-    <section className={styles['home-routines']} aria-label="오늘의 루틴">
+    <section
+      className={styles['home-routines']}
+      aria-label="오늘의 루틴"
+      aria-busy={isSaving || isLoading}
+    >
       <div className={styles['content']}>
         {isLoading && <p role="status">오늘의 루틴을 불러오고 있어요.</p>}
-        {(exerciseError || routineError) && (
+        {(exerciseError || routineError || progressError) && (
           <button
             type="button"
             onClick={() => {
               void refetch();
               void refetchRoutines();
+              void refetchProgress();
             }}
           >
             다시 시도
@@ -82,9 +100,9 @@ export default function HomeRoutines({ today }: { today: string }) {
               const available = routine.exerciseIds.filter((id) =>
                 exercises.some((exercise) => exercise.id === id),
               );
-              const checked =
-                progress.find((item) => item.routineId === routine.id && item.date === today)
-                  ?.exerciseIds ?? [];
+              const checked = progress
+                .filter((item) => item.routineId === routine.id)
+                .map((item) => item.exerciseId);
               const count = available.filter((id) => checked.includes(id)).length;
               const isComplete = available.length > 0 && count === available.length;
               return (
@@ -127,6 +145,7 @@ export default function HomeRoutines({ today }: { today: string }) {
                                   type="checkbox"
                                   aria-label={`${exercise.name} 완료`}
                                   checked={isChecked}
+                                  disabled={isSaving}
                                   onChange={(event) =>
                                     handleExerciseCompleted(routine.id, id, event.target.checked)
                                   }
@@ -180,18 +199,4 @@ export default function HomeRoutines({ today }: { today: string }) {
       </div>
     </section>
   );
-}
-
-function loadHomeRoutines() {
-  try {
-    return {
-      progress: getRoutineProgress(),
-      error: '',
-    };
-  } catch {
-    return {
-      progress: [],
-      error: '데이터를 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    };
-  }
 }
