@@ -17,7 +17,7 @@ export default function ExerciseListPage() {
   return (
     <section className={styles['exercise-page']}>
       <Header
-        title="내 운동"
+        title="내 운동 관리"
         showBack={false}
         actions={
           (error || exercises.length > 0) && (

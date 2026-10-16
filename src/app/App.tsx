@@ -20,7 +20,7 @@ export default function App() {
     <BrowserRouter>
       <main className={styles['app-shell']}>
         <Routes>
-          <Route path="/" element={<Navigate to="/exercise" replace />} />
+          <Route path="/" element={<Navigate to="/routine" replace />} />
 
           <Route element={<BottomNavigationLayout />}>
             <Route path="/routine" element={<RoutinePage />} />

@@ -12,7 +12,7 @@ export default function RoutinePage() {
   return (
     <section className={styles['routine-page']}>
       <Header
-        title="루틴"
+        title="내 루틴 관리"
         showBack={false}
         actions={
           <Link className={styles['add-link']} to="/routine/new">
