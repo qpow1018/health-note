@@ -4,15 +4,15 @@
       max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
-  .add-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: $control-height;
-    padding-inline: 8px;
-    color: $mint-accent;
-    font-size: $font-size-body;
-    font-weight: 500;
-    text-decoration: none;
+  .add-button,
+  .empty-add {
+    gap: 4px;
+    font-size: $font-size-caption;
+  }
+
+  .add-button {
+    min-height: 40px;
+    padding-block: 8px;
   }
 
   .empty {
@@ -25,31 +25,68 @@
     font-size: $font-size-caption;
   }
 
+  .empty-add {
+    margin-top: 24px;
+  }
+
+  .list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: $control-height;
+    margin-top: 16px;
+    color: $text-secondary;
+    font-size: $font-size-caption;
+  }
+
+  .order-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: $control-height;
+    padding-inline: 8px;
+    color: inherit;
+    text-decoration: none;
+  }
+
   .list {
     padding: 0;
-    margin: 24px 0 0;
+    margin: 0;
     list-style: none;
 
     .item {
       border-bottom: 1px solid $border-soft;
+    }
 
-      .detail-link {
-        display: block;
-        min-height: $control-height;
-        padding-block: 20px;
-        color: inherit;
-        text-decoration: none;
-      }
+    .detail-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: $control-height;
+      padding-block: 16px;
+      color: inherit;
+      text-decoration: none;
+    }
 
-      h2 {
-        font-size: 18px;
-        font-weight: 500;
-      }
+    .info {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
 
-      p {
-        margin-top: 8px;
-        color: $text-secondary;
-      }
+    h2 {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    p {
+      margin-top: 4px;
+      color: $text-secondary;
+      font-size: $font-size-caption;
+    }
+
+    .chevron {
+      flex-shrink: 0;
+      color: $text-secondary;
     }
   }
 

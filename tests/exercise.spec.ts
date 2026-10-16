@@ -17,7 +17,7 @@ test('빈 목록에서 등록하고 새로고침해도 기존 운동과 함께 �
   await page.getByLabel('운동 이름').fill('걷기');
   await page.getByRole('button', { name: '저장' }).click();
   await page.reload();
-  await expect(page.getByRole('listitem')).toHaveText(['푸시업10회 × 3세트', '걷기운동량 미입력']);
+  await expect(page.getByRole('listitem')).toHaveText(['푸시업10회 × 3세트', '걷기-']);
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), STORAGE_KEY);
   expect(stored).toMatchObject([
     { name: '푸시업', amount: '10회', sets: 3 },
@@ -113,7 +113,7 @@ test('저장 공간 오류는 입력과 기존 데이터를 보존하고 재시�
     frame.remove();
   });
   await page.getByRole('button', { name: '저장' }).click();
-  await expect(page.getByRole('listitem')).toHaveText(['걷기30분', '스쿼트운동량 미입력']);
+  await expect(page.getByRole('listitem')).toHaveText(['걷기30분', '스쿼트-']);
 });
 
 for (const raw of ['{broken', '{}', '[{"id":"x","name":"걷기","amount":"30분","sets":0}]']) {
