@@ -69,7 +69,7 @@ test('운동 선택을 다시 열면 추가·삭제를 반영하고 폼 입력�
       JSON.stringify([{ id: 'b', name: '스쿼트', amount: '10회', sets: 3 }]),
     ),
   );
-  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByRole('checkbox', { name: /스쿼트/ })).toBeVisible();
   await expect(sheet.getByRole('checkbox', { name: /걷기/ })).toHaveCount(0);
@@ -77,7 +77,7 @@ test('운동 선택을 다시 열면 추가·삭제를 반영하고 폼 입력�
   await expect(page.getByText('삭제된 운동', { exact: true })).toBeVisible();
   await expect(page.getByLabel('메모')).toHaveValue('유지할 입력');
   await page.getByRole('button', { name: '삭제된 운동 제거' }).click();
-  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   await sheet.getByRole('checkbox', { name: /스쿼트/ }).check();
   await page.getByRole('button', { name: /선택 완료/ }).click();
   await page.getByRole('button', { name: '저장', exact: true }).click();
@@ -133,13 +133,13 @@ test('운동 목록 읽기 실패 후 다시 선택하면 복구하고 입력을
   await page.goto('/routine/r/edit');
   await page.getByLabel('메모').fill('복구 후 유지');
   await page.evaluate(() => localStorage.setItem('health-note.exercises.v1', '{broken'));
-  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
   await page.evaluate(
     (exercise) => localStorage.setItem('health-note.exercises.v1', JSON.stringify([exercise])),
     EXERCISE,
   );
-  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   await expect(page.getByRole('dialog').getByRole('checkbox', { name: /걷기/ })).toBeChecked();
   await page.getByRole('button', { name: /선택 완료/ }).click();
   await expect(page.getByLabel('메모')).toHaveValue('복구 후 유지');

@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
+import { DragDropProvider } from '@dnd-kit/react';
+import type { DragStartEvent } from '@dnd-kit/react';
+import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
+import type { TExercise } from '@/features/exercise/exercise.types';
 import { loadRoutineExercises } from '@/features/routine/routineLoader';
 import { getTodayDate } from '@/features/routine/routineSchedule';
 import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routineStorage';
@@ -12,6 +17,24 @@ import FieldError from '@/components/common/form/FieldError';
 import Input from '@/components/common/form/Input';
 
 import styles from './RoutineForm.module.scss';
+
+import { MdAdd, MdDragHandle } from 'react-icons/md';
+
+const ORDER_POINTER_SENSOR = PointerSensor.configure({
+  activationConstraints: [new PointerActivationConstraints.Distance({ value: 8 })],
+});
+
+const ORDER_ACCESSIBILITY = Accessibility.configure({
+  screenReaderInstructions: {
+    draggable:
+      '스페이스 또는 Enter로 이동을 시작하고, 방향키로 위치를 바꾼 뒤 다시 눌러 놓으세요. Escape로 이동을 취소할 수 있어요.',
+  },
+  announcements: {
+    dragstart: ({ operation }: DragStartEvent) =>
+      `${operation.source?.data.name ?? '운동'} 순서 이동을 시작했어요.`,
+    dragend: () => undefined,
+  },
+});
 
 const WEEKDAYS = [
   { day: 1, label: '월' },
@@ -33,6 +56,8 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const [scheduleType, setScheduleType] = useState<TRoutineSchedule['type']>(
     initialValues?.schedule.type ?? 'weekdays',
   );
@@ -64,12 +89,19 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
     setIsSheetOpen(false);
   }
 
-  function handleMoveExercise(index: number, offset: number) {
+  function handleMoveExercise(from: number, to: number) {
+    if (from === to) return;
     const next = [...exerciseIds];
-    const target = index + offset;
-    const [exerciseId] = next.splice(index, 1);
-    next.splice(target, 0, exerciseId);
+    const [id] = next.splice(from, 1);
+    next.splice(to, 0, id);
     setExerciseIds(next);
+    const name = result.exercises.find((exercise) => exercise.id === id)?.name ?? '운동';
+    setAnnouncement(`${name}, ${next.length}개 중 ${to + 1}번째로 이동했어요.`);
+  }
+
+  function handleRemoveExercise(id: string) {
+    setExerciseIds(exerciseIds.filter((value) => value !== id));
+    setExerciseError('');
   }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -141,83 +173,76 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
           <FieldError id="routine-name-error" message={nameError} />
         </div>
         <div className={styles['field']}>
-          <h2>
-            운동{' '}
-            <span className={styles['required']} aria-hidden="true">
-              *
-            </span>
-          </h2>
-          <p className={styles['hint']}>
-            등록한 운동량과 세트를 사용해요. 순서는 보기 편하게 바꿀 수 있어요.
-          </p>
+          <div className={styles['exercise-heading']}>
+            <h2>
+              운동{' '}
+              <span className={styles['required']} aria-hidden="true">
+                *
+              </span>
+            </h2>
+            <button
+              type="button"
+              className={styles['select-button']}
+              onClick={handleOpenExercises}
+              disabled={isDragging}
+              aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
+            >
+              <MdAdd size={18} aria-hidden="true" />
+              운동 선택
+            </button>
+          </div>
           {result.error && (
             <p role="alert" className={styles['error']}>
               {result.error}
             </p>
           )}
-          <Button
-            color="gray"
-            fill="outline"
-            onClick={handleOpenExercises}
-            aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
-          >
-            운동 선택
-          </Button>
           <FieldError id="routine-exercises-error" message={exerciseError} />
-          {exerciseIds.length > 0 && (
-            <ol className={styles['selected-list']}>
-              {exerciseIds.map((id, index) => {
-                const exercise = result.exercises.find((item) => item.id === id);
-                const exerciseName =
-                  exercise?.name ?? (result.error ? '운동 정보 확인 불가' : '삭제된 운동');
-                return (
-                  <li key={id}>
-                    <div className={styles['exercise-info']}>
-                      <strong>{exerciseName}</strong>
-                      {exercise && (
-                        <p>
-                          {exercise.amount || '운동량 미입력'}
-                          {exercise.sets !== null && ` × ${exercise.sets}세트`}
-                        </p>
-                      )}
-                      {!exercise && !result.error && (
-                        <Button
-                          color="gray"
-                          fill="outline"
-                          onClick={() => {
-                            setExerciseIds(exerciseIds.filter((value) => value !== id));
-                            setExerciseError('');
-                          }}
-                        >
-                          삭제된 운동 제거
-                        </Button>
-                      )}
-                    </div>
-                    <div className={styles['order-actions']}>
-                      <Button
-                        color="gray"
-                        fill="outline"
-                        aria-label={`${exerciseName} 위로`}
-                        disabled={index === 0}
-                        onClick={() => handleMoveExercise(index, -1)}
-                      >
-                        ↑
-                      </Button>
-                      <Button
-                        color="gray"
-                        fill="outline"
-                        aria-label={`${exerciseName} 아래로`}
-                        disabled={index === exerciseIds.length - 1}
-                        onClick={() => handleMoveExercise(index, 1)}
-                      >
-                        ↓
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
+          <p className={styles['announcement']} role="status" aria-live="polite">
+            {announcement}
+          </p>
+          <div className={styles['exercise-box']}>
+            {exerciseIds.length === 0 && (
+              <p className={styles['empty-exercises']}>선택한 운동이 없어요.</p>
+            )}
+            {exerciseIds.length > 0 && (
+              <DragDropProvider
+                sensors={(defaults) =>
+                  defaults.map((sensor) =>
+                    sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor,
+                  )
+                }
+                plugins={(defaults) =>
+                  defaults.map((plugin) =>
+                    plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin,
+                  )
+                }
+                onDragStart={() => setIsDragging(true)}
+                onDragEnd={(event) => {
+                  setIsDragging(false);
+                  if (event.canceled) {
+                    setAnnouncement('이동을 취소했어요.');
+                    return;
+                  }
+                  const { source } = event.operation;
+                  if (isSortable(source)) handleMoveExercise(source.initialIndex, source.index);
+                }}
+              >
+                <ol className={styles['selected-list']} aria-label="선택한 운동 순서">
+                  {exerciseIds.map((id, index) => (
+                    <SelectedExercise
+                      key={id}
+                      id={id}
+                      index={index}
+                      exercise={result.exercises.find((exercise) => exercise.id === id)}
+                      isLoadError={Boolean(result.error)}
+                      isSortable={exerciseIds.length > 1}
+                      onRemove={handleRemoveExercise}
+                    />
+                  ))}
+                </ol>
+              </DragDropProvider>
+            )}
+          </div>
         </div>
         <fieldset
           className={styles['field']}
@@ -323,7 +348,7 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
           />
         </div>
         <div className={styles['actions']}>
-          <Button type="submit" disabled={Boolean(result.error)}>
+          <Button type="submit" disabled={Boolean(result.error) || isDragging}>
             저장
           </Button>
         </div>
@@ -363,5 +388,63 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
         </div>
       </BottomSheet>
     </div>
+  );
+}
+
+type TSelectedExerciseProps = {
+  id: string;
+  index: number;
+  exercise: TExercise | undefined;
+  isLoadError: boolean;
+  isSortable: boolean;
+  onRemove: (id: string) => void;
+};
+
+function SelectedExercise({
+  id,
+  index,
+  exercise,
+  isLoadError,
+  isSortable: isSortingEnabled,
+  onRemove,
+}: TSelectedExerciseProps) {
+  const exerciseName = exercise?.name ?? (isLoadError ? '운동 정보 확인 불가' : '삭제된 운동');
+  const { ref, handleRef, isDragSource } = useSortable({
+    id,
+    index,
+    disabled: !isSortingEnabled,
+    data: { name: exerciseName },
+  });
+
+  return (
+    <li
+      ref={ref}
+      className={`${styles['selected-item']} ${isDragSource ? styles['dragging'] : ''}`}
+    >
+      <button
+        ref={handleRef}
+        type="button"
+        className={styles['drag-handle']}
+        aria-label={`${exerciseName} 순서 이동`}
+        hidden={!isSortingEnabled}
+        disabled={!isSortingEnabled}
+      >
+        <MdDragHandle size={20} aria-hidden="true" />
+      </button>
+      <div className={styles['exercise-info']}>
+        <strong>{exerciseName}</strong>
+        {exercise && (
+          <p>
+            {exercise.amount || '운동량 미입력'}
+            {exercise.sets !== null && ` × ${exercise.sets}세트`}
+          </p>
+        )}
+        {!exercise && !isLoadError && (
+          <Button color="gray" fill="outline" onClick={() => onRemove(id)}>
+            삭제된 운동 제거
+          </Button>
+        )}
+      </div>
+    </li>
   );
 }

@@ -33,9 +33,9 @@ test('필드 오류를 입력과 연결하고 수정하면 해제하며 저장 �
   await expect(page.getByRole('alert')).toHaveCount(0);
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: '운동 선택', exact: true }),
+    page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }),
   ).toHaveAccessibleDescription('운동을 하나 이상 선택해 주세요.');
-  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /^(운동 선택|선택 변경)$/ }).click();
   await page.getByRole('dialog').getByRole('checkbox', { name: /걷기/ }).check();
   await page.getByRole('button', { name: /선택 완료/ }).click();
   await expect(page.getByRole('alert')).toHaveCount(0);

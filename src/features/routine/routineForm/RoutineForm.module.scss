@@ -30,17 +30,91 @@
     font-size: $font-size-caption;
   }
 
+  .exercise-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    h2 {
+      margin: 0;
+      font-size: $font-size-body;
+      font-weight: 500;
+    }
+  }
+
+  .select-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 4px;
+    min-height: $control-height;
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: $mint-accent;
+    font-size: $font-size-caption;
+  }
+
+  .announcement {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .exercise-box {
+    padding-inline: 12px;
+    border: 1px solid $border-soft;
+    border-radius: $border-radius;
+  }
+
+  .empty-exercises {
+    padding: 24px 12px;
+    color: $text-secondary;
+    font-size: $font-size-caption;
+    text-align: center;
+  }
+
   .selected-list {
     padding: 0;
-    margin: 12px 0 0;
+    margin: 0;
     list-style: none;
 
-    li {
+    .selected-item {
       display: flex;
       align-items: center;
-      gap: 12px;
       padding-block: 12px;
       border-bottom: 1px solid $border-soft;
+      background: $bg;
+      &:last-child {
+        border-bottom: 0;
+      }
+      &.dragging {
+        background: $bg-light;
+      }
+    }
+  }
+
+  .drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: $control-height;
+    height: $control-height;
+    padding: 0;
+    border: 0;
+    border-radius: $border-radius;
+    background: transparent;
+    color: $text-secondary;
+    touch-action: none;
+    cursor: grab;
+    &[hidden] {
+      display: none;
     }
   }
 
@@ -54,12 +128,6 @@
       color: $text-secondary;
       font-size: $font-size-caption;
     }
-  }
-
-  .order-actions {
-    display: flex;
-    flex-shrink: 0;
-    gap: 4px;
   }
 
   .schedule-options {
