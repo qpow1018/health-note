@@ -18,6 +18,17 @@
       flex-shrink: 0;
     }
   }
+  .date-bar {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    padding-inline: max($page-padding, env(safe-area-inset-left))
+      max($page-padding, env(safe-area-inset-right));
+    border-bottom: 1px solid $border-soft;
+    background: $bg-dark;
+    color: $gray-300;
+    font-size: 12px;
+  }
   .content {
     padding: 16px $page-padding 32px;
   }

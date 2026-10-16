@@ -75,6 +75,11 @@ test('빈 상태, 다음 일정, 삭제된 운동', async ({ page }) => {
 test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '헬스노트', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘의 루틴' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: '전체 루틴' })).toHaveCount(0);
+  const date = page.locator('time[datetime="2026-10-16"]');
+  await expect(date).toHaveText('10월 16일 금요일');
+  expect((await date.locator('..').boundingBox())?.height).toBe(28);
   const logo = page.locator('header img');
   await expect(logo).toHaveJSProperty('complete', true);
   expect(await logo.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(
@@ -86,17 +91,31 @@ test('홈 완료 체크, 관리 상세 이동, 새 날짜', async ({ page }) => 
     expect((await page.request.get(icon.src)).ok()).toBe(true);
   }
   expect((await page.request.get('/brand/apple-touch-icon.png')).ok()).toBe(true);
-  await page.screenshot({ path: '/tmp/health-note-logo-home.png' });
+  await page.screenshot({ path: '/tmp/health-note-date-bar.png' });
   await expect(page.getByText('10회 × 3세트')).toBeVisible();
   await page.getByRole('checkbox', { name: '푸시업 완료' }).check();
   await expect(page).toHaveURL('/');
-  await expect(page.getByText('운동 2개 중 1개 완료')).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: '상체 루틴 진행 상태' })).toHaveAttribute(
+    'aria-valuetext',
+    '운동 2개 중 1개 완료',
+  );
+  await expect(page.getByText('운동 2개 중 1개 완료', { exact: true })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('checkbox', { name: '푸시업 완료' })).toBeChecked();
   await page.getByRole('checkbox', { name: '로우 완료' }).check();
-  await expect(page.getByText('완료', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('heading', { name: '상체 루틴' })
+      .locator('..')
+      .getByText('완료', { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: '/tmp/health-note-compact.png' });
   await page.getByRole('checkbox', { name: '로우 완료' }).uncheck();
-  await expect(page.getByText('운동 2개 중 1개 완료')).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: '상체 루틴 진행 상태' })).toHaveAttribute(
+    'aria-valuetext',
+    '운동 2개 중 1개 완료',
+  );
+  await expect(page.getByText('운동 2개 중 1개 완료', { exact: true })).toHaveCount(0);
   await page.screenshot({ path: '/tmp/health-note-home-redesign.png' });
   await page.setViewportSize({ width: 320, height: 740 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
@@ -137,7 +156,8 @@ test('긴 운동 이름과 여러 루틴, 행 클릭과 키보드 체크', async
   await checkbox.focus();
   await page.keyboard.press('Space');
   await expect(checkbox).not.toBeChecked();
-  await expect(page.getByText('시작 전', { exact: true })).toHaveCount(2);
+  await expect(page.getByText('시작 전', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('진행 중', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '/tmp/health-note-home-long.png', fullPage: true });
 });

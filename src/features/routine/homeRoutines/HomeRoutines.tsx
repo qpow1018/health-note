@@ -7,7 +7,6 @@ import {
   getRoutineProgress,
   setExerciseCompleted,
 } from '@/features/routine/routineProgressStorage';
-import { useRoutineToday } from '@/features/routine/useRoutineToday';
 import toast from '@/utils/toast';
 import {
   getNextRoutineDate,
@@ -21,8 +20,7 @@ import styles from './HomeRoutines.module.scss';
 
 import { MdChevronRight } from 'react-icons/md';
 
-export default function HomeRoutines() {
-  const today = useRoutineToday();
+export default function HomeRoutines({ today }: { today: string }) {
   const [, refresh] = useReducer((value: number) => value + 1, 0);
   const { routines, exercises, progress, error } = loadHomeRoutines();
   const active = routines.filter((routine) => routine.isActive);
@@ -50,21 +48,8 @@ export default function HomeRoutines() {
   }
 
   return (
-    <section className={styles['home-routines']} aria-labelledby="home-routines-heading">
+    <section className={styles['home-routines']} aria-label="오늘의 루틴">
       <div className={styles['content']}>
-        <time className={styles['date']} dateTime={today}>
-          {new Date(`${today}T00:00:00`).toLocaleDateString('ko-KR', {
-            month: 'long',
-            day: 'numeric',
-            weekday: 'long',
-          })}
-        </time>
-        <div className={styles['section-heading']}>
-          <h2 id="home-routines-heading">오늘의 루틴</h2>
-          <Link to="/routine">
-            전체 루틴 <MdChevronRight aria-hidden="true" />
-          </Link>
-        </div>
         {error && (
           <p role="alert" className={styles['error']}>
             {error}
@@ -81,12 +66,14 @@ export default function HomeRoutines() {
                   ?.exerciseIds ?? [];
               const count = available.filter((id) => checked.includes(id)).length;
               const isComplete = available.length > 0 && count === available.length;
-              const status = count > 0 ? '진행 중' : '시작 전';
               return (
                 <li key={routine.id}>
                   <div className={styles['card']}>
                     <div className={styles['routine-heading']}>
-                      <h3>{routine.name}</h3>
+                      <div className={styles['routine-title']}>
+                        <h2>{routine.name}</h2>
+                        {isComplete && <span className={styles['completed-status']}>완료</span>}
+                      </div>
                       <Link
                         to={`/routine/${encodeURIComponent(routine.id)}`}
                         aria-label={`${routine.name} 관리`}
@@ -94,18 +81,9 @@ export default function HomeRoutines() {
                         관리 <MdChevronRight aria-hidden="true" />
                       </Link>
                     </div>
-                    <div className={styles['routine-status']}>
-                      <span className={isComplete ? styles['completed-status'] : undefined}>
-                        {isComplete ? '완료' : status}
-                      </span>
-                      <p aria-live="polite">
-                        {available.length > 0
-                          ? `운동 ${available.length}개 중 ${count}개 완료`
-                          : '운동을 다시 등록해 주세요.'}
-                      </p>
-                    </div>
                     <progress
                       aria-label={`${routine.name} 진행 상태`}
+                      aria-valuetext={`운동 ${available.length}개 중 ${count}개 완료`}
                       max={Math.max(available.length, 1)}
                       value={count}
                     />
@@ -117,9 +95,6 @@ export default function HomeRoutines() {
                           <li key={id} className={isChecked ? styles['completed'] : undefined}>
                             {exercise && (
                               <label className={styles['exercise-row']}>
-                                <span className={styles['order']} aria-hidden="true">
-                                  {routine.exerciseIds.indexOf(id) + 1}
-                                </span>
                                 <span className={styles['exercise-info']}>
                                   <span className={styles['exercise-name']}>{exercise.name}</span>
                                   <span className={styles['amount']}>
