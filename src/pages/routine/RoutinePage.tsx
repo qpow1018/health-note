@@ -61,7 +61,12 @@ export default function RoutinePage() {
                   >
                     <div className={styles['info']}>
                       <h2>{routine.name}</h2>
-                      <p>운동 {routine.exerciseIds.length}개</p>
+                      <p>
+                        <span className={routine.isActive ? styles['active-status'] : undefined}>
+                          {routine.isActive ? '활성' : '비활성'}
+                        </span>
+                        {' · '}운동 {routine.exerciseIds.length}개
+                      </p>
                     </div>
                     <MdChevronRight className={styles['chevron']} size={20} aria-hidden="true" />
                   </Link>

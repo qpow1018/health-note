@@ -4,6 +4,7 @@ const KEY = 'health-note.routines.v1';
 const ROUTINES = ['푸시업', '스쿼트', '걷기'].map((name, index) => ({
   id: String(index),
   name,
+  isActive: false,
   exerciseIds: ['a'],
   schedule: { type: 'weekdays', days: [1] },
   memo: `${name} 메모`,

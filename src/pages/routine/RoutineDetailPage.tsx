@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { deleteRoutine, postponeRoutine } from '@/features/routine/routineStorage';
+import { deleteRoutine, setRoutineActive } from '@/features/routine/routineStorage';
 import type { TRoutineSchedule } from '@/features/routine/routineStorage';
 import { loadRoutine, loadRoutineExercises } from '@/features/routine/routineLoader';
-import { getNextRoutineDate, moveRoutineDate } from '@/features/routine/routineSchedule';
+import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
 
-import Button from '@/components/common/button/Button';
 import Header from '@/components/common/header/Header';
 import MoreMenu from '@/components/common/moreMenu/MoreMenu';
 import Confirm from '@/components/common/modal/Confirm';
@@ -20,36 +19,36 @@ const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export default function RoutineDetailPage() {
   const { routineId } = useParams();
-  const today = useRoutineToday();
+  return <RoutineDetail key={routineId} routineId={routineId} />;
+}
+
+function RoutineDetail({ routineId }: { routineId: string | undefined }) {
   const navigate = useNavigate();
+  const [{ routine, error }, setResult] = useState(() => loadRoutine(routineId));
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [postponeResult, setPostponeResult] = useState({ message: '', error: '' });
-  const { routine, error } = loadRoutine(routineId);
-  const nextDate =
-    routine?.schedule.type === 'interval' ? getNextRoutineDate(routine.schedule, today) : null;
-  const exerciseResult = routine ? loadRoutineExercises() : undefined;
   let title = '루틴 상세';
   if (!error && !routine) title = '루틴을 찾을 수 없어요.';
-  if (!error && routine) title = routine.name;
+  if (routine) title = routine.name;
 
-  function handlePostpone() {
-    if (!routine || !nextDate || nextDate >= '9999-12-31') return;
-    const movedDate = moveRoutineDate(nextDate, 1);
-    const isConfirmed = window.confirm(
-      `${formatDate(nextDate)}의 운동을 ${formatDate(movedDate)}로 미룰까요? 이후 예정 일정도 하루씩 이동해요. 이전 일정은 유지돼요.`,
-    );
-    if (!isConfirmed) return;
+  function handleToggleActive() {
+    if (!routine) return;
     try {
-      postponeRoutine(routine.id, nextDate);
+      const updated = setRoutineActive(routine.id, !routine.isActive, routine.isActive);
+      if (updated === 'conflict') {
+        setResult(loadRoutine(routineId));
+        toast.error('다른 화면에서 활성 상태가 변경되었어요. 현재 상태를 확인해 주세요.', {
+          isShowCloseButton: true,
+        });
+        return;
+      }
+      setResult({ routine: updated, error: '' });
+      toast.success(updated.isActive ? '루틴을 활성화했어요.' : '루틴을 비활성화했어요.');
     } catch {
-      setPostponeResult({
-        message: '',
-        error:
-          '미루지 못했어요. 일정이 변경되었거나 브라우저 저장에 문제가 있을 수 있어요. 현재 일정을 확인하고 다시 시도해 주세요.',
-      });
-      return;
+      toast.error(
+        '활성 상태를 변경하지 못했어요. 저장된 데이터와 브라우저 저장 공간을 확인해 주세요.',
+        { isShowCloseButton: true },
+      );
     }
-    setPostponeResult({ message: `${formatDate(movedDate)}로 미뤘어요.`, error: '' });
   }
 
   function handleDelete() {
@@ -74,7 +73,7 @@ export default function RoutineDetailPage() {
         title={title}
         fallbackTo="/routine"
         actions={
-          !error && routine ? (
+          routine ? (
             <MoreMenu
               items={[
                 { label: '수정', to: `/routine/${encodeURIComponent(routine.id)}/edit` },
@@ -93,77 +92,38 @@ export default function RoutineDetailPage() {
         {!error && !routine && (
           <p className={styles['hint']}>목록으로 돌아가 루틴을 선택해 주세요.</p>
         )}
-        {!error && routine && (
+        {routine && (
           <>
-            <section className={styles['section']} aria-labelledby="schedule-heading">
-              <h2 id="schedule-heading">반복 일정</h2>
-              <p>{formatSchedule(routine.schedule)}</p>
-              {routine.schedule.type === 'interval' && (
-                <div className={styles['next-schedule']}>
-                  {nextDate && (
-                    <p>
-                      다음 예정일: <strong>{formatDate(nextDate)}</strong>
-                    </p>
-                  )}
-                  {!nextDate && (
-                    <p className={styles['hint']}>표시할 수 있는 다음 예정일이 없어요.</p>
-                  )}
-                  <Button
-                    color="gray"
-                    fill="outline"
-                    disabled={!nextDate || nextDate >= '9999-12-31'}
-                    onClick={handlePostpone}
-                  >
-                    하루 미루기
-                  </Button>
-                  <p className={styles['hint']}>다음 예정일부터 이후 일정이 하루씩 이동해요.</p>
-                  {postponeResult.message && <p role="status">{postponeResult.message}</p>}
-                  {postponeResult.error && (
-                    <p role="alert" className={styles['error']}>
-                      {postponeResult.error}
-                    </p>
-                  )}
-                </div>
-              )}
-            </section>
-            <section className={styles['section']} aria-labelledby="exercises-heading">
-              <h2 id="exercises-heading">운동</h2>
-              {exerciseResult?.error && (
-                <p className={styles['error']} role="alert">
-                  {exerciseResult.error}
+            <div className={styles['activation']}>
+              <div>
+                <p>루틴 활성화</p>
+                <p className={routine.isActive ? styles['active-status'] : styles['hint']}>
+                  {routine.isActive ? '활성' : '비활성'}
                 </p>
-              )}
-              {exerciseResult && !exerciseResult.error && (
-                <ol className={styles['exercise-list']}>
-                  {routine.exerciseIds.map((id) => {
-                    const exercise = exerciseResult.exercises.find((item) => item.id === id);
-                    return (
-                      <li key={id}>
-                        {exercise && (
-                          <>
-                            <h3>{exercise.name}</h3>
-                            <p className={styles['hint']}>
-                              {exercise.amount || '운동량 미입력'}
-                              {exercise.sets !== null && ` × ${exercise.sets}세트`}
-                            </p>
-                          </>
-                        )}
-                        {!exercise && <p className={styles['hint']}>삭제된 운동이에요.</p>}
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </section>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-label="루틴 활성화"
+                aria-checked={routine.isActive}
+                className={styles['activation-switch']}
+                onClick={handleToggleActive}
+              >
+                <span aria-hidden="true" />
+              </button>
+            </div>
+            <RoutineSchedule schedule={routine.schedule} isActive={routine.isActive} />
+            <RoutineExercises exerciseIds={routine.exerciseIds} />
             <section className={styles['section']} aria-labelledby="memo-heading">
               <h2 id="memo-heading">메모</h2>
-              {routine.memo && <p className={styles['memo']}>{routine.memo}</p>}
-              {!routine.memo && <p className={styles['hint']}>등록한 메모가 없어요.</p>}
+              <p className={routine.memo ? styles['memo'] : styles['hint']}>
+                {routine.memo || '-'}
+              </p>
             </section>
           </>
         )}
       </div>
-      {!error && routine && (
+      {routine && (
         <Confirm
           isOpen={isDeleteConfirmOpen}
           title="루틴 삭제"
@@ -177,16 +137,92 @@ export default function RoutineDetailPage() {
   );
 }
 
-function formatSchedule(schedule: TRoutineSchedule) {
+function RoutineSchedule({
+  schedule,
+  isActive,
+}: {
+  schedule: TRoutineSchedule;
+  isActive: boolean;
+}) {
+  const today = useRoutineToday();
+  const nextDate = getNextRoutineDate(schedule, today);
+  let summary: string;
   if (schedule.type === 'weekdays') {
     const days = WEEKDAY_ORDER.filter((day) => schedule.days.includes(day));
-    return `매주 ${days.map((day) => WEEKDAYS[day]).join(' · ')}`;
+    summary = `매주 ${days.map((day) => WEEKDAYS[day]).join(' · ')}`;
+  } else {
+    summary = `${schedule.intervalDays}일 간격`;
   }
-  const [year, month, day] = schedule.startDate.split('-');
-  return `${year}년 ${Number(month)}월 ${Number(day)}일부터 ${schedule.intervalDays}일 간격`;
+  return (
+    <section className={styles['section']} aria-labelledby="schedule-heading">
+      <h2 id="schedule-heading">반복 일정</h2>
+      <p className={styles['schedule-summary']}>{summary}</p>
+      <dl className={styles['next-date']}>
+        <dt>{isActive ? '다음 예정일' : '활성화 시 다음 예정일'}</dt>
+        <dd>
+          {nextDate && (
+            <>
+              <strong>{formatRelativeDate(nextDate, today)}</strong>
+              {' · '}
+              <time dateTime={nextDate}>{formatDate(nextDate)}</time>
+            </>
+          )}
+          {!nextDate && '표시할 수 있는 다음 예정일이 없어요.'}
+        </dd>
+      </dl>
+      {schedule.type === 'interval' && (
+        <p className={styles['schedule-start']}>{formatDate(schedule.startDate)}부터 시작</p>
+      )}
+    </section>
+  );
+}
+
+function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
+  const { exercises, error } = loadRoutineExercises();
+  return (
+    <section className={styles['section']} aria-labelledby="exercises-heading">
+      <h2 id="exercises-heading">
+        운동 <span className={styles['exercise-count']}>{exerciseIds.length}개</span>
+      </h2>
+      {error && (
+        <p className={styles['error']} role="alert">
+          {error}
+        </p>
+      )}
+      {!error && (
+        <ol className={styles['exercise-list']}>
+          {exerciseIds.map((id) => {
+            const exercise = exercises.find((item) => item.id === id);
+            return (
+              <li key={id}>
+                {exercise && (
+                  <>
+                    <h3>{exercise.name}</h3>
+                    <p className={styles['hint']}>
+                      {exercise.amount || '운동량 미입력'}
+                      {exercise.sets !== null && ` × ${exercise.sets}세트`}
+                    </p>
+                  </>
+                )}
+                {!exercise && <p className={styles['hint']}>삭제된 운동이에요.</p>}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
+  );
 }
 
 function formatDate(date: string) {
   const [year, month, day] = date.split('-');
   return `${year}년 ${Number(month)}월 ${Number(day)}일`;
+}
+
+function formatRelativeDate(date: string, today: string) {
+  const days =
+    (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / (24 * 60 * 60 * 1000);
+  if (days === 0) return '오늘';
+  if (days === 1) return '내일';
+  return `${days}일 후`;
 }

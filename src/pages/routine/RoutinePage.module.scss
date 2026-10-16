@@ -84,6 +84,10 @@
       font-size: $font-size-caption;
     }
 
+    .active-status {
+      color: $mint-accent;
+    }
+
     .chevron {
       flex-shrink: 0;
       color: $text-secondary;

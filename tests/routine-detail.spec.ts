@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 const ROUTINE = {
   id: 'routine-1',
   name: '상체 루틴',
+  isActive: false,
   exerciseIds: ['walk', 'squat'],
   schedule: { type: 'weekdays', days: [0, 5, 1] },
   memo: '천천히\n무리하지 않기',
@@ -61,8 +62,8 @@ test('간격 반복과 빈 메모를 표시하고 직접 진입의 뒤로가기�
   );
   const direct = await context.newPage();
   await direct.goto('/routine/routine-1');
-  await expect(direct.getByText('2026년 10월 14일부터 2일 간격', { exact: true })).toBeVisible();
-  await expect(direct.getByText('등록한 메모가 없어요.')).toBeVisible();
+  await expect(direct.getByText('2일 간격', { exact: true })).toBeVisible();
+  await expect(direct.getByText('-', { exact: true })).toBeVisible();
   await direct.getByRole('button', { name: '뒤로가기' }).click();
   await expect(direct).toHaveURL('/routine');
 });

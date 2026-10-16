@@ -37,6 +37,7 @@ test('요일 루틴에 운동을 선택하고 정렬해 저장하며 새로고�
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toMatchObject([
     {
       name: '기본 루틴',
+      isActive: false,
       exerciseIds: ['walk', 'squat'],
       schedule: { type: 'weekdays', days: [1, 5] },
       memo: '천천히',

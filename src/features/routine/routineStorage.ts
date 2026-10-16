@@ -18,7 +18,9 @@ export type TRoutineValues = {
   memo: string;
 };
 
-export type TRoutine = TRoutineValues & { id: string };
+export type TRoutine = TRoutineValues & { id: string; isActive: boolean };
+
+type TStoredRoutine = Omit<TRoutine, 'isActive'> & { isActive?: boolean };
 
 const STORAGE_KEY = 'health-note.routines.v1';
 
@@ -62,11 +64,12 @@ function isSchedule(value: unknown): value is TRoutineSchedule {
   return true;
 }
 
-function isRoutine(value: unknown): value is TRoutine {
+function isRoutine(value: unknown): value is TStoredRoutine {
   if (typeof value !== 'object' || value === null) return false;
   const routine = value as Record<string, unknown>;
   return (
     typeof routine.id === 'string' &&
+    (routine.isActive === undefined || typeof routine.isActive === 'boolean') &&
     typeof routine.name === 'string' &&
     Boolean(routine.name.trim()) &&
     typeof routine.memo === 'string' &&
@@ -84,7 +87,7 @@ export function getRoutines(): TRoutine[] {
   const routines: unknown = JSON.parse(stored);
   if (!Array.isArray(routines) || !routines.every(isRoutine))
     throw new Error('Invalid routine data');
-  return routines;
+  return routines.map((routine) => ({ ...routine, isActive: routine.isActive ?? false }));
 }
 
 function validateRoutine(routine: TRoutine): void {
@@ -96,7 +99,7 @@ function validateRoutine(routine: TRoutine): void {
 }
 
 export function createRoutine(values: TRoutineValues): void {
-  const routine = { ...values, id: crypto.randomUUID() };
+  const routine = { ...values, id: crypto.randomUUID(), isActive: false };
   validateRoutine(routine);
   const routines = getRoutines();
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...routines, routine]));
@@ -125,7 +128,7 @@ export function updateRoutine(
       postponedDates: isSameSchedule ? previousSchedule.postponedDates : undefined,
     };
   }
-  const routine = { ...values, id, schedule };
+  const routine = { ...values, id, schedule, isActive: routines[index].isActive };
   validateRoutine(routine);
   routines[index] = routine;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(routines));
@@ -178,4 +181,19 @@ export function reorderRoutines(
   const reordered = orderedIds.map((id) => byId.get(id)!);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reordered));
   return reordered;
+}
+
+export function setRoutineActive(
+  id: string,
+  isActive: boolean,
+  expectedIsActive: boolean,
+): TRoutine | 'conflict' {
+  const routines = getRoutines();
+  const index = routines.findIndex((routine) => routine.id === id);
+  if (index === -1) throw new Error('Routine not found');
+  if (routines[index].isActive !== expectedIsActive) return 'conflict';
+  const routine = { ...routines[index], isActive };
+  routines[index] = routine;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routines));
+  return routine;
 }

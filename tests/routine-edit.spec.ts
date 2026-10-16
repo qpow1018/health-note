@@ -4,6 +4,7 @@ const KEY = 'health-note.routines.v1';
 const ROUTINE = {
   id: 'r1',
   name: '기존 루틴',
+  isActive: false,
   exerciseIds: ['walk', 'squat'],
   schedule: { type: 'weekdays', days: [1, 5] },
   memo: '기존 메모',
@@ -46,7 +47,7 @@ test('상세에서 수정해 모든 입력과 ID·다른 루틴을 유지하고 
   await page.getByLabel('메모').fill('바뀐 메모');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/routine/r1');
-  await expect(page.getByText('2026년 10월 14일부터 3일 간격', { exact: true })).toBeVisible();
+  await expect(page.getByText('3일 간격', { exact: true })).toBeVisible();
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
     {
       ...ROUTINE,
