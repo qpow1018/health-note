@@ -15,6 +15,8 @@ import Button from '@/components/common/button/Button';
 import Textarea from '@/components/common/form/Textarea';
 import FieldError from '@/components/common/form/FieldError';
 import Input from '@/components/common/form/Input';
+import Radio from '@/components/common/form/Radio';
+import Checkbox from '@/components/common/form/Checkbox';
 
 import styles from './RoutineForm.module.scss';
 
@@ -263,24 +265,22 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
               </p>
             )}
           <div className={styles['schedule-options']}>
-            <label>
-              <input
-                type="radio"
-                name="scheduleType"
-                checked={scheduleType === 'weekdays'}
-                onChange={() => setScheduleType('weekdays')}
-              />{' '}
+            <Radio
+              name="scheduleType"
+              value="weekdays"
+              checked={scheduleType === 'weekdays'}
+              onChange={() => setScheduleType('weekdays')}
+            >
               요일 반복
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="scheduleType"
-                checked={scheduleType === 'interval'}
-                onChange={() => setScheduleType('interval')}
-              />{' '}
+            </Radio>
+            <Radio
+              name="scheduleType"
+              value="interval"
+              checked={scheduleType === 'interval'}
+              onChange={() => setScheduleType('interval')}
+            >
               간격 반복
-            </label>
+            </Radio>
           </div>
           <div hidden={scheduleType !== 'weekdays'} className={styles['weekdays']}>
             {WEEKDAYS.map(({ day, label }) => (
@@ -295,7 +295,7 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
                   }
                   disabled={scheduleType !== 'weekdays'}
                 />
-                {label}
+                <span>{label}</span>
               </label>
             ))}
           </div>
@@ -370,20 +370,20 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
         )}
         <div className={styles['exercise-options']}>
           {result.exercises.map((exercise) => (
-            <label key={exercise.id}>
-              <input
-                type="checkbox"
-                checked={draftIds.includes(exercise.id)}
-                onChange={() => handleToggleExercise(exercise.id)}
-              />
-              <span>
+            <Checkbox
+              key={exercise.id}
+              className={styles['exercise-option']}
+              checked={draftIds.includes(exercise.id)}
+              onChange={() => handleToggleExercise(exercise.id)}
+            >
+              <span className={styles['exercise-option-info']}>
                 <strong>{exercise.name}</strong>
                 <span>
                   {exercise.amount || '운동량 미입력'}
                   {exercise.sets !== null && ` × ${exercise.sets}세트`}
                 </span>
               </span>
-            </label>
+            </Checkbox>
           ))}
         </div>
       </BottomSheet>
