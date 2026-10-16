@@ -1,0 +1,56 @@
+.use-page {
+  .content {
+    padding: 20px $page-padding max(32px, env(safe-area-inset-bottom));
+    overflow-wrap: anywhere;
+  }
+  time,
+  .hint {
+    color: $text-secondary;
+    font-size: $font-size-caption;
+  }
+  .summary {
+    margin-top: 12px;
+    color: $mint-light;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .memo {
+    margin-top: 20px;
+    white-space: pre-wrap;
+  }
+  .hint {
+    margin-top: 12px;
+  }
+  .list {
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+    li {
+      padding: 20px 0;
+      border-bottom: 1px solid $border-soft;
+    }
+    label {
+      min-height: 48px;
+    }
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      color: $text-secondary;
+      font-size: $font-size-caption;
+    }
+  }
+  .amount {
+    margin-left: 30px;
+    color: $text-secondary;
+  }
+  .manage {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: $text-secondary;
+  }
+  .error {
+    color: $error-accent;
+  }
+}
