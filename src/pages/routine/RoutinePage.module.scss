@@ -1,8 +1,7 @@
 .routine-page {
   .content {
     padding: 0 max($page-padding, env(safe-area-inset-right))
-      max($page-padding, env(safe-area-inset-bottom))
-      max($page-padding, env(safe-area-inset-left));
+      max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
   .add-link {
@@ -14,7 +13,9 @@
     text-decoration: none;
   }
 
-  .message { padding-block: 48px; }
+  .message {
+    padding-block: 48px;
+  }
 
   .error {
     margin-top: 24px;
@@ -37,7 +38,9 @@
         text-decoration: none;
       }
 
-      h2 { font-size: 18px; }
+      h2 {
+        font-size: 18px;
+      }
       p {
         margin-top: 8px;
         color: $text-secondary;

@@ -1,14 +1,13 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { getRoutines } from '@/features/routine/routineStorage';
+import { loadRoutines } from '@/features/routine/routineLoader';
 
 import Header from '@/components/common/header/Header';
 
 import styles from './RoutinePage.module.scss';
 
 export default function RoutinePage() {
-  const [{ routines, error }] = useState(loadRoutines);
+  const { routines, error } = loadRoutines();
   return (
     <section className={styles['routine-page']}>
       <Header
@@ -47,15 +46,4 @@ export default function RoutinePage() {
       </div>
     </section>
   );
-}
-
-function loadRoutines() {
-  try {
-    return { routines: getRoutines(), error: '' };
-  } catch {
-    return {
-      routines: [],
-      error: '루틴 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    };
-  }
 }

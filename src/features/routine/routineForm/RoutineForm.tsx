@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
-import { getExercises } from '@/features/exercise/exerciseStorage';
+import { loadRoutineExercises } from '@/features/routine/routineLoader';
+import { getTodayDate } from '@/features/routine/routineSchedule';
 import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routineStorage';
 
 import BottomSheet from '@/components/common/bottomSheet/BottomSheet';
@@ -28,7 +29,7 @@ type TRoutineFormProps = {
 };
 
 export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutineFormProps) {
-  const [result, setResult] = useState(loadExercises);
+  const [result, setResult] = useState(loadRoutineExercises);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -36,10 +37,10 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
     initialValues?.schedule.type ?? 'weekdays',
   );
   const [error, setError] = useState('');
-  const [today] = useState(getToday);
+  const [today] = useState(getTodayDate);
 
   function handleOpenExercises() {
-    const latest = loadExercises();
+    const latest = loadRoutineExercises();
     setResult(latest);
     if (latest.error) return;
     setDraftIds([...exerciseIds]);
@@ -50,6 +51,14 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
     setDraftIds(
       draftIds.includes(id) ? draftIds.filter((value) => value !== id) : [...draftIds, id],
     );
+  }
+
+  function handleConfirmExercises() {
+    setExerciseIds([
+      ...exerciseIds.filter((id) => draftIds.includes(id)),
+      ...draftIds.filter((id) => !exerciseIds.includes(id)),
+    ]);
+    setIsSheetOpen(false);
   }
 
   function handleMoveExercise(index: number, offset: number) {
@@ -65,7 +74,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
     const data = new FormData(event.currentTarget);
     const name = String(data.get('name') ?? '').trim();
     setError('');
-    const latest = loadExercises();
+    const latest = loadRoutineExercises();
     setResult(latest);
     if (latest.error) return;
     if (exerciseIds.some((id) => !latest.exercises.some((exercise) => exercise.id === id))) {
@@ -296,16 +305,7 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
         title="운동 선택"
         onClose={() => setIsSheetOpen(false)}
         footer={
-          <Button
-            className={styles['confirm-button']}
-            onClick={() => {
-              setExerciseIds([
-                ...exerciseIds.filter((id) => draftIds.includes(id)),
-                ...draftIds.filter((id) => !exerciseIds.includes(id)),
-              ]);
-              setIsSheetOpen(false);
-            }}
-          >
+          <Button className={styles['confirm-button']} onClick={handleConfirmExercises}>
             선택 완료 ({draftIds.length})
           </Button>
         }
@@ -336,20 +336,4 @@ export default function RoutineForm({ initialValues, cancelTo, onSave }: TRoutin
       </BottomSheet>
     </div>
   );
-}
-
-function loadExercises() {
-  try {
-    return { exercises: getExercises(), error: '' };
-  } catch {
-    return {
-      exercises: [],
-      error: '운동 목록을 불러오지 못했어요. 저장된 데이터와 브라우저 저장 설정을 확인해 주세요.',
-    };
-  }
-}
-
-function getToday() {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }

@@ -1,8 +1,7 @@
 .routine-detail-page {
   .content {
     padding: 0 max($page-padding, env(safe-area-inset-right))
-      max($page-padding, env(safe-area-inset-bottom))
-      max($page-padding, env(safe-area-inset-left));
+      max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
   .section {
@@ -28,7 +27,9 @@
         font-weight: 500;
       }
 
-      p { margin-top: 4px; }
+      p {
+        margin-top: 4px;
+      }
     }
   }
 
@@ -38,11 +39,17 @@
     gap: 12px;
     margin-top: 20px;
 
-    .hint { font-size: $font-size-caption; }
+    .hint {
+      font-size: $font-size-caption;
+    }
   }
 
-  .hint { color: $text-secondary; }
-  .memo { white-space: pre-wrap; }
+  .hint {
+    color: $text-secondary;
+  }
+  .memo {
+    white-space: pre-wrap;
+  }
 
   .error {
     margin-top: 24px;
@@ -54,6 +61,8 @@
     gap: 12px;
     margin-top: 32px;
 
-    > * { flex: 1; }
+    > * {
+      flex: 1;
+    }
   }
 }
