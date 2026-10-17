@@ -17,10 +17,11 @@
 ## 구조의 책임
 
 - `src/api/<domain>/`: 서버 요청·응답 변환과 API·DB 경계 타입. 완료 기록 API는 `routine` 도메인에 포함한다.
-- `src/features/<domain>/`: 폼·일정 계산·조회 및 mutation 훅·Query 키와 캐시 갱신.
+- `src/queries/`: 도메인별 조회·mutation 훅, Query 키·캐시 갱신·재조회 설정.
+- `src/features/<domain>/`, `src/pages/<domain>/`: 폼·일정 계산·URL 해석·조회 정책 선택·오류 안내·화면 이동.
 - `src/lib/supabase.ts`, `src/lib/auth/`: 공통 Supabase 클라이언트와 현재 사용자 정보.
 - `src/lib/query/`: 공유 QueryClient와 QueryProvider. 인증 사용자 변경 시에도 Provider와 동일한 인스턴스의 캐시를 초기화한다.
-- API는 feature나 Query 캐시를 참조하지 않는다. 자세한 배치·동작 규칙은 각 스킬을 따른다.
+- API는 queries·feature·Query 캐시를 참조하지 않는다. queries는 feature·page를 참조하지 않고 서버 상태 관리에 집중한다. 자세한 배치·동작 규칙은 각 스킬을 따른다.
 
 ## 구현 작업의 스킬 적용
 

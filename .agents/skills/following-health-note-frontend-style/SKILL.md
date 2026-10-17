@@ -9,7 +9,8 @@ description: Apply Health Note conventions when writing, reviewing, or refactori
 
 - 앱 레이아웃·라우트 조립은 src/app/, 페이지는 src/pages/<domain>/에 둔다.
 - 페이지는 URL 파라미터 해석, 화면 조립, 저장 후 이동을 담당하고 페이지 전용 스타일을 같은 폴더에 둔다.
-- 도메인 폼·검증·일정 계산·조회 및 mutation 훅은 src/features/<domain>/에 둔다. features는 공유 코드만 모으는 곳이 아니라 기능 책임을 가진 코드의 위치다.
+- 도메인 폼·검증·일정 계산·기능별 화면 로직은 src/features/<domain>/에 둔다. features는 공유 코드만 모으는 곳이 아니라 기능 책임을 가진 코드의 위치다.
+- 서버 상태를 관리하는 조회·mutation 훅과 Query 키는 src/queries/<domain>Query.ts에 둔다.
 - 서버 요청과 API·DB 경계 타입은 src/api/<domain>/에 두고, 폼 전용 상태·UI 타입은 해당 feature에 둔다.
 - React 생명주기에 의존하며 도메인과 무관하게 재사용하는 로직은 src/hooks/에 둔다. Modal·Confirm·BottomSheet는 src/components/common/modal/에서 관리한다.
 - 페이지에서만 쓰는 JSX는 페이지 안에 유지할 수 있다. 페이지를 얇게 만들기 위해 억지로 분리하지 않는다.
@@ -40,10 +41,13 @@ description: Apply Health Note conventions when writing, reviewing, or refactori
 
 ## 서버 상태와 API 사용
 
-- 캐시가 필요한 조회는 feature의 query 훅이 src/api/의 도메인 함수를 호출한다. UI에서 Supabase table·RPC를 직접 호출하지 않는다.
-- 생성·수정·삭제는 feature의 mutation 훅에서 API를 호출하고 성공 결과에 따라 캐시를 무효화한다. 충돌·삭제 제한 같은 실패 결과를 성공으로 처리하지 않는다.
-- 캐시가 필요 없는 인증 명령은 API를 직접 호출할 수 있다. OAuth URL 준비는 API, 브라우저 이동과 사용자 안내는 feature·화면이 담당한다.
-- Query 키는 해당 feature에서 소유한다. 편집 화면의 스냅샷 조회와 refetchType: 'none' 등 기존 재조회 정책은 의미를 확인하고 유지한다.
+- 캐시가 필요한 조회는 src/queries/의 query 훅이 src/api/의 도메인 함수를 호출한다. UI에서 Supabase table·RPC를 직접 호출하지 않는다.
+- 생성·수정·삭제는 src/queries/의 mutation 훅에서 API를 호출하고 성공 결과에 따라 캐시를 무효화한다. 충돌·삭제 제한 같은 실패 결과를 성공으로 처리하지 않는다.
+- API 함수마다 Query 훅을 의무적으로 만들지 않는다. 캐시가 필요 없는 인증 명령은 API를 직접 호출할 수 있다. OAuth URL 준비는 API, 브라우저 이동과 사용자 안내는 feature·화면이 담당한다.
+- Query 키는 해당 queries 모듈에서 소유한다. Query 훅은 Query·mutation 결과를 반환하며 사용자 안내 문구·토스트·페이지 이동을 포함하지 않는다.
+- URL·location.key 해석과 편집용 스냅샷 사용 여부 결정은 feature·page가 담당한다. Query 훅은 전달받은 구분값과 옵션을 캐시 키·재조회 설정에 반영한다.
+- queries는 feature·page와 라우터에 의존하지 않는다. 일정 계산·미루기 조건·편집 이력 유지 같은 기능 정책은 feature에서 처리하고 준비된 요청 값을 mutation에 전달한다.
+- 편집 스냅샷과 refetchType: 'none' 등 기존 재조회 동작은 보존한다. 실제 호출부에 필요한 옵션만 제공하고 범용 설정이나 단순 전달용 feature 훅을 미리 만들지 않는다.
 - 서버 상태를 별도 컴포넌트 상태에 장기 복제하지 않는다. 폼 초안과 미저장 정렬처럼 별도 편집 상태가 필요한 경우는 분리한다.
 - QueryProvider와 공유 QueryClient는 src/lib/query/에 둔다. Provider 안에서 별도 인스턴스를 만들지 않는다.
 - 인증 세션 구독은 features/auth/useAuthSession.ts에서 처리한다. 사용자 변경 시 캐시 초기화와 AuthBoundary의 사용자별 재마운트로 다른 계정의 데이터·편집 상태가 이어지지 않도록 한다.

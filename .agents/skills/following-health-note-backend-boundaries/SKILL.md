@@ -12,7 +12,7 @@ description: Apply Health Note boundaries when writing, reviewing, or refactorin
 - 서버 요청 함수는 `src/api/<domain>/index.ts`, API 요청·응답·DB row 타입은 같은 도메인의 `type.ts`에 둔다. 작은 내부 타입을 위해 파일을 미리 만들지는 않는다.
 - 인증은 `api/auth`, 운동은 `api/exercise`, 루틴과 완료 기록은 `api/routine`에서 관리한다. 완료 기록만을 위한 별도 API 파일은 책임이 커질 때 검토한다.
 - 공통 Supabase 클라이언트는 `src/lib/supabase.ts`, 현재 사용자 정보는 `src/lib/auth/currentUser.ts`에 둔다.
-- API는 feature·React 훅·QueryClient를 참조하지 않는다. 토스트·화면 이동·캐시 갱신은 feature·화면이 담당한다.
+- API는 queries·feature·React 훅·QueryClient를 참조하지 않는다. Query 키·캐시 갱신은 src/queries/, 토스트·오류 안내·화면 이동은 feature·page가 담당한다.
 - 일정 계산·미루기 조건·편집 시 이력 유지 정책은 feature에 남기고, 저장 요청과 버전 조건은 API가 전달한다.
 - 현재 Supabase SDK를 사용한다. 별도 HTTP client나 공통 요청 추상화는 실제 요구가 있을 때 도입한다.
 
