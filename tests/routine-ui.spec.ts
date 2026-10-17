@@ -85,3 +85,23 @@ test('모바일 목록·정렬·상세·삭제 모달과 좁은 화면의 긴 �
     ).toBe(true);
   }
 });
+
+for (const closeMethod of ['취소', 'Escape']) {
+  test(`삭제 확인을 ${closeMethod}로 닫으면 더보기 버튼으로 포커스가 복귀한다`, async ({
+    page,
+  }) => {
+    await page.goto('/routine/0');
+    const opener = page.getByRole('button', { name: '더보기' });
+    await opener.click();
+    await page.getByRole('button', { name: '삭제', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: '루틴 삭제' });
+    await expect(dialog).toBeVisible();
+    if (closeMethod === 'Escape') {
+      await page.keyboard.press('Escape');
+    } else {
+      await dialog.getByRole('button', { name: '취소', exact: true }).click();
+    }
+    await expect(dialog).not.toBeVisible();
+    await expect(opener).toBeFocused();
+  });
+}

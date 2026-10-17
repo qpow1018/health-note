@@ -22,14 +22,10 @@ export default function Modal({ isOpen, title, onClose, children }: TModalProps)
     const dialog = dialogRef.current;
     if (!dialog || !isOpen) return;
 
-    const previousFocus = document.activeElement;
     dialog.showModal();
 
     return () => {
       dialog.close();
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
-        previousFocus.focus();
-      }
     };
   }, [isOpen]);
 
