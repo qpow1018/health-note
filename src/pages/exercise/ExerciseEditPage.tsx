@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
 import { useExercise } from '@/features/exercise/exerciseLoader';
-import { useUpdateExercise } from '@/features/exercise/useExerciseMutations';
+import { useUpdateExercise } from '@/queries/exerciseQuery';
 import type { TExerciseValues } from '@/api/exercise/type';
 
 import Header from '@/components/common/header/Header';
@@ -17,7 +17,7 @@ export default function ExerciseEditPage() {
 }
 
 function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {
-  const updateExercise = useUpdateExercise();
+  const { mutateAsync: updateExercise } = useUpdateExercise();
   const navigate = useNavigate();
 
   const { exercise, error, isLoading, refetch } = useExercise(exerciseId, true);
@@ -30,7 +30,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
       return;
     }
     try {
-      const result = await updateExercise(exercise.id, values, exercise);
+      const result = await updateExercise({ id: exercise.id, values, expectedExercise: exercise });
       if (result === 'conflict') {
         toast.error(
           '다른 화면에서 변경된 운동이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',

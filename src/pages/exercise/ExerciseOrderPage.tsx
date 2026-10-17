@@ -5,7 +5,7 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useReorderExercises } from '@/features/exercise/useExerciseMutations';
+import { useReorderExercises } from '@/queries/exerciseQuery';
 import { useExercises } from '@/features/exercise/useExercises';
 import toast from '@/utils/toast';
 import type { TExercise } from '@/api/exercise/type';
@@ -61,7 +61,7 @@ export default function ExerciseOrderPage() {
 }
 
 function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercise[] }) {
-  const reorderExercises = useReorderExercises();
+  const { mutateAsync: reorderExercises } = useReorderExercises();
   const navigate = useNavigate();
   const [exercises] = useState(initialExercises);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,10 +74,10 @@ function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercis
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const saved = await reorderExercises(
+      const saved = await reorderExercises({
         orderedIds,
-        exercises.map((exercise) => exercise.id),
-      );
+        expectedIds: exercises.map((exercise) => exercise.id),
+      });
       if (saved === 'conflict') {
         toast.error('목록이 변경되었어요. 목록으로 돌아가 다시 시도해 주세요.', {
           isShowCloseButton: true,

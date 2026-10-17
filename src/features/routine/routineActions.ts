@@ -1,5 +1,5 @@
 import { queryClient } from '@/lib/query/queryClient';
-import { ROUTINES_QUERY_KEY } from './routineLoader';
+import { invalidateRoutines } from '@/queries/routineQuery';
 import { getRoutines, updateRoutineSchedule } from '@/api/routine';
 import type { TRoutine, TRoutineValues } from '@/api/routine/type';
 import { getNextRoutineDate, getTodayDate } from './routineSchedule';
@@ -34,5 +34,5 @@ export async function postponeRoutine(id: string, expectedDate: string): Promise
     postponedDates: [...(routine.schedule.postponedDates ?? []), nextDate],
   };
   await updateRoutineSchedule(id, schedule, routine.version);
-  await queryClient.invalidateQueries({ queryKey: ROUTINES_QUERY_KEY, refetchType: 'none' });
+  await invalidateRoutines(queryClient);
 }

@@ -1,3 +1,4 @@
+import { isDateString } from '@/utils/date';
 import { getCurrentUserId } from '@/lib/auth/currentUser';
 import { getSupabase } from '@/lib/supabase';
 import type {
@@ -122,6 +123,7 @@ export async function getRoutineProgress(
   date: string,
   signal?: AbortSignal,
 ): Promise<TRoutineProgress[]> {
+  if (!isDateString(date)) throw new Error('Invalid date');
   let query = getSupabase()
     .from('routine_progress')
     .select('routine_id,exercise_id')
@@ -139,6 +141,7 @@ export async function setExerciseCompleted(
   exerciseId: string,
   isCompleted: boolean,
 ): Promise<void> {
+  if (!isDateString(date)) throw new Error('Invalid date');
   const userId = getCurrentUserId();
   const table = getSupabase().from('routine_progress');
   const { error } = isCompleted

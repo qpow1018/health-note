@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useRoutine } from '@/features/routine/routineLoader';
-import { useUpdateRoutine } from '@/features/routine/useRoutineMutations';
+import { prepareRoutineValues } from '@/features/routine/routineActions';
+import { useUpdateRoutine } from '@/queries/routineQuery';
 import type { TRoutineValues } from '@/api/routine/type';
 import toast from '@/utils/toast';
 
@@ -17,7 +18,7 @@ export default function RoutineEditPage() {
 }
 
 function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
-  const updateRoutine = useUpdateRoutine();
+  const { mutateAsync: updateRoutine } = useUpdateRoutine();
   const navigate = useNavigate();
   const { routine, error, isLoading, refetch } = useRoutine(routineId, true);
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;
@@ -28,7 +29,11 @@ function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
       return;
     }
     try {
-      const result = await updateRoutine(routine.id, values, routine);
+      const result = await updateRoutine({
+        id: routine.id,
+        values: prepareRoutineValues(values, routine),
+        expectedRoutine: routine,
+      });
       if (result === 'conflict') {
         toast.error(
           '다른 화면에서 변경된 루틴이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',

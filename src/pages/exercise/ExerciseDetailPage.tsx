@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useDeleteExercise } from '@/features/exercise/useExerciseMutations';
+import { useDeleteExercise } from '@/queries/exerciseQuery';
 import { useExercise } from '@/features/exercise/exerciseLoader';
 import { getYoutubeVideoId, isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExercise } from '@/api/exercise/type';
@@ -20,7 +20,7 @@ type TExerciseDetailContentProps = {
 };
 
 export default function ExerciseDetailPage() {
-  const deleteExercise = useDeleteExercise();
+  const { mutateAsync: deleteExercise } = useDeleteExercise();
   const navigate = useNavigate();
 
   const { exerciseId } = useParams();

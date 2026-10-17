@@ -5,7 +5,7 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useReorderRoutines } from '@/features/routine/useRoutineMutations';
+import { useReorderRoutines } from '@/queries/routineQuery';
 import type { TRoutine } from '@/api/routine/type';
 import { useRoutines } from '@/features/routine/routineLoader';
 import toast from '@/utils/toast';
@@ -63,7 +63,7 @@ export default function RoutineOrderPage() {
 }
 
 function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] }) {
-  const reorderRoutines = useReorderRoutines();
+  const { mutateAsync: reorderRoutines } = useReorderRoutines();
   const navigate = useNavigate();
   const [routines] = useState(initialRoutines);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,10 +76,10 @@ function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] 
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const saved = await reorderRoutines(
+      const saved = await reorderRoutines({
         orderedIds,
-        routines.map((routine) => routine.id),
-      );
+        expectedIds: routines.map((routine) => routine.id),
+      });
       if (saved === 'conflict') {
         toast.error('목록이 변경되었어요. 목록으로 돌아가 다시 시도해 주세요.', {
           isShowCloseButton: true,

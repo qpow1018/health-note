@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useDeleteRoutine, useSetRoutineActive } from '@/features/routine/useRoutineMutations';
+import { useDeleteRoutine, useSetRoutineActive } from '@/queries/routineQuery';
 import type { TRoutineSchedule } from '@/api/routine/type';
 import { useRoutine } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
@@ -24,8 +24,8 @@ export default function RoutineDetailPage() {
 }
 
 function RoutineDetail({ routineId }: { routineId: string | undefined }) {
-  const setRoutineActive = useSetRoutineActive();
-  const deleteRoutine = useDeleteRoutine();
+  const { mutateAsync: setRoutineActive } = useSetRoutineActive();
+  const { mutateAsync: deleteRoutine } = useDeleteRoutine();
   const navigate = useNavigate();
   const { routine, error, isLoading, refetch } = useRoutine(routineId);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,7 +38,11 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
     if (!routine || isSaving) return;
     setIsSaving(true);
     try {
-      const updated = await setRoutineActive(routine.id, !routine.isActive, routine.isActive);
+      const updated = await setRoutineActive({
+        id: routine.id,
+        isActive: !routine.isActive,
+        expectedIsActive: routine.isActive,
+      });
       if (updated === 'conflict') {
         await refetch();
         toast.error('다른 화면에서 활성 상태가 변경되었어요. 현재 상태를 확인해 주세요.', {

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useCreateExercise } from '@/features/exercise/useExerciseMutations';
+import { useCreateExercise } from '@/queries/exerciseQuery';
 import type { TExerciseValues } from '@/api/exercise/type';
 
 import Header from '@/components/common/header/Header';
@@ -10,7 +10,7 @@ import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm';
 import styles from './ExerciseCreatePage.module.scss';
 
 export default function ExerciseCreatePage() {
-  const createExercise = useCreateExercise();
+  const { mutateAsync: createExercise } = useCreateExercise();
   const navigate = useNavigate();
 
   async function handleSave(values: TExerciseValues): Promise<void> {
