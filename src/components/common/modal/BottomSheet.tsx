@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+
 import styles from './BottomSheet.module.scss';
 
 import { MdClose } from 'react-icons/md';
@@ -23,6 +25,8 @@ export default function BottomSheet({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -33,11 +37,8 @@ export default function BottomSheet({
     }
 
     dialog.showModal();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.style.overflow = previousOverflow;
       dialog.close();
     };
   }, [isOpen]);

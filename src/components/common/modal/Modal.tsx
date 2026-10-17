@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+
 import styles from './Modal.module.scss';
 
 type TModalProps = {
@@ -14,18 +16,17 @@ export default function Modal({ isOpen, title, onClose, children }: TModalProps)
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || !isOpen) return;
 
     const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
     dialog.showModal();
-    document.body.style.overflow = 'hidden';
 
     return () => {
       dialog.close();
-      document.body.style.overflow = previousOverflow;
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
         previousFocus.focus();
       }

@@ -11,7 +11,7 @@ import type { TExercise } from '@/features/exercise/exercise.types';
 import { getTodayDate } from '@/features/routine/routineSchedule';
 import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routineStorage';
 
-import BottomSheet from '@/components/common/bottomSheet/BottomSheet';
+import BottomSheet from '@/components/common/modal/BottomSheet';
 import Button from '@/components/common/button/Button';
 import Textarea from '@/components/common/form/Textarea';
 import FieldError from '@/components/common/form/FieldError';
