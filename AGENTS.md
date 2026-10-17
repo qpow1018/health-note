@@ -1,8 +1,9 @@
 # Health Note
 
 - React 19 + TypeScript + Vite 모바일 웹 프로젝트이며 npm과 package-lock.json을 사용한다.
-- 프론트엔드 작성·수정에는 [following-health-note-frontend-style](.agents/skills/following-health-note-frontend-style/SKILL.md)을 적용한다.
-- 현재 운동 등록·목록·상세·수정·삭제와 브라우저 저장을 제공한다. 네이티브 연동은 해당 구현 요청에 맞춰 추가한다.
+- React UI·feature 로직·TanStack Query·SCSS 작성·수정·리뷰에는 [following-health-note-frontend-style](.agents/skills/following-health-note-frontend-style/SKILL.md)을 적용한다.
+- API·Supabase 인증 인프라·DB 계약·RLS·마이그레이션·환경 변수 작성·수정·리뷰에는 [following-health-note-backend-boundaries](.agents/skills/following-health-note-backend-boundaries/SKILL.md)을 적용한다. 두 영역에 걸친 작업은 각 책임에 해당하는 지침을 함께 적용한다.
+- Google 로그인 후 운동·루틴·날짜별 완료 기록을 계정별 Supabase DB에 저장한다. 로컬 개발은 Docker Supabase, 운영은 클라우드 Supabase를 사용한다. 네이티브 연동은 해당 구현 요청에 맞춰 추가한다.
 - 새 기능을 위한 빈 폴더, 미사용 옵션, 추상화를 미리 만들지 않는다.
 
 ## 코드 작성 전 책임과 위치 판단
@@ -12,6 +13,14 @@
 - 기존 구조와 다른 방식을 선택한다면, 그 이유와 이점을 설명한다.
 - 단순히 기존 패턴을 따르기 위해 불필요한 컴포넌트나 추상화를 만들지는 않는다.
 - 작성 전에 책임과 위치를 결정한 근거를 짧게 공유한다. 별도의 승인 단계로 만들지는 않는다.
+
+## 구조의 책임
+
+- `src/api/<domain>/`: 서버 요청·응답 변환과 API·DB 경계 타입. 완료 기록 API는 `routine` 도메인에 포함한다.
+- `src/features/<domain>/`: 폼·일정 계산·조회 및 mutation 훅·Query 키와 캐시 갱신.
+- `src/lib/supabase.ts`, `src/lib/auth/`: 공통 Supabase 클라이언트와 현재 사용자 정보.
+- `src/lib/query/`: 공유 QueryClient와 QueryProvider. 인증 사용자 변경 시에도 Provider와 동일한 인스턴스의 캐시를 초기화한다.
+- API는 feature나 Query 캐시를 참조하지 않는다. 자세한 배치·동작 규칙은 각 스킬을 따른다.
 
 ## 구현 작업의 스킬 적용
 
@@ -43,5 +52,6 @@
 - 화면·인터랙션 변경: PC의 모바일 폭에서 확인하고, 주요 흐름은 Android에서도 확인한다.
 - 화면 캡처는 변경한 UI의 대표 화면을 우선 확인하고, 다른 레이아웃·상태의 검증이나 문제 확인에 필요한 경우에만 추가한다. 모든 화면을 관성적으로 캡처하거나 변경 없이 같은 화면을 반복해서 읽지 않는다.
 - 로직만 변경한 작업은 화면 배치에 영향을 주거나 화면 확인이 필요한 문제가 없는 한 캡처를 생략한다. 캡처 수를 줄이더라도 필요한 인터랙션·실패 동작 검증은 유지한다.
-- 저장·계산 로직은 의미 있는 실패 동작을 중심으로 검증하며 테스트 도구는 필요해질 때 추가한다.
+- API·저장·계산 로직은 변경에 관련된 기존 Playwright 테스트로 정상·실패·충돌 동작을 확인한다. 실제 DB 정책·제약을 변경하면 실행 중인 로컬 Supabase에서 `npm run db:test`도 실행한다.
+- 모의 API 기반 브라우저 테스트는 실제 Google 인증이나 운영 RLS 검증과 구분한다. 문서·스킬만 변경한 작업은 링크·설정·포맷 검증을 수행하며 앱 테스트를 일괄 실행하지 않는다.
 - 검증하지 못한 항목과 이유를 명시한다.

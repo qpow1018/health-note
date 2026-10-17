@@ -1,6 +1,6 @@
 ---
 name: following-health-note-frontend-style
-description: Apply Health Note conventions when writing or changing React, TypeScript, mobile layouts, SCSS, or browser persistence in this repository.
+description: Apply Health Note conventions when writing, reviewing, or refactoring React UI, feature logic, TanStack Query, mobile layouts, SCSS, or browser storage. API requests, Supabase auth infrastructure, and DB contracts use the backend-boundaries skill.
 ---
 
 # Health Note 프론트엔드 스타일
@@ -9,7 +9,9 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 
 - 앱 레이아웃·라우트 조립은 src/app/, 페이지는 src/pages/<domain>/에 둔다.
 - 페이지는 URL 파라미터 해석, 화면 조립, 저장 후 이동을 담당하고 페이지 전용 스타일을 같은 폴더에 둔다.
-- 운동 폼·검증·타입·저장 처리는 src/features/exercise/에 둔다. features는 공유 코드만 모으는 곳이 아니라 기능 책임을 가진 코드의 위치다.
+- 도메인 폼·검증·일정 계산·조회 및 mutation 훅은 src/features/<domain>/에 둔다. features는 공유 코드만 모으는 곳이 아니라 기능 책임을 가진 코드의 위치다.
+- 서버 요청과 API·DB 경계 타입은 src/api/<domain>/에 두고, 폼 전용 상태·UI 타입은 해당 feature에 둔다.
+- React 생명주기에 의존하며 도메인과 무관하게 재사용하는 로직은 src/hooks/에 둔다. Modal·Confirm·BottomSheet는 src/components/common/modal/에서 관리한다.
 - 페이지에서만 쓰는 JSX는 페이지 안에 유지할 수 있다. 페이지를 얇게 만들기 위해 억지로 분리하지 않는다.
 - 도메인과 무관한 공용 UI는 src/components/common/에 둔다.
 - 두 번째 실제 사용처가 생기고 역할까지 같을 때 공용화를 검토한다. 모양만 비슷한 코드는 강제로 합치지 않는다.
@@ -35,6 +37,17 @@ description: Apply Health Note conventions when writing or changing React, TypeS
 - 조기 반환으로 중첩을 줄인다.
 - Vite 앱에 Next.js 서버·클라이언트 컴포넌트 규칙을 적용하지 않는다.
 - 브라우저 저장 코드는 화면과 분리해 feature에서 관리한다.
+
+## 서버 상태와 API 사용
+
+- 캐시가 필요한 조회는 feature의 query 훅이 src/api/의 도메인 함수를 호출한다. UI에서 Supabase table·RPC를 직접 호출하지 않는다.
+- 생성·수정·삭제는 feature의 mutation 훅에서 API를 호출하고 성공 결과에 따라 캐시를 무효화한다. 충돌·삭제 제한 같은 실패 결과를 성공으로 처리하지 않는다.
+- 캐시가 필요 없는 인증 명령은 API를 직접 호출할 수 있다. OAuth URL 준비는 API, 브라우저 이동과 사용자 안내는 feature·화면이 담당한다.
+- Query 키는 해당 feature에서 소유한다. 편집 화면의 스냅샷 조회와 refetchType: 'none' 등 기존 재조회 정책은 의미를 확인하고 유지한다.
+- 서버 상태를 별도 컴포넌트 상태에 장기 복제하지 않는다. 폼 초안과 미저장 정렬처럼 별도 편집 상태가 필요한 경우는 분리한다.
+- QueryProvider와 공유 QueryClient는 src/lib/query/에 둔다. Provider 안에서 별도 인스턴스를 만들지 않는다.
+- 인증 세션 구독은 features/auth/useAuthSession.ts에서 처리한다. 사용자 변경 시 캐시 초기화와 AuthBoundary의 사용자별 재마운트로 다른 계정의 데이터·편집 상태가 이어지지 않도록 한다.
+- 배경 스크롤 잠금은 useBodyScrollLock을 사용한다. 네이티브 dialog의 열기·닫기와 포커스 동작은 컴포넌트에서 처리하고, 기본 동작과 중복되는 수동 제어는 필요성을 검증한 뒤 추가한다.
 
 ## 포맷
 
