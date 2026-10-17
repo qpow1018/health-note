@@ -3,11 +3,11 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { queryClient } from '@/lib/queryClient';
 
-import HomePage from '@/pages/home/HomePage';
-
 import ToastContainer from '@/components/common/toast/ToastContainer';
 import BottomNavigationLayout from './BottomNavigationLayout';
 import AuthBoundary from './AuthBoundary';
+
+import HomePage from '@/pages/home/HomePage';
 import NotFoundPage from '@/pages/notFound/NotFoundPage';
 import RoutinePage from '@/pages/routine/RoutinePage';
 import RoutineDetailPage from '@/pages/routine/RoutineDetailPage';
