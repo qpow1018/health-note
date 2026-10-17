@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 
-import { getUserStorageKey } from '@/features/auth/userStorage';
-import { getRoutines } from './routineStorage';
+import { getUserKey } from '@/lib/auth/currentUser';
+import { getRoutines } from '@/api/routine';
+
+export const ROUTINES_QUERY_KEY = ['routines'] as const;
 
 export function useRoutines(isSnapshot = false) {
   const location = useLocation();
   const query = useQuery({
-    queryKey: ['routines', getUserStorageKey('owner'), isSnapshot ? location.key : 'list'],
+    queryKey: [...ROUTINES_QUERY_KEY, getUserKey('owner'), isSnapshot ? location.key : 'list'],
     queryFn: ({ signal }) => getRoutines(signal),
     refetchOnWindowFocus: !isSnapshot,
     refetchOnReconnect: !isSnapshot,

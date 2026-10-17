@@ -1,7 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import { queryClient } from '@/lib/queryClient';
+import QueryProvider from '@/lib/query/QueryProvider';
 
 import ToastContainer from '@/components/common/toast/ToastContainer';
 import BottomNavigationLayout from './BottomNavigationLayout';
@@ -24,7 +23,7 @@ import styles from './App.module.scss';
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
       <BrowserRouter>
         <main className={styles['app-shell']}>
           <AuthBoundary>
@@ -51,6 +50,6 @@ export default function App() {
         </main>
         <ToastContainer />
       </BrowserRouter>
-    </QueryClientProvider>
+    </QueryProvider>
   );
 }

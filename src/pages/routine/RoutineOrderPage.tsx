@@ -5,8 +5,8 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { reorderRoutines } from '@/features/routine/routineStorage';
-import type { TRoutine } from '@/features/routine/routineStorage';
+import { useReorderRoutines } from '@/features/routine/useRoutineMutations';
+import type { TRoutine } from '@/api/routine/type';
 import { useRoutines } from '@/features/routine/routineLoader';
 import toast from '@/utils/toast';
 
@@ -63,6 +63,7 @@ export default function RoutineOrderPage() {
 }
 
 function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] }) {
+  const reorderRoutines = useReorderRoutines();
   const navigate = useNavigate();
   const [routines] = useState(initialRoutines);
   const [isSaving, setIsSaving] = useState(false);

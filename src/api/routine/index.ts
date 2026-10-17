@@ -1,30 +1,13 @@
-import { getStorageUserId } from '@/features/auth/userStorage';
+import { getCurrentUserId } from '@/lib/auth/currentUser';
 import { getSupabase } from '@/lib/supabase';
-import { queryClient } from '@/lib/queryClient';
-import { getNextRoutineDate, getTodayDate } from './routineSchedule';
-
-export type TRoutineSchedule =
-  | { type: 'weekdays'; days: number[] }
-  | { type: 'interval'; startDate: string; intervalDays: number; postponedDates?: string[] };
-
-export type TRoutineValues = {
-  name: string;
-  exerciseIds: string[];
-  schedule: TRoutineSchedule;
-  memo: string;
-};
-
-export type TRoutine = TRoutineValues & { id: string; isActive: boolean; version: number };
-
-type TRoutineRow = {
-  id: string;
-  name: string;
-  schedule: TRoutineSchedule;
-  memo: string;
-  is_active: boolean;
-  version: number;
-  routine_exercises: { exercise_id: string; position: number }[];
-};
+import type {
+  TRoutine,
+  TRoutineValues,
+  TRoutineSchedule,
+  TRoutineRow,
+  TRoutineProgress,
+  TProgressRow,
+} from './type';
 
 export async function getRoutines(signal?: AbortSignal): Promise<TRoutine[]> {
   let query = getSupabase()
@@ -45,14 +28,10 @@ export async function getRoutines(signal?: AbortSignal): Promise<TRoutine[]> {
   }));
 }
 
-function invalidateRoutines() {
-  return queryClient.invalidateQueries({ queryKey: ['routines'], refetchType: 'none' });
-}
-
 async function saveRoutine(id: string, values: TRoutineValues, expectedVersion: number | null) {
   const { data, error } = await getSupabase().rpc('save_routine', {
     routine_id: id,
-    owner_id: getStorageUserId(),
+    owner_id: getCurrentUserId(),
     routine_name: values.name,
     routine_schedule: values.schedule,
     routine_memo: values.memo,
@@ -61,7 +40,6 @@ async function saveRoutine(id: string, values: TRoutineValues, expectedVersion: 
   });
   if (error) throw error;
   if (!data) return 'conflict';
-  await invalidateRoutines();
   return 'updated';
 }
 
@@ -74,21 +52,7 @@ export async function updateRoutine(
   values: TRoutineValues,
   expectedRoutine: TRoutine,
 ): Promise<'updated' | 'conflict'> {
-  const previousSchedule = expectedRoutine.schedule;
-  let schedule = values.schedule;
-  if (schedule.type === 'interval') {
-    const isSameSchedule =
-      previousSchedule.type === 'interval' &&
-      previousSchedule.startDate === schedule.startDate &&
-      previousSchedule.intervalDays === schedule.intervalDays;
-    schedule = {
-      type: 'interval',
-      startDate: schedule.startDate,
-      intervalDays: schedule.intervalDays,
-      postponedDates: isSameSchedule ? previousSchedule.postponedDates : undefined,
-    };
-  }
-  const result = await saveRoutine(id, { ...values, schedule }, expectedRoutine.version);
+  const result = await saveRoutine(id, values, expectedRoutine.version);
   if (result === 'conflict' && !(await getRoutines()).some((item) => item.id === id))
     throw new Error('Routine not found');
   return result;
@@ -103,30 +67,22 @@ export async function deleteRoutine(id: string): Promise<void> {
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error('Routine not found');
-  await invalidateRoutines();
 }
 
-export async function postponeRoutine(id: string, expectedDate: string): Promise<void> {
-  const routine = (await getRoutines()).find((item) => item.id === id);
-  if (!routine || routine.schedule.type !== 'interval')
-    throw new Error('Interval routine required');
-  const nextDate = getNextRoutineDate(routine.schedule, getTodayDate());
-  if (nextDate === null || nextDate !== expectedDate || nextDate >= '9999-12-31')
-    throw new Error('Schedule changed or date out of range');
-  const schedule = {
-    ...routine.schedule,
-    postponedDates: [...(routine.schedule.postponedDates ?? []), nextDate],
-  };
+export async function updateRoutineSchedule(
+  id: string,
+  schedule: TRoutineSchedule,
+  expectedVersion: number,
+): Promise<void> {
   const { data, error } = await getSupabase()
     .from('routines')
     .update({ schedule })
     .eq('id', id)
-    .eq('version', routine.version)
+    .eq('version', expectedVersion)
     .select('id')
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error('Schedule changed');
-  await invalidateRoutines();
 }
 
 export async function reorderRoutines(
@@ -139,7 +95,6 @@ export async function reorderRoutines(
   });
   if (error) throw error;
   if (!data) return 'conflict';
-  await invalidateRoutines();
   return 'updated';
 }
 
@@ -160,6 +115,42 @@ export async function setRoutineActive(
     if (!(await getRoutines()).some((item) => item.id === id)) throw new Error('Routine not found');
     return 'conflict';
   }
-  await invalidateRoutines();
   return 'updated';
+}
+
+export async function getRoutineProgress(
+  date: string,
+  signal?: AbortSignal,
+): Promise<TRoutineProgress[]> {
+  let query = getSupabase()
+    .from('routine_progress')
+    .select('routine_id,exercise_id')
+    .eq('date', date)
+    .retry(false);
+  if (signal) query = query.abortSignal(signal);
+  const { data, error } = await query.returns<TProgressRow[]>();
+  if (error) throw error;
+  return data.map((row) => ({ routineId: row.routine_id, exerciseId: row.exercise_id }));
+}
+
+export async function setExerciseCompleted(
+  routineId: string,
+  date: string,
+  exerciseId: string,
+  isCompleted: boolean,
+): Promise<void> {
+  const userId = getCurrentUserId();
+  const table = getSupabase().from('routine_progress');
+  const { error } = isCompleted
+    ? await table.upsert(
+        { user_id: userId, routine_id: routineId, date, exercise_id: exerciseId },
+        { onConflict: 'user_id,routine_id,date,exercise_id', ignoreDuplicates: true },
+      )
+    : await table
+        .delete()
+        .eq('user_id', userId)
+        .eq('routine_id', routineId)
+        .eq('date', date)
+        .eq('exercise_id', exerciseId);
+  if (error) throw error;
 }

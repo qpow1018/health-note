@@ -1,17 +1,6 @@
 import { getSupabase } from '@/lib/supabase';
-import { queryClient } from '@/lib/queryClient';
-import { getStorageUserId } from '@/features/auth/userStorage';
-import type { TExercise, TExerciseValues } from './exercise.types';
-
-type TExerciseRow = {
-  id: string;
-  name: string;
-  amount: string;
-  sets: number | null;
-  youtube_links: string[];
-  memo: string;
-  version: number;
-};
+import { getCurrentUserId } from '@/lib/auth/currentUser';
+import type { TExercise, TExerciseValues, TExerciseRow } from './type';
 
 export async function getExercises(signal?: AbortSignal): Promise<TExercise[]> {
   let query = getSupabase()
@@ -34,19 +23,14 @@ function toRow(values: TExerciseValues) {
   return { ...rest, youtube_links: youtubeLinks };
 }
 
-function invalidateExercises() {
-  return queryClient.invalidateQueries({ queryKey: ['exercises'], refetchType: 'none' });
-}
-
 export async function createExercise(values: TExerciseValues): Promise<void> {
-  const userId = getStorageUserId();
+  const userId = getCurrentUserId();
   const { error } = await getSupabase()
     .from('exercises')
     .insert({ ...toRow(values), user_id: userId })
     .select('id')
     .single();
   if (error) throw error;
-  await invalidateExercises();
 }
 
 export async function updateExercise(
@@ -67,7 +51,6 @@ export async function updateExercise(
     if (!exercises.some((exercise) => exercise.id === id)) throw new Error('Exercise not found');
     return 'conflict';
   }
-  await invalidateExercises();
   return 'updated';
 }
 
@@ -81,7 +64,6 @@ export async function deleteExercise(id: string): Promise<'deleted' | 'in-use'> 
   if (error?.code === '23503') return 'in-use';
   if (error) throw error;
   if (!data) throw new Error('Exercise not found');
-  await invalidateExercises();
   return 'deleted';
 }
 
@@ -95,6 +77,5 @@ export async function reorderExercises(
   });
   if (error) throw error;
   if (!data) return 'conflict';
-  await invalidateExercises();
   return 'updated';
 }

@@ -135,7 +135,7 @@ test('활성 루틴 수정은 상태를 유지하고 편집 도중 상태 변경
   await page.goto('/routine/r/edit');
   await page.getByLabel('루틴 이름').fill('저장 안 될 이름');
   await page.evaluate(async () => {
-    const modulePath = '/src/features/routine/routineStorage.ts';
+    const modulePath = '/src/api/routine/index.ts';
     const { setRoutineActive } = await import(modulePath);
     await setRoutineActive('r', false, true);
   });

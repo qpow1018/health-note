@@ -169,7 +169,7 @@ for (const ids of [
 ]) {
   test(`잘못된 순서는 기존 데이터를 보존한다: ${ids.join(',')}`, async ({ page }) => {
     const rejected = await page.evaluate(async (ids) => {
-      const modulePath = '/src/features/exercise/exerciseStorage.ts';
+      const modulePath = '/src/api/exercise/index.ts';
       const { reorderExercises } = await import(modulePath);
       try {
         await reorderExercises(ids, ['0', '1', '2']);

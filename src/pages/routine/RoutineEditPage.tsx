@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useRoutine } from '@/features/routine/routineLoader';
-import { updateRoutine } from '@/features/routine/routineStorage';
-import type { TRoutineValues } from '@/features/routine/routineStorage';
+import { useUpdateRoutine } from '@/features/routine/useRoutineMutations';
+import type { TRoutineValues } from '@/api/routine/type';
 import toast from '@/utils/toast';
 
 import Header from '@/components/common/header/Header';
@@ -17,6 +17,7 @@ export default function RoutineEditPage() {
 }
 
 function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
+  const updateRoutine = useUpdateRoutine();
   const navigate = useNavigate();
   const { routine, error, isLoading, refetch } = useRoutine(routineId, true);
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;

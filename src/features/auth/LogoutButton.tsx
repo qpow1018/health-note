@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { getSupabase } from '@/lib/supabase';
+import { signOut } from '@/api/auth';
 import toast from '@/utils/toast';
 
 import styles from './LogoutButton.module.scss';
@@ -12,7 +12,7 @@ export default function LogoutButton() {
     if (isSigningOut) return;
     setIsSigningOut(true);
     try {
-      const { error } = await getSupabase().auth.signOut({ scope: 'local' });
+      const { error } = await signOut();
       if (error) {
         toast.error('로그아웃을 서버에서 확인하지 못했어요. 인터넷 연결을 확인해 주세요.');
       }

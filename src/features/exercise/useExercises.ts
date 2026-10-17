@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 
-import { getUserStorageKey } from '@/features/auth/userStorage';
-import { getExercises } from './exerciseStorage';
+import { getUserKey } from '@/lib/auth/currentUser';
+import { getExercises } from '@/api/exercise';
+
+export const EXERCISES_QUERY_KEY = ['exercises'] as const;
 
 export function useExercises(isSnapshot = false) {
   const location = useLocation();
   const query = useQuery({
-    queryKey: ['exercises', getUserStorageKey('owner'), isSnapshot ? location.key : 'list'],
+    queryKey: [...EXERCISES_QUERY_KEY, getUserKey('owner'), isSnapshot ? location.key : 'list'],
     queryFn: ({ signal }) => getExercises(signal),
     refetchOnWindowFocus: !isSnapshot,
     refetchOnReconnect: !isSnapshot,

@@ -130,9 +130,11 @@ E2E 테스트는 설치된 Google Chrome이 필요합니다.
 - `src/app/`: 앱 레이아웃과 라우트 조립
 - `src/pages/`: 페이지와 페이지 전용 스타일
 - `src/features/auth/`: 로그인·로그아웃과 인증 상태 관리
-- `src/features/exercise/`: 운동 폼·타입·조회·저장·검증
-- `src/features/routine/`: 루틴 폼·일정·조회·저장·완료 기록
-- `src/lib/`: Supabase 클라이언트와 TanStack Query 설정
+- `src/api/`: 인증·운동·루틴·완료 기록의 서버 요청과 요청·응답·DB 타입
+- `src/features/exercise/`: 운동 폼·조회·mutation·검증
+- `src/features/routine/`: 루틴 폼·일정 계산·조회·mutation·완료 기록 상태
+- `src/lib/`: Supabase 클라이언트와 현재 사용자 정보
+- `src/lib/query/`: 공유 QueryClient와 QueryProvider
 - `src/components/common/`: 공용 UI
 - `src/styles/`: 폰트·다크 테마·공통 토큰·전역 스타일
 

@@ -7,9 +7,9 @@ import { Accessibility, Feedback, PointerSensor, PointerActivationConstraints } 
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
 import { useExercises } from '@/features/exercise/useExercises';
-import type { TExercise } from '@/features/exercise/exercise.types';
+import type { TExercise } from '@/api/exercise/type';
 import { getTodayDate } from '@/features/routine/routineSchedule';
-import type { TRoutineValues, TRoutineSchedule } from '@/features/routine/routineStorage';
+import type { TRoutineValues, TRoutineSchedule } from '@/api/routine/type';
 
 import BottomSheet from '@/components/common/modal/BottomSheet';
 import Button from '@/components/common/button/Button';

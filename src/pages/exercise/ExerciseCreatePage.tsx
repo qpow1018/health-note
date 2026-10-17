@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { createExercise } from '@/features/exercise/exerciseStorage';
-import type { TExerciseValues } from '@/features/exercise/exercise.types';
+import { useCreateExercise } from '@/features/exercise/useExerciseMutations';
+import type { TExerciseValues } from '@/api/exercise/type';
 
 import Header from '@/components/common/header/Header';
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm';
@@ -10,6 +10,7 @@ import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm';
 import styles from './ExerciseCreatePage.module.scss';
 
 export default function ExerciseCreatePage() {
+  const createExercise = useCreateExercise();
   const navigate = useNavigate();
 
   async function handleSave(values: TExerciseValues): Promise<void> {

@@ -1,4 +1,4 @@
-import type { TRoutineSchedule } from './routineStorage';
+import type { TRoutineSchedule } from '@/api/routine/type';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

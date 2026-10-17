@@ -1,13 +1,19 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { getUserStorageKey } from '@/features/auth/userStorage';
-import { getRoutineProgress } from './routineProgressStorage';
+import { getUserKey } from '@/lib/auth/currentUser';
+import { getRoutineProgress } from '@/api/routine';
+import { isRoutineDate } from './routineSchedule';
+
+export const ROUTINE_PROGRESS_QUERY_KEY = ['routine-progress'] as const;
 
 export function useRoutineProgress(date: string) {
   const query = useQuery({
-    queryKey: ['routine-progress', getUserStorageKey('owner'), date],
-    queryFn: ({ signal }) => getRoutineProgress(date, signal),
+    queryKey: [...ROUTINE_PROGRESS_QUERY_KEY, getUserKey('owner'), date],
+    queryFn: ({ signal }) => {
+      if (!isRoutineDate(date)) throw new Error('Invalid date');
+      return getRoutineProgress(date, signal);
+    },
   });
   const { refetch } = query;
   useEffect(() => {

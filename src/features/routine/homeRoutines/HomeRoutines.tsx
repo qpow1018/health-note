@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useRoutines } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
-import { setExerciseCompleted } from '@/features/routine/routineProgressStorage';
+import { useSetExerciseCompleted } from '@/features/routine/useRoutineMutations';
 import { useRoutineProgress } from '@/features/routine/useRoutineProgress';
 import toast from '@/utils/toast';
 import {
@@ -19,6 +19,7 @@ import styles from './HomeRoutines.module.scss';
 import { MdChevronRight } from 'react-icons/md';
 
 export default function HomeRoutines({ today }: { today: string }) {
+  const setExerciseCompleted = useSetExerciseCompleted();
   const [isSaving, setIsSaving] = useState(false);
   const {
     progress,

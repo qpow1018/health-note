@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
-import { createRoutine } from '@/features/routine/routineStorage';
-import type { TRoutineValues } from '@/features/routine/routineStorage';
+import { useCreateRoutine } from '@/features/routine/useRoutineMutations';
+import type { TRoutineValues } from '@/api/routine/type';
 import toast from '@/utils/toast';
 
 import Header from '@/components/common/header/Header';
@@ -10,6 +10,7 @@ import RoutineForm from '@/features/routine/routineForm/RoutineForm';
 import styles from './RoutineCreatePage.module.scss';
 
 export default function RoutineCreatePage() {
+  const createRoutine = useCreateRoutine();
   const navigate = useNavigate();
 
   async function handleSave(values: TRoutineValues): Promise<void> {

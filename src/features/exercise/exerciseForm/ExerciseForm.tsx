@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 
 import { isYoutubeUrl } from '@/features/exercise/youtubeUrl';
-import type { TExerciseValues } from '@/features/exercise/exercise.types';
+import type { TExerciseValues } from '@/api/exercise/type';
 
 import Button from '@/components/common/button/Button';
 import Input from '@/components/common/form/Input';

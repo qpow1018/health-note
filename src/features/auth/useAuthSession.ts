@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 
+import { queryClient } from '@/lib/query/queryClient';
 import { supabase } from '@/lib/supabase';
-import { setStorageUserId } from './userStorage';
+import { setCurrentUserId } from '@/lib/auth/currentUser';
 
 type TAuthState = {
   session: Session | null;
@@ -27,7 +28,7 @@ export function useAuthSession() {
 
     function updateSession(session: Session | null, error = '') {
       if (!isMounted) return;
-      setStorageUserId(session?.user.id ?? null);
+      if (setCurrentUserId(session?.user.id ?? null)) queryClient.clear();
       setState({ session, isLoading: false, error });
     }
 

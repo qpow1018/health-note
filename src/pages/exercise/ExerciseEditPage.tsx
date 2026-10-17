@@ -2,8 +2,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
 import { useExercise } from '@/features/exercise/exerciseLoader';
-import { updateExercise } from '@/features/exercise/exerciseStorage';
-import type { TExerciseValues } from '@/features/exercise/exercise.types';
+import { useUpdateExercise } from '@/features/exercise/useExerciseMutations';
+import type { TExerciseValues } from '@/api/exercise/type';
 
 import Header from '@/components/common/header/Header';
 import ExerciseForm from '@/features/exercise/exerciseForm/ExerciseForm';
@@ -17,6 +17,7 @@ export default function ExerciseEditPage() {
 }
 
 function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {
+  const updateExercise = useUpdateExercise();
   const navigate = useNavigate();
 
   const { exercise, error, isLoading, refetch } = useExercise(exerciseId, true);

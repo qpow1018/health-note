@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { deleteRoutine, setRoutineActive } from '@/features/routine/routineStorage';
-import type { TRoutineSchedule } from '@/features/routine/routineStorage';
+import { useDeleteRoutine, useSetRoutineActive } from '@/features/routine/useRoutineMutations';
+import type { TRoutineSchedule } from '@/api/routine/type';
 import { useRoutine } from '@/features/routine/routineLoader';
 import { useExercises } from '@/features/exercise/useExercises';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
@@ -24,6 +24,8 @@ export default function RoutineDetailPage() {
 }
 
 function RoutineDetail({ routineId }: { routineId: string | undefined }) {
+  const setRoutineActive = useSetRoutineActive();
+  const deleteRoutine = useDeleteRoutine();
   const navigate = useNavigate();
   const { routine, error, isLoading, refetch } = useRoutine(routineId);
   const [isSaving, setIsSaving] = useState(false);
