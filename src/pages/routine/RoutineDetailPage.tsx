@@ -5,7 +5,8 @@ import toast from '@/utils/toast';
 import { useDeleteRoutine, useSetRoutineActive } from '@/queries/routineQuery';
 import type { TRoutineSchedule } from '@/api/routine/type';
 import { useRoutine } from '@/features/routine/routineLoader';
-import { useExercises } from '@/features/exercise/useExercises';
+import { useExercisesQuery } from '@/queries/exerciseQuery';
+import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
 
@@ -197,7 +198,8 @@ function RoutineSchedule({
 }
 
 function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
-  const { exercises, error, isLoading } = useExercises();
+  const { data: exercises = [], isError, isPending: isLoading } = useExercisesQuery();
+  const error = isError ? EXERCISES_LOAD_ERROR : '';
   return (
     <section className={styles['section']} aria-labelledby="exercises-heading">
       <h2 id="exercises-heading">

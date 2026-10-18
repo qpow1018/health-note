@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
   await page.reload();
 });
 
-test('오래 열린 수정 폼은 다른 탭의 운동량·세트·메모를 덮어쓰지 않는다', async ({
+test('다른 탭에서 변경해도 작성 중인 입력을 유지하고 저장한 값으로 갱신한다', async ({
   page,
   context,
 }) => {
@@ -26,29 +26,22 @@ test('오래 열린 수정 폼은 다른 탭의 운동량·세트·메모를 덮
   await otherTab.getByLabel('메모').fill('다른 탭 메모');
   await otherTab.getByRole('button', { name: '저장', exact: true }).click();
   await expect(otherTab).toHaveURL('/exercise/a');
-  await page.getByRole('button', { name: '저장', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('다른 화면에서 변경');
-  await expect(page.locator('form').getByRole('alert')).toHaveCount(0);
-  await page.getByRole('button', { name: '토스트 닫기' }).click();
+  await page.bringToFront();
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  const response = page.waitForResponse(
+    (response) =>
+      response.url().includes('/rest/v1/exercises?') && response.request().method() === 'GET',
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await response;
   await expect(page.getByLabel('운동 이름')).toHaveValue('내가 입력한 이름');
-  await page.getByRole('button', { name: '저장', exact: true }).click();
-  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
-    { ...EXERCISE, amount: '45분', sets: 2, memo: '다른 탭 메모' },
-  ]);
-  await page.getByRole('button', { name: '뒤로가기', exact: true }).click();
-  await page.getByRole('button', { name: '더보기', exact: true }).click();
-  await page.getByRole('link', { name: '수정', exact: true }).click();
-  await expect(page.getByLabel('운동량')).toHaveValue('45분');
-  await page.getByLabel('운동 이름').fill('최신 내용으로 수정');
+  await expect(page.getByLabel('운동량')).toHaveValue('30분');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page).toHaveURL('/exercise/a');
-  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!)[0], KEY)).toEqual({
-    ...EXERCISE,
-    name: '최신 내용으로 수정',
-    amount: '45분',
-    sets: 2,
-    memo: '다른 탭 메모',
-  });
+  await expect(page.getByRole('heading', { name: '내가 입력한 이름', exact: true })).toBeVisible();
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
+    { ...EXERCISE, name: '내가 입력한 이름' },
+  ]);
 });
 
 test('새로고침하면 다른 탭에서 변경한 운동을 반영한다', async ({ page, context }) => {

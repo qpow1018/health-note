@@ -33,25 +33,15 @@ export async function createExercise(values: TExerciseValues): Promise<void> {
   if (error) throw error;
 }
 
-export async function updateExercise(
-  id: string,
-  values: TExerciseValues,
-  expectedExercise: TExercise,
-): Promise<'updated' | 'conflict'> {
+export async function updateExercise(id: string, values: TExerciseValues): Promise<void> {
   const { data, error } = await getSupabase()
     .from('exercises')
     .update(toRow(values))
     .eq('id', id)
-    .eq('version', expectedExercise.version)
     .select('id')
     .maybeSingle();
   if (error) throw error;
-  if (!data) {
-    const exercises = await getExercises();
-    if (!exercises.some((exercise) => exercise.id === id)) throw new Error('Exercise not found');
-    return 'conflict';
-  }
-  return 'updated';
+  if (!data) throw new Error('Exercise not found');
 }
 
 export async function deleteExercise(id: string): Promise<'deleted' | 'in-use'> {

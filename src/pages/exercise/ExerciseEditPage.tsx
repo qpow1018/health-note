@@ -20,7 +20,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
   const { mutateAsync: updateExercise } = useUpdateExercise();
   const navigate = useNavigate();
 
-  const { exercise, error, isLoading, refetch } = useExercise(exerciseId, true);
+  const { exercise, error, isLoading, refetch } = useExercise(exerciseId);
 
   const detailTo = `/exercise/${encodeURIComponent(exerciseId ?? '')}`;
 
@@ -30,14 +30,7 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
       return;
     }
     try {
-      const result = await updateExercise({ id: exercise.id, values, expectedExercise: exercise });
-      if (result === 'conflict') {
-        toast.error(
-          '다른 화면에서 변경된 운동이에요. 입력은 유지했어요. 상세로 돌아가 최신 내용을 확인한 뒤 다시 수정해 주세요.',
-          { isShowCloseButton: true },
-        );
-        return;
-      }
+      await updateExercise({ id: exercise.id, values });
     } catch {
       toast.error('저장하지 못했어요. 운동이 삭제되었거나 인터넷 연결에 문제가 있을 수 있어요.', {
         isShowCloseButton: true,

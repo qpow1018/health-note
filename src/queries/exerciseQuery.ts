@@ -1,27 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import * as api from '@/api/exercise';
-import type { TExercise, TExerciseValues } from '@/api/exercise/type';
+import type { TExerciseValues } from '@/api/exercise/type';
 import { getUserKey } from '@/lib/auth/currentUser';
-
-type TExerciseQueryOptions = {
-  cacheKey?: string;
-  refetchOnWindowFocus?: boolean;
-  refetchOnReconnect?: boolean;
-};
 
 export const EXERCISES_QUERY_KEY = ['exercises'] as const;
 
-export function useExercisesQuery({
-  cacheKey = 'list',
-  refetchOnWindowFocus = true,
-  refetchOnReconnect = true,
-}: TExerciseQueryOptions = {}) {
+export function useExercisesQuery() {
   return useQuery({
-    queryKey: [...EXERCISES_QUERY_KEY, getUserKey('owner'), cacheKey],
+    queryKey: [...EXERCISES_QUERY_KEY, getUserKey('owner')],
     queryFn: ({ signal }) => api.getExercises(signal),
-    refetchOnWindowFocus,
-    refetchOnReconnect,
   });
 }
 
@@ -38,17 +26,9 @@ export function useCreateExercise() {
 export function useUpdateExercise() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      values,
-      expectedExercise,
-    }: {
-      id: string;
-      values: TExerciseValues;
-      expectedExercise: TExercise;
-    }) => api.updateExercise(id, values, expectedExercise),
-    onSuccess: (result) => {
-      if (result === 'conflict') return;
+    mutationFn: ({ id, values }: { id: string; values: TExerciseValues }) =>
+      api.updateExercise(id, values),
+    onSuccess: () => {
       return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY, refetchType: 'none' });
     },
   });

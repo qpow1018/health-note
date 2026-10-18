@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
-import { useExercises } from '@/features/exercise/useExercises';
+import { useExercisesQuery } from '@/queries/exerciseQuery';
+import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
 import Header from '@/components/common/header/Header';
@@ -10,7 +11,8 @@ import styles from './ExerciseListPage.module.scss';
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function ExerciseListPage() {
-  const { exercises, error, isLoading, refetch } = useExercises();
+  const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
+  const error = isError ? EXERCISES_LOAD_ERROR : '';
 
   return (
     <section className={styles['exercise-page']}>
@@ -18,12 +20,10 @@ export default function ExerciseListPage() {
         title="내 운동 관리"
         showBack={false}
         actions={
-          (error || exercises.length > 0) && (
-            <ButtonLink className={styles['add-button']} to="/exercise/new">
-              <MdAdd size={20} aria-hidden="true" />
-              운동 추가
-            </ButtonLink>
-          )
+          <ButtonLink className={styles['add-button']} to="/exercise/new">
+            <MdAdd size={20} aria-hidden="true" />
+            운동 추가
+          </ButtonLink>
         }
       />
       <div className={styles['content']}>
@@ -42,10 +42,6 @@ export default function ExerciseListPage() {
           <div className={styles['empty']}>
             <p>아직 등록한 운동이 없어요.</p>
             <p className={styles['hint']}>운동 이름과 운동량을 자유롭게 적어보세요.</p>
-            <ButtonLink className={styles['empty-add']} to="/exercise/new">
-              <MdAdd size={20} aria-hidden="true" />
-              운동 추가
-            </ButtonLink>
           </div>
         )}
         {!isLoading && !error && exercises.length > 0 && (

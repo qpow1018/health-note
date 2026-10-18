@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useRoutines } from '@/features/routine/routineLoader';
-import { useExercises } from '@/features/exercise/useExercises';
+import { useExercisesQuery } from '@/queries/exerciseQuery';
+import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import { useSetExerciseCompleted } from '@/queries/routineQuery';
 import { useRoutineProgress } from '@/features/routine/useRoutineProgress';
 import toast from '@/utils/toast';
@@ -33,7 +34,13 @@ export default function HomeRoutines({ today }: { today: string }) {
     isLoading: isRoutineLoading,
     refetch: refetchRoutines,
   } = useRoutines();
-  const { exercises, error: exerciseError, isLoading: isExerciseLoading, refetch } = useExercises();
+  const {
+    data: exercises = [],
+    isError: isExerciseError,
+    isPending: isExerciseLoading,
+    refetch,
+  } = useExercisesQuery();
+  const exerciseError = isExerciseError ? EXERCISES_LOAD_ERROR : '';
   const isLoading = isRoutineLoading || isExerciseLoading || isProgressLoading;
   const error = progressError || routineError || exerciseError;
   const active = routines.filter((routine) => routine.isActive);

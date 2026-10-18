@@ -18,7 +18,11 @@ type TExerciseFormProps = {
   onSave: (values: TExerciseValues) => Promise<void>;
 };
 
-export default function ExerciseForm({ initialValues, onSave }: TExerciseFormProps) {
+export default function ExerciseForm({
+  initialValues: initialFormValues,
+  onSave,
+}: TExerciseFormProps) {
+  const [initialValues] = useState(initialFormValues);
   const [isSaving, setIsSaving] = useState(false);
   const [nameError, setNameError] = useState('');
   const [setsError, setSetsError] = useState('');

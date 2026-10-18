@@ -4,13 +4,9 @@
       max($page-padding, env(safe-area-inset-bottom)) max($page-padding, env(safe-area-inset-left));
   }
 
-  .add-button,
-  .empty-add {
+  .add-button {
     gap: 4px;
     font-size: $font-size-caption;
-  }
-
-  .add-button {
     min-height: 40px;
     padding-block: 8px;
   }
@@ -23,10 +19,6 @@
     margin-top: 8px;
     color: $text-secondary;
     font-size: $font-size-caption;
-  }
-
-  .empty-add {
-    margin-top: 24px;
   }
 
   .list-toolbar {

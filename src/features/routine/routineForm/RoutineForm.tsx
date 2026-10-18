@@ -6,7 +6,8 @@ import type { DragDropManager } from '@dnd-kit/dom';
 import { Accessibility, Feedback, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useExercises } from '@/features/exercise/useExercises';
+import { useExercisesQuery } from '@/queries/exerciseQuery';
+import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import type { TExercise } from '@/api/exercise/type';
 import { getTodayDate } from '@/features/routine/routineSchedule';
 import type { TRoutineValues, TRoutineSchedule } from '@/api/routine/type';
@@ -58,7 +59,8 @@ type TRoutineFormProps = {
 };
 
 export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps) {
-  const { exercises, error, isLoading, refetch } = useExercises();
+  const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
+  const error = isError ? EXERCISES_LOAD_ERROR : '';
   const result = { exercises, error };
   const [isSaving, setIsSaving] = useState(false);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
@@ -141,9 +143,7 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
     try {
       const latest = await refetch();
       if (latest.error) {
-        setExerciseError(
-          '운동 목록을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.',
-        );
+        setExerciseError(EXERCISES_LOAD_ERROR);
         return;
       }
       if (exerciseIds.some((id) => !(latest.data ?? []).some((exercise) => exercise.id === id))) {
