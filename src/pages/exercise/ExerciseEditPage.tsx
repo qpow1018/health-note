@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useExercise } from '@/features/exercise/exerciseLoader';
-import { useUpdateExercise } from '@/queries/exerciseQuery';
+import { useExercisesQuery, useUpdateExercise } from '@/queries/exerciseQuery';
+import { EXERCISE_LOAD_ERROR } from '@/features/exercise/messages';
 import type { TExerciseValues } from '@/api/exercise/type';
 
 import Header from '@/components/common/header/Header';
@@ -20,7 +20,8 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
   const { mutateAsync: updateExercise } = useUpdateExercise();
   const navigate = useNavigate();
 
-  const { exercise, error, isLoading, refetch } = useExercise(exerciseId);
+  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const exercise = exercises.find((exercise) => exercise.id === exerciseId);
 
   const detailTo = `/exercise/${encodeURIComponent(exerciseId ?? '')}`;
 
@@ -45,24 +46,24 @@ function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined })
     <section className={styles['exercise-edit-page']}>
       <Header title="운동 수정" fallbackTo={detailTo} />
       <div className={styles['content']}>
-        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-        {error && (
+        {isPending && <p role="status">운동을 불러오고 있어요.</p>}
+        {isError && (
           <button type="button" onClick={() => void refetch()}>
             다시 시도
           </button>
         )}
-        {error && (
+        {isError && (
           <p className={styles['error']} role="alert">
-            {error}
+            {EXERCISE_LOAD_ERROR}
           </p>
         )}
-        {!isLoading && !error && !exercise && (
+        {!isPending && !isError && !exercise && (
           <div className={styles['missing']}>
             <p>운동을 찾을 수 없어요.</p>
             <Link to="/exercise">목록으로</Link>
           </div>
         )}
-        {!error && exercise && <ExerciseForm initialValues={exercise} onSave={handleSave} />}
+        {!isError && exercise && <ExerciseForm initialValues={exercise} onSave={handleSave} />}
       </div>
     </section>
   );

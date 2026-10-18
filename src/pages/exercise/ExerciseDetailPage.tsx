@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useDeleteExercise } from '@/queries/exerciseQuery';
-import { useExercise } from '@/features/exercise/exerciseLoader';
+import { useExercisesQuery, useDeleteExercise } from '@/queries/exerciseQuery';
+import { EXERCISE_LOAD_ERROR } from '@/features/exercise/messages';
 import { getYoutubeVideoId, isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExercise } from '@/api/exercise/type';
 
@@ -24,8 +24,8 @@ export default function ExerciseDetailPage() {
   const navigate = useNavigate();
 
   const { exerciseId } = useParams();
-  const result = useExercise(exerciseId);
-  const { exercise, error, isLoading, refetch } = result;
+  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const exercise = exercises.find((exercise) => exercise.id === exerciseId);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -62,7 +62,7 @@ export default function ExerciseDetailPage() {
         title={exercise?.name ?? '운동 상세'}
         fallbackTo="/exercise"
         actions={
-          !error && exercise ? (
+          !isError && exercise ? (
             <MoreMenu
               items={[
                 { label: '수정', to: `/exercise/${encodeURIComponent(exercise.id)}/edit` },
@@ -74,29 +74,29 @@ export default function ExerciseDetailPage() {
       />
 
       <div className={styles['content']}>
-        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-        {error && (
+        {isPending && <p role="status">운동을 불러오고 있어요.</p>}
+        {isError && (
           <button type="button" onClick={() => void refetch()}>
             다시 시도
           </button>
         )}
-        {error && (
+        {isError && (
           <p className={styles['error']} role="alert">
-            {error}
+            {EXERCISE_LOAD_ERROR}
           </p>
         )}
 
-        {!isLoading && !error && !exercise && (
+        {!isPending && !isError && !exercise && (
           <div>
             <p className={styles['hint']}>운동을 찾을 수 없어요.</p>
             <p className={styles['hint']}>목록으로 돌아가 운동을 선택해 주세요.</p>
           </div>
         )}
 
-        {!error && exercise && <ExerciseDetailContent exercise={exercise} />}
+        {!isError && exercise && <ExerciseDetailContent exercise={exercise} />}
       </div>
 
-      {!error && exercise && (
+      {!isError && exercise && (
         <Confirm
           isOpen={isDeleteConfirmOpen}
           title="운동 삭제"
