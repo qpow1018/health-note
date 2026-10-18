@@ -20,7 +20,8 @@ test('조회 중에는 빈 목록으로 오인시키지 않고 실패 후 재시
     await route.fulfill({ status: 503, json: { message: 'Unavailable' } });
   });
   await page.goto('/exercise');
-  await expect(page.getByRole('status')).toHaveText('운동을 불러오고 있어요.');
+  await expect(page.getByRole('status', { name: '불러오고 있어요.' })).toBeVisible();
+  await page.screenshot({ path: '/tmp/health-note-exercise-loading.png' });
   await expect(page.getByText('아직 등록한 운동이 없어요.')).toHaveCount(0);
   release();
   await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
@@ -105,4 +106,32 @@ test('기존 브라우저 운동을 자동 업로드하거나 삭제하지 않�
   expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), KEY)).toEqual([
     EXERCISE,
   ]);
+});
+
+test('재조회에 실패해도 기존 목록을 유지하고 재시도로 최신 목록을 표시한다', async ({ page }) => {
+  await page.goto('/exercise');
+  await page.evaluate(
+    ({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])),
+    { key: KEY, exercise: EXERCISE },
+  );
+  await page.reload();
+  await expect(page.getByRole('link', { name: /스쿼트/ })).toBeVisible();
+  await page.route('**/rest/v1/exercises?**', (route) =>
+    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
+  await expect(page.getByRole('link', { name: /스쿼트/ })).toBeVisible();
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toHaveCount(0);
+  await page.screenshot({ path: '/tmp/health-note-exercise-refetch-error.png' });
+  await page.evaluate(
+    ({ key, exercise }) =>
+      localStorage.setItem(key, JSON.stringify([{ ...exercise, name: '최신 스쿼트' }])),
+    { key: KEY, exercise: EXERCISE },
+  );
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  await expect(page.getByRole('link', { name: /최신 스쿼트/ })).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
 });

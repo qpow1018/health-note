@@ -5,14 +5,14 @@ import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
 import Header from '@/components/common/header/Header';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 
 import styles from './ExerciseListPage.module.scss';
 
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function ExerciseListPage() {
-  const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
-  const error = isError ? EXERCISES_LOAD_ERROR : '';
+  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
 
   return (
     <section className={styles['exercise-page']}>
@@ -26,25 +26,15 @@ export default function ExerciseListPage() {
           </ButtonLink>
         }
       />
+
       <div className={styles['content']}>
-        {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-        {error && (
-          <button type="button" onClick={() => void refetch()}>
-            다시 시도
-          </button>
-        )}
-        {error && (
-          <p role="alert" className={styles['error']}>
-            {error}
-          </p>
-        )}
-        {!isLoading && !error && exercises.length === 0 && (
-          <div className={styles['empty']}>
-            <p>아직 등록한 운동이 없어요.</p>
-            <p className={styles['hint']}>운동 이름과 운동량을 자유롭게 적어보세요.</p>
-          </div>
-        )}
-        {!isLoading && !error && exercises.length > 0 && (
+        {isPending && <BoxLoading />}
+
+        {isError && <ExerciseLoadError onRetry={() => void refetch()} />}
+
+        {!isPending && !isError && exercises.length === 0 && <EmptyExercises />}
+
+        {exercises.length > 0 && (
           <>
             <div className={styles['list-toolbar']}>
               <p>총 {exercises.length}개</p>
@@ -78,5 +68,27 @@ export default function ExerciseListPage() {
         )}
       </div>
     </section>
+  );
+}
+
+function ExerciseLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+      <p role="alert" className={styles['error']}>
+        {EXERCISES_LOAD_ERROR}
+      </p>
+    </>
+  );
+}
+
+function EmptyExercises() {
+  return (
+    <div className={styles['empty']}>
+      <p>아직 등록한 운동이 없어요.</p>
+      <p className={styles['hint']}>운동 이름과 운동량을 자유롭게 적어보세요.</p>
+    </div>
   );
 }
