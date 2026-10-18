@@ -46,7 +46,12 @@ test('저장 응답을 기다리는 동안 중복 제출을 막는다', async ({
   await page.getByLabel('운동 이름').fill('스쿼트');
   await page.getByRole('button', { name: '저장', exact: true }).click();
   await expect(page.getByRole('button', { name: '저장 중…' })).toBeDisabled();
-  await page.getByLabel('운동 이름').press('Enter');
+  await expect(page.getByLabel('운동 이름')).toBeDisabled();
+  await expect(page.getByLabel('운동량', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('세트', { exact: true })).toBeDisabled();
+  await expect(page.getByLabel('메모')).toBeDisabled();
+  await expect(page.getByRole('button', { name: '링크 추가', exact: true })).toBeDisabled();
+  await page.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
   release();
   await expect(page).toHaveURL('/exercise');
   await expect(page.getByRole('listitem')).toHaveCount(1);
@@ -198,4 +203,37 @@ test('삭제 응답을 기다리는 동안 수정·삭제 메뉴를 제공하지
   release();
   await expect(page).toHaveURL('/exercise');
   await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
+});
+
+test('수정 폼은 재조회 실패와 재시도 후에도 입력과 링크를 유지한다', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/exercise');
+  await page.evaluate(
+    ({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])),
+    { key: KEY, exercise: EXERCISE },
+  );
+  await page.goto('/exercise/db-exercise/edit');
+  await page.getByLabel('운동 이름').fill('작성 중인 이름');
+  await page.getByLabel('메모').fill('작성 중인 메모');
+  await page.getByLabel('유튜브 링크 1', { exact: true }).fill('https://youtu.be/abcdefghijk');
+  await page.route('**/rest/v1/exercises?**', (route) =>
+    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
+  );
+  await page.clock.fastForward(61_000);
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.getByRole('alert')).toContainText('운동을 불러오지 못했어요.');
+  await expect(page.getByLabel('운동 이름')).toHaveValue('작성 중인 이름');
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByLabel('운동 이름')).toHaveValue('작성 중인 이름');
+  await expect(page.getByLabel('메모')).toHaveValue('작성 중인 메모');
+  await expect(page.getByLabel('유튜브 링크 1', { exact: true })).toHaveValue(
+    'https://youtu.be/abcdefghijk',
+  );
+  await page.screenshot({ path: '/tmp/health-note-edit.png' });
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page).toHaveURL('/exercise/db-exercise');
+  await expect(page.getByRole('heading', { name: '작성 중인 이름', exact: true })).toBeVisible();
 });

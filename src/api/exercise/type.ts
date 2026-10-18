@@ -1,3 +1,5 @@
+export const MAX_EXERCISE_SETS = 2_147_483_647;
+
 export type TExercise = {
   version: number;
   id: string;

@@ -48,16 +48,21 @@ test('빈 이름과 공백 이름은 저장되지 않는다', async ({ page }) =
   await expect(page.getByLabel('운동 이름')).toHaveAttribute('aria-invalid', 'false');
 });
 
-for (const sets of ['0', '-1', '1.5', '9007199254740992']) {
+for (const sets of ['0', '-1', '1.5', '2147483648', '9007199254740992']) {
   test(`잘못된 세트 ${sets}는 저장되지 않는다`, async ({ page }) => {
     await page.goto('/exercise/new');
     await page.getByLabel('운동 이름').fill('스쿼트');
     await page.getByLabel('세트').fill(sets);
+    if (sets === '9007199254740992') {
+      await page.locator('form').evaluate((form: HTMLFormElement) => {
+        form.noValidate = true;
+      });
+    }
     await page.getByRole('button', { name: '저장' }).click();
     await expect(page).toHaveURL('/exercise/new');
     expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBeNull();
     if (sets === '9007199254740992') {
-      await expect(page.getByRole('alert')).toContainText('1 이상의 정수');
+      await expect(page.getByRole('alert')).toContainText('1 이상 2147483647 이하의 정수');
       await expect(page.getByLabel('세트', { exact: false })).toHaveAttribute(
         'aria-describedby',
         'exercise-sets-error',
