@@ -203,6 +203,49 @@ test('새로고침은 미저장 순서를 폐기하고 운동이 하나면 편�
   await expect(page.getByRole('link', { name: '순서 변경' })).toHaveCount(0);
 });
 
+test('재조회 실패와 재시도 후에도 미저장 순서를 유지한다', async ({ page }) => {
+  await page.clock.install();
+  await page.getByRole('link', { name: '순서 변경' }).click();
+  await moveFirstDown(page);
+  await page.route('**/rest/v1/exercises?**', (route) =>
+    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
+  );
+  await page.clock.fastForward(61_000);
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
+  await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
+  await expect(page.getByRole('button', { name: '완료', exact: true })).toBeEnabled();
+  await page.screenshot({ path: '/tmp/health-note-order.png' });
+});
+
+test('저장 응답을 기다리는 동안 정렬 핸들을 비활성화한다', async ({ page }) => {
+  let release: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/rest/v1/rpc/reorder_exercises', async (route) => {
+    await pending;
+    await route.fallback();
+  });
+  await page.getByRole('link', { name: '순서 변경' }).click();
+  await moveFirstDown(page);
+  await page.getByRole('button', { name: '완료', exact: true }).click();
+  await expect(page.getByRole('button', { name: '완료', exact: true })).toBeDisabled();
+  for (const name of ['스쿼트', '푸시업', '걷기']) {
+    await expect(
+      page.getByRole('button', { name: `${name} 순서 이동`, exact: true }),
+    ).toBeDisabled();
+  }
+  release();
+  await expect(page).toHaveURL('/exercise');
+  await expect(page.getByRole('listitem').locator('h2')).toHaveText(['스쿼트', '푸시업', '걷기']);
+});
+
 async function moveFirstDown(page: Page) {
   const handle = page.getByRole('button', { name: '푸시업 순서 이동' });
   await handle.focus();

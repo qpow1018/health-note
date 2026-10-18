@@ -12,6 +12,7 @@ import type { TExercise } from '@/api/exercise/type';
 
 import Button from '@/components/common/button/Button';
 import Header from '@/components/common/header/Header';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 
 import styles from './ExerciseOrderPage.module.scss';
 
@@ -36,29 +37,23 @@ const ORDER_ACCESSIBILITY = Accessibility.configure({
 type TSortableExerciseProps = {
   exercise: TExercise;
   index: number;
+  isDisabled: boolean;
 };
 
 export default function ExerciseOrderPage() {
-  const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
-  const error = isError ? EXERCISES_LOAD_ERROR : '';
-  if (isLoading || error)
-    return (
-      <section className={styles['order-page']}>
-        <Header title="운동 순서 변경" fallbackTo="/exercise" />
-        <div className={styles['content']}>
-          {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-          {error && (
-            <>
-              <p role="alert">{error}</p>
-              <button type="button" onClick={() => void refetch()}>
-                다시 시도
-              </button>
-            </>
-          )}
-        </div>
-      </section>
-    );
-  return <ExerciseOrderContent initialExercises={exercises} />;
+  const { data: exercises, isError, isPending, refetch } = useExercisesQuery();
+  const navigate = useNavigate();
+
+  return (
+    <section className={styles['order-page']}>
+      <Header title="운동 순서 변경" onBack={() => navigate('/exercise', { replace: true })} />
+      <div className={styles['content']}>
+        {isPending && <BoxLoading />}
+        {isError && <ExerciseOrderLoadError onRetry={() => void refetch()} />}
+        {exercises !== undefined && <ExerciseOrderContent initialExercises={exercises} />}
+      </div>
+    </section>
+  );
 }
 
 function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercise[] }) {
@@ -108,60 +103,59 @@ function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercis
   }
 
   return (
-    <section className={styles['order-page']}>
-      <Header title="운동 순서 변경" onBack={() => navigate('/exercise', { replace: true })} />
-      <div className={styles['content']}>
-        {exercises.length === 0 && <p className={styles['hint']}>순서를 변경할 운동이 없어요.</p>}
-        {exercises.length > 0 && (
-          <>
-            <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
-            <p className={styles['announcement']} role="status" aria-live="polite">
-              {announcement}
-            </p>
-            <DragDropProvider
-              sensors={(defaults) =>
-                defaults.map((sensor) => (sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor))
+    <>
+      {exercises.length === 0 && <p className={styles['hint']}>순서를 변경할 운동이 없어요.</p>}
+      {exercises.length > 0 && (
+        <>
+          <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
+          <p className={styles['announcement']} role="status" aria-live="polite">
+            {announcement}
+          </p>
+          <DragDropProvider
+            sensors={(defaults) =>
+              defaults.map((sensor) => (sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor))
+            }
+            plugins={(defaults) =>
+              defaults.map((plugin) => (plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin))
+            }
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={(event) => {
+              setIsDragging(false);
+              if (event.canceled) {
+                setAnnouncement('이동을 취소했어요.');
+                return;
               }
-              plugins={(defaults) =>
-                defaults.map((plugin) => (plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin))
-              }
-              onDragStart={() => setIsDragging(true)}
-              onDragEnd={(event) => {
-                setIsDragging(false);
-                if (event.canceled) {
-                  setAnnouncement('이동을 취소했어요.');
-                  return;
-                }
-                const { source } = event.operation;
-                if (isSortable(source)) handleMove(source.initialIndex, source.index);
-              }}
-            >
-              <ul className={styles['list']} aria-label="운동 순서">
-                {orderedIds.map((id, index) => (
-                  <SortableExercise
-                    key={id}
-                    exercise={exercises.find((exercise) => exercise.id === id)!}
-                    index={index}
-                  />
-                ))}
-              </ul>
-            </DragDropProvider>
-            <div className={styles['actions']}>
-              <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
-                완료
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </section>
+              const { source } = event.operation;
+              if (isSortable(source)) handleMove(source.initialIndex, source.index);
+            }}
+          >
+            <ul className={styles['list']} aria-label="운동 순서">
+              {orderedIds.map((id, index) => (
+                <SortableExercise
+                  key={id}
+                  exercise={exercises.find((exercise) => exercise.id === id)!}
+                  index={index}
+                  isDisabled={isSaving}
+                />
+              ))}
+            </ul>
+          </DragDropProvider>
+          <div className={styles['actions']}>
+            <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
+              완료
+            </Button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
-function SortableExercise({ exercise, index }: TSortableExerciseProps) {
+function SortableExercise({ exercise, index, isDisabled }: TSortableExerciseProps) {
   const { ref, handleRef, isDragSource } = useSortable({
     id: exercise.id,
     index,
+    disabled: isDisabled,
     data: { name: exercise.name },
   });
 
@@ -170,6 +164,7 @@ function SortableExercise({ exercise, index }: TSortableExerciseProps) {
       <button
         ref={handleRef}
         type="button"
+        disabled={isDisabled}
         className={styles['handle']}
         aria-label={`${exercise.name} 순서 이동`}
       >
@@ -183,5 +178,18 @@ function SortableExercise({ exercise, index }: TSortableExerciseProps) {
         </p>
       </div>
     </li>
+  );
+}
+
+function ExerciseOrderLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <p role="alert" className={styles['error']}>
+        {EXERCISES_LOAD_ERROR}
+      </p>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+    </>
   );
 }
