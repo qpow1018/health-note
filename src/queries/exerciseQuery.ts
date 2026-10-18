@@ -18,7 +18,7 @@ export function useCreateExercise() {
   return useMutation({
     mutationFn: api.createExercise,
     onSuccess: () => {
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY, refetchType: 'none' });
+      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
     },
   });
 }
@@ -29,7 +29,7 @@ export function useUpdateExercise() {
     mutationFn: ({ id, values }: { id: string; values: TExerciseValues }) =>
       api.updateExercise(id, values),
     onSuccess: () => {
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY, refetchType: 'none' });
+      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
     },
   });
 }
@@ -40,7 +40,7 @@ export function useDeleteExercise() {
     mutationFn: api.deleteExercise,
     onSuccess: (result) => {
       if (result === 'in-use') return;
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY, refetchType: 'none' });
+      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
     },
   });
 }
@@ -52,7 +52,7 @@ export function useReorderExercises() {
       api.reorderExercises(orderedIds, expectedIds),
     onSuccess: (result) => {
       if (result === 'conflict') return;
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY, refetchType: 'none' });
+      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
     },
   });
 }

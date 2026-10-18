@@ -16,6 +16,7 @@ test('다른 탭에서 변경해도 작성 중인 입력을 유지하고 저장�
   page,
   context,
 }) => {
+  await page.clock.install();
   await page.goto('/exercise/a/edit');
   await page.getByLabel('운동 이름').fill('내가 입력한 이름');
   const otherTab = await context.newPage();
@@ -26,6 +27,7 @@ test('다른 탭에서 변경해도 작성 중인 입력을 유지하고 저장�
   await otherTab.getByLabel('메모').fill('다른 탭 메모');
   await otherTab.getByRole('button', { name: '저장', exact: true }).click();
   await expect(otherTab).toHaveURL('/exercise/a');
+  await page.clock.fastForward(61_000);
   await page.bringToFront();
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
   const response = page.waitForResponse(

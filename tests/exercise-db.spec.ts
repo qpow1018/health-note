@@ -109,6 +109,7 @@ test('기존 브라우저 운동을 자동 업로드하거나 삭제하지 않�
 });
 
 test('재조회에 실패해도 기존 목록을 유지하고 재시도로 최신 목록을 표시한다', async ({ page }) => {
+  await page.clock.install();
   await page.goto('/exercise');
   await page.evaluate(
     ({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])),
@@ -119,6 +120,7 @@ test('재조회에 실패해도 기존 목록을 유지하고 재시도로 최�
   await page.route('**/rest/v1/exercises?**', (route) =>
     route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
   );
+  await page.clock.fastForward(61_000);
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
