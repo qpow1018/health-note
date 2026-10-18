@@ -5,7 +5,7 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useRoutinesQuery, useReorderRoutines } from '@/queries/routineQuery';
+import routineQuery from '@/queries/routineQuery';
 import type { TRoutine } from '@/api/routine/type';
 import { ROUTINES_LOAD_ERROR } from '@/features/routine/messages';
 import toast from '@/utils/toast';
@@ -43,7 +43,7 @@ type TSortableRoutineProps = {
 export default function RoutineOrderPage() {
   const navigate = useNavigate();
 
-  const { data: routines, isError, isPending, refetch } = useRoutinesQuery();
+  const { data: routines, isError, isPending, refetch } = routineQuery.useGetRoutines();
 
   return (
     <section className={styles['order-page']}>
@@ -58,7 +58,7 @@ export default function RoutineOrderPage() {
 }
 
 function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] }) {
-  const { mutateAsync: reorderRoutines } = useReorderRoutines();
+  const { mutateAsync: reorderRoutines } = routineQuery.useReorderRoutines();
   const navigate = useNavigate();
   const [routines] = useState(initialRoutines);
   const [isSaving, setIsSaving] = useState(false);

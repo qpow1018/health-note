@@ -6,53 +6,57 @@ import { getUserKey } from '@/lib/auth/currentUser';
 
 export const EXERCISES_QUERY_KEY = ['exercises'] as const;
 
-export function useExercisesQuery() {
-  return useQuery({
-    queryKey: [...EXERCISES_QUERY_KEY, getUserKey('owner')],
-    queryFn: ({ signal }) => api.getExercises(signal),
-  });
-}
+const exerciseQuery = {
+  useGetExercises() {
+    return useQuery({
+      queryKey: [...EXERCISES_QUERY_KEY, getUserKey('owner')],
+      queryFn: ({ signal }) => api.getExercises(signal),
+    });
+  },
 
-export function useCreateExercise() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.createExercise,
-    onSuccess: () => {
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
-    },
-  });
-}
+  useCreateExercise() {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: api.createExercise,
+      onSuccess: () => {
+        return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
+      },
+    });
+  },
 
-export function useUpdateExercise() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, values }: { id: string; values: TExerciseValues }) =>
-      api.updateExercise(id, values),
-    onSuccess: () => {
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
-    },
-  });
-}
+  useUpdateExercise() {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: ({ id, values }: { id: string; values: TExerciseValues }) =>
+        api.updateExercise(id, values),
+      onSuccess: () => {
+        return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
+      },
+    });
+  },
 
-export function useDeleteExercise() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.deleteExercise,
-    onSuccess: (result) => {
-      if (result === 'in-use') return;
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
-    },
-  });
-}
+  useDeleteExercise() {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: api.deleteExercise,
+      onSuccess: (result) => {
+        if (result === 'in-use') return;
+        return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
+      },
+    });
+  },
 
-export function useReorderExercises() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ orderedIds, expectedIds }: { orderedIds: string[]; expectedIds: string[] }) =>
-      api.reorderExercises(orderedIds, expectedIds),
-    onSuccess: (result) => {
-      if (result === 'conflict') return;
-      return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
-    },
-  });
-}
+  useReorderExercises() {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: ({ orderedIds, expectedIds }: { orderedIds: string[]; expectedIds: string[] }) =>
+        api.reorderExercises(orderedIds, expectedIds),
+      onSuccess: (result) => {
+        if (result === 'conflict') return;
+        return queryClient.invalidateQueries({ queryKey: EXERCISES_QUERY_KEY });
+      },
+    });
+  },
+};
+
+export default exerciseQuery;

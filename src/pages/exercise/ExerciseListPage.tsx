@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { useExercisesQuery } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
@@ -12,7 +12,7 @@ import styles from './ExerciseListPage.module.scss';
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function ExerciseListPage() {
-  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const { data: exercises = [], isError, isPending, refetch } = exerciseQuery.useGetExercises();
 
   return (
     <section className={styles['exercise-page']}>

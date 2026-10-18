@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import {
-  useRoutinesQuery,
-  useRoutineProgressQuery,
-  useSetExerciseCompleted,
-} from '@/queries/routineQuery';
+import routineQuery from '@/queries/routineQuery';
 import { ROUTINES_LOAD_ERROR, ROUTINE_PROGRESS_LOAD_ERROR } from '@/features/routine/messages';
-import { useExercisesQuery } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import toast from '@/utils/toast';
 import {
@@ -23,26 +19,26 @@ import styles from './HomeRoutines.module.scss';
 import { MdChevronRight } from 'react-icons/md';
 
 export default function HomeRoutines({ today }: { today: string }) {
-  const { mutateAsync: setExerciseCompleted } = useSetExerciseCompleted();
+  const { mutateAsync: setExerciseCompleted } = routineQuery.useSetExerciseCompleted();
   const [isSaving, setIsSaving] = useState(false);
   const {
     data: progress = [],
     isError: isProgressError,
     isPending: isProgressLoading,
     refetch: refetchProgress,
-  } = useRoutineProgressQuery(today);
+  } = routineQuery.useGetRoutineProgress(today);
   const {
     data: routines = [],
     isError: isRoutineError,
     isPending: isRoutineLoading,
     refetch: refetchRoutines,
-  } = useRoutinesQuery();
+  } = routineQuery.useGetRoutines();
   const {
     data: exercises = [],
     isError: isExerciseError,
     isPending: isExerciseLoading,
     refetch,
-  } = useExercisesQuery();
+  } = exerciseQuery.useGetExercises();
   const routineError = isRoutineError ? ROUTINES_LOAD_ERROR : '';
   const progressError = isProgressError ? ROUTINE_PROGRESS_LOAD_ERROR : '';
   const exerciseError = isExerciseError ? EXERCISES_LOAD_ERROR : '';

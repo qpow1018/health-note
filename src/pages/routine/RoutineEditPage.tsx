@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useRoutinesQuery, useUpdateRoutine } from '@/queries/routineQuery';
+import routineQuery from '@/queries/routineQuery';
 import { ROUTINE_LOAD_ERROR } from '@/features/routine/messages';
 import { prepareRoutineValues } from '@/features/routine/routineActions';
 import type { TRoutine, TRoutineValues } from '@/api/routine/type';
@@ -20,7 +20,7 @@ export default function RoutineEditPage() {
 }
 
 function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
-  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
+  const { data: routines = [], isError, isPending, refetch } = routineQuery.useGetRoutines();
   const routine = routines.find((routine) => routine.id === routineId);
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;
 
@@ -49,7 +49,7 @@ function RoutineEditor({
   onRefresh: () => Promise<unknown>;
 }) {
   const [routine] = useState(initialRoutine);
-  const { mutateAsync: updateRoutine } = useUpdateRoutine();
+  const { mutateAsync: updateRoutine } = routineQuery.useUpdateRoutine();
   const navigate = useNavigate();
   async function handleSave(values: TRoutineValues): Promise<void> {
     try {

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useRoutinesQuery, useDeleteRoutine, useSetRoutineActive } from '@/queries/routineQuery';
+import routineQuery from '@/queries/routineQuery';
 import type { TRoutineSchedule } from '@/api/routine/type';
 import { ROUTINE_LOAD_ERROR } from '@/features/routine/messages';
-import { useExercisesQuery } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
@@ -26,10 +26,11 @@ export default function RoutineDetailPage() {
 }
 
 function RoutineDetail({ routineId }: { routineId: string | undefined }) {
-  const { mutateAsync: setRoutineActive, isPending: isActivating } = useSetRoutineActive();
-  const { mutateAsync: deleteRoutine, isPending: isDeleting } = useDeleteRoutine();
+  const { mutateAsync: setRoutineActive, isPending: isActivating } =
+    routineQuery.useSetRoutineActive();
+  const { mutateAsync: deleteRoutine, isPending: isDeleting } = routineQuery.useDeleteRoutine();
   const navigate = useNavigate();
-  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
+  const { data: routines = [], isError, isPending, refetch } = routineQuery.useGetRoutines();
   const routine = routines.find((routine) => routine.id === routineId);
   const isSaving = isActivating || isDeleting;
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -200,7 +201,7 @@ function RoutineSchedule({
 }
 
 function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
-  const { data: exercises = [], isError, isPending } = useExercisesQuery();
+  const { data: exercises = [], isError, isPending } = exerciseQuery.useGetExercises();
   return (
     <section className={styles['section']} aria-labelledby="exercises-heading">
       <h2 id="exercises-heading">

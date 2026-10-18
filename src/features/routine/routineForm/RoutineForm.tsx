@@ -6,7 +6,7 @@ import type { DragDropManager } from '@dnd-kit/dom';
 import { Accessibility, Feedback, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useExercisesQuery } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import type { TExercise } from '@/api/exercise/type';
 import { getTodayDate } from '@/features/routine/routineSchedule';
@@ -63,7 +63,7 @@ export default function RoutineForm({
   onSave,
 }: TRoutineFormProps) {
   const [initialValues] = useState(initialFormValues);
-  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const { data: exercises = [], isError, isPending, refetch } = exerciseQuery.useGetExercises();
   const [isSaving, setIsSaving] = useState(false);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);

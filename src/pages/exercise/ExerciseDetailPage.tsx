@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useExercisesQuery, useDeleteExercise } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISE_LOAD_ERROR } from '@/features/exercise/messages';
 import { getYoutubeVideoId, isYoutubeUrl } from '@/features/exercise/youtubeUrl';
 import type { TExercise } from '@/api/exercise/type';
@@ -21,11 +21,11 @@ type TExerciseDetailContentProps = {
 };
 
 export default function ExerciseDetailPage() {
-  const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise();
+  const { mutateAsync: deleteExercise, isPending: isDeleting } = exerciseQuery.useDeleteExercise();
   const navigate = useNavigate();
 
   const { exerciseId } = useParams();
-  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const { data: exercises = [], isError, isPending, refetch } = exerciseQuery.useGetExercises();
   const exercise = exercises.find((exercise) => exercise.id === exerciseId);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);

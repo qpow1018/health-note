@@ -32,7 +32,7 @@ API는 Query 캐시나 화면에 의존하지 않고, queries는 feature·page·
 
 ## 조회와 저장 흐름
 
-조회는 `page/feature → query 훅 → API → Supabase`로 진행한다. API는 DB의 snake_case를 앱의 camelCase로 변환하고, Query는 서버 상태를 관리하며, 화면은 로딩·오류·빈 상태를 표시한다.
+조회는 `page/feature → query 훅 → API → Supabase`로 진행한다. Query 훅은 도메인 객체를 default export하며, 화면은 `exerciseQuery.useGetExercises()`, `routineQuery.useGetRoutines()`처럼 호출한다. API는 DB의 snake_case를 앱의 camelCase로 변환하고, Query는 서버 상태를 관리하며, 화면은 로딩·오류·빈 상태를 표시한다.
 
 저장은 화면에서 요청 값을 준비해 mutation에 전달한다. API 결과에 따라 Query 캐시를 갱신하고, 화면에서 실패 안내나 성공 후 이동을 처리한다. 폼 초안·미저장 정렬은 서버 캐시와 별도의 편집 상태다.
 

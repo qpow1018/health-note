@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { useRoutinesQuery } from '@/queries/routineQuery';
+import routineQuery from '@/queries/routineQuery';
 import { ROUTINES_LOAD_ERROR } from '@/features/routine/messages';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
@@ -12,7 +12,7 @@ import styles from './RoutinePage.module.scss';
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function RoutinePage() {
-  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
+  const { data: routines = [], isError, isPending, refetch } = routineQuery.useGetRoutines();
 
   return (
     <section className={styles['routine-page']}>

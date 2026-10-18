@@ -5,7 +5,7 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useExercisesQuery, useReorderExercises } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import toast from '@/utils/toast';
 import type { TExercise } from '@/api/exercise/type';
@@ -41,7 +41,7 @@ type TSortableExerciseProps = {
 };
 
 export default function ExerciseOrderPage() {
-  const { data: exercises, isError, isPending, refetch } = useExercisesQuery();
+  const { data: exercises, isError, isPending, refetch } = exerciseQuery.useGetExercises();
   const navigate = useNavigate();
 
   return (
@@ -57,7 +57,7 @@ export default function ExerciseOrderPage() {
 }
 
 function ExerciseOrderContent({ initialExercises }: { initialExercises: TExercise[] }) {
-  const { mutateAsync: reorderExercises } = useReorderExercises();
+  const { mutateAsync: reorderExercises } = exerciseQuery.useReorderExercises();
   const navigate = useNavigate();
   const [exercises] = useState(initialExercises);
   const [isSaving, setIsSaving] = useState(false);

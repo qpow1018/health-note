@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useExercisesQuery, useUpdateExercise } from '@/queries/exerciseQuery';
+import exerciseQuery from '@/queries/exerciseQuery';
 import { EXERCISE_LOAD_ERROR } from '@/features/exercise/messages';
 import type { TExerciseValues } from '@/api/exercise/type';
 
@@ -18,10 +18,10 @@ export default function ExerciseEditPage() {
 }
 
 function ExerciseEditContent({ exerciseId }: { exerciseId: string | undefined }) {
-  const { mutateAsync: updateExercise } = useUpdateExercise();
+  const { mutateAsync: updateExercise } = exerciseQuery.useUpdateExercise();
   const navigate = useNavigate();
 
-  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
+  const { data: exercises = [], isError, isPending, refetch } = exerciseQuery.useGetExercises();
   const exercise = exercises.find((exercise) => exercise.id === exerciseId);
 
   const detailTo = `/exercise/${encodeURIComponent(exerciseId ?? '')}`;
