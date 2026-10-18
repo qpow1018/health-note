@@ -142,4 +142,6 @@ E2E 테스트는 설치된 Google Chrome이 필요합니다.
 - `tests/`: Playwright 브라우저 테스트와 모의 API
 - `supabase/`: 로컬 설정·마이그레이션·DB 테스트와 스키마 초안
 
+현재 인증 세션 구독은 `src/features/auth/useAuthSession.ts`에서 처리합니다. 사용자 변경 시 공유 QueryClient의 캐시를 초기화하고, `src/app/AuthBoundary.tsx`에서 사용자별로 하위 화면을 재마운트해 이전 계정의 편집 상태가 이어지지 않도록 합니다.
+
 작성 규칙은 [AGENTS.md](./AGENTS.md)와 연결된 프로젝트 스킬을 참고합니다.
