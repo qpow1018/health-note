@@ -58,10 +58,13 @@ type TRoutineFormProps = {
   onSave: (values: TRoutineValues) => Promise<void>;
 };
 
-export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps) {
+export default function RoutineForm({
+  initialValues: initialFormValues,
+  onSave,
+}: TRoutineFormProps) {
+  const [initialValues] = useState(initialFormValues);
   const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
   const error = isError ? EXERCISES_LOAD_ERROR : '';
-  const result = { exercises, error };
   const [isSaving, setIsSaving] = useState(false);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
@@ -104,7 +107,7 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
     const [id] = next.splice(from, 1);
     next.splice(to, 0, id);
     setExerciseIds(next);
-    const name = result.exercises.find((exercise) => exercise.id === id)?.name ?? '운동';
+    const name = exercises.find((exercise) => exercise.id === id)?.name ?? '운동';
     setAnnouncement(`${name}, ${next.length}개 중 ${to + 1}번째로 이동했어요.`);
   }
 
@@ -192,199 +195,199 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
   return (
     <div className={styles['routine-form']}>
       <form className={styles['form']} onSubmit={handleSubmit}>
-        <div className={styles['field']}>
-          <label htmlFor="routine-name">
-            루틴 이름{' '}
-            <span className={styles['required']} aria-hidden="true">
-              *
-            </span>
-          </label>
-          <Input
-            id="routine-name"
-            name="name"
-            defaultValue={initialValues?.name}
-            required
-            placeholder="예: 상체 루틴"
-            onChange={() => setNameError('')}
-            aria-invalid={Boolean(nameError)}
-            aria-describedby={nameError ? 'routine-name-error' : undefined}
-          />
-          <FieldError id="routine-name-error" message={nameError} />
-        </div>
-        <div className={styles['field']}>
-          <div className={styles['exercise-heading']}>
-            <h2>
-              운동{' '}
+        <fieldset className={styles['fields']} disabled={isSaving}>
+          <div className={styles['field']}>
+            <label htmlFor="routine-name">
+              루틴 이름{' '}
               <span className={styles['required']} aria-hidden="true">
                 *
               </span>
-            </h2>
-            <button
-              type="button"
-              className={styles['select-button']}
-              onClick={handleOpenExercises}
-              disabled={isDragging || isLoading || isSaving}
-              aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
-            >
-              <MdAdd size={18} aria-hidden="true" />
-              운동 선택
-            </button>
+            </label>
+            <Input
+              id="routine-name"
+              name="name"
+              defaultValue={initialValues?.name}
+              required
+              placeholder="예: 상체 루틴"
+              onChange={() => setNameError('')}
+              aria-invalid={Boolean(nameError)}
+              aria-describedby={nameError ? 'routine-name-error' : undefined}
+            />
+            <FieldError id="routine-name-error" message={nameError} />
           </div>
-          {result.error && (
-            <p role="alert" className={styles['error']}>
-              {result.error}
-            </p>
-          )}
-          <FieldError id="routine-exercises-error" message={exerciseError} />
-          <p className={styles['announcement']} role="status" aria-live="polite">
-            {announcement}
-          </p>
-          <div className={styles['exercise-box']}>
-            {exerciseIds.length === 0 && (
-              <p className={styles['empty-exercises']}>선택한 운동이 없어요.</p>
-            )}
-            {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-            {exerciseIds.length > 0 && !isLoading && (
-              <DragDropProvider
-                sensors={(defaults) =>
-                  defaults.map((sensor) =>
-                    sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor,
-                  )
-                }
-                plugins={(defaults) =>
-                  defaults.map((plugin) => {
-                    if (plugin === Accessibility) return ORDER_ACCESSIBILITY;
-                    if (plugin === Feedback) return ORDER_FEEDBACK;
-                    return plugin;
-                  })
-                }
-                onDragStart={() => setIsDragging(true)}
-                onDragEnd={handleDragEnd}
+          <div className={styles['field']}>
+            <div className={styles['exercise-heading']}>
+              <h2>
+                운동{' '}
+                <span className={styles['required']} aria-hidden="true">
+                  *
+                </span>
+              </h2>
+              <button
+                type="button"
+                className={styles['select-button']}
+                onClick={handleOpenExercises}
+                disabled={isDragging || isLoading || isSaving}
+                aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
               >
-                <ol className={styles['selected-list']} aria-label="선택한 운동 순서">
-                  {exerciseIds.map((id, index) => (
-                    <SelectedExercise
-                      key={id}
-                      id={id}
-                      index={index}
-                      exercise={result.exercises.find((exercise) => exercise.id === id)}
-                      isLoadError={Boolean(result.error)}
-                      isSortable={exerciseIds.length > 1}
-                      onRemove={handleRemoveExercise}
-                    />
-                  ))}
-                </ol>
-              </DragDropProvider>
-            )}
-          </div>
-        </div>
-        <fieldset
-          className={styles['field']}
-          onChange={() => setScheduleError('')}
-          aria-describedby={scheduleError ? 'routine-schedule-error' : undefined}
-          aria-invalid={Boolean(scheduleError)}
-        >
-          <legend>
-            반복 일정{' '}
-            <span className={styles['required']} aria-hidden="true">
-              *
-            </span>
-          </legend>
-          {initialValues?.schedule.type === 'interval' &&
-            Boolean(initialValues.schedule.postponedDates?.length) && (
-              <p className={styles['hint']}>
-                시작일이나 반복 간격을 변경하면 미루기 내역이 초기화돼요.
+                <MdAdd size={18} aria-hidden="true" />
+                운동 선택
+              </button>
+            </div>
+            {error && (
+              <p role="alert" className={styles['error']}>
+                {error}
               </p>
             )}
-          <div className={styles['schedule-options']}>
-            <Radio
-              name="scheduleType"
-              value="weekdays"
-              checked={scheduleType === 'weekdays'}
-              onChange={() => setScheduleType('weekdays')}
-            >
-              요일 반복
-            </Radio>
-            <Radio
-              name="scheduleType"
-              value="interval"
-              checked={scheduleType === 'interval'}
-              onChange={() => setScheduleType('interval')}
-            >
-              간격 반복
-            </Radio>
-          </div>
-          <div hidden={scheduleType !== 'weekdays'} className={styles['weekdays']}>
-            {WEEKDAYS.map(({ day, label }) => (
-              <label key={day}>
-                <input
-                  type="checkbox"
-                  name="days"
-                  value={day}
-                  defaultChecked={
-                    initialValues?.schedule.type === 'weekdays' &&
-                    initialValues.schedule.days.includes(day)
+            <FieldError id="routine-exercises-error" message={exerciseError} />
+            <p className={styles['announcement']} role="status" aria-live="polite">
+              {announcement}
+            </p>
+            <div className={styles['exercise-box']}>
+              {exerciseIds.length === 0 && (
+                <p className={styles['empty-exercises']}>선택한 운동이 없어요.</p>
+              )}
+              {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
+              {exerciseIds.length > 0 && !isLoading && (
+                <DragDropProvider
+                  sensors={(defaults) =>
+                    defaults.map((sensor) =>
+                      sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor,
+                    )
                   }
-                  disabled={scheduleType !== 'weekdays'}
-                />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-          <div hidden={scheduleType !== 'interval'}>
-            <div className={styles['field']}>
-              <label htmlFor="routine-start">시작일</label>
-              <Input
-                id="routine-start"
-                name="startDate"
-                type="date"
-                defaultValue={
-                  initialValues?.schedule.type === 'interval'
-                    ? initialValues.schedule.startDate
-                    : today
-                }
-                required
-                disabled={scheduleType !== 'interval'}
-              />
-            </div>
-            <div className={styles['field']}>
-              <label htmlFor="routine-interval">반복 간격 (일)</label>
-              <Input
-                id="routine-interval"
-                name="intervalDays"
-                type="number"
-                min="1"
-                step="1"
-                inputMode="numeric"
-                defaultValue={
-                  initialValues?.schedule.type === 'interval'
-                    ? initialValues.schedule.intervalDays
-                    : 2
-                }
-                required
-                disabled={scheduleType !== 'interval'}
-              />
-              <p className={styles['hint']}>2일 간격이면 시작일, 2일 후, 4일 후에 반복해요.</p>
+                  plugins={(defaults) =>
+                    defaults.map((plugin) => {
+                      if (plugin === Accessibility) return ORDER_ACCESSIBILITY;
+                      if (plugin === Feedback) return ORDER_FEEDBACK;
+                      return plugin;
+                    })
+                  }
+                  onDragStart={() => setIsDragging(true)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <ol className={styles['selected-list']} aria-label="선택한 운동 순서">
+                    {exerciseIds.map((id, index) => (
+                      <SelectedExercise
+                        key={id}
+                        id={id}
+                        index={index}
+                        exercise={exercises.find((exercise) => exercise.id === id)}
+                        isLoadError={Boolean(error)}
+                        isSortable={exerciseIds.length > 1}
+                        isDisabled={isSaving}
+                        onRemove={handleRemoveExercise}
+                      />
+                    ))}
+                  </ol>
+                </DragDropProvider>
+              )}
             </div>
           </div>
-          <FieldError id="routine-schedule-error" message={scheduleError} />
-        </fieldset>
-        <div className={styles['field']}>
-          <label htmlFor="routine-memo">메모</label>
-          <Textarea
-            id="routine-memo"
-            name="memo"
-            defaultValue={initialValues?.memo}
-            rows={4}
-            placeholder="루틴에 대해 자유롭게 적어주세요."
-          />
-        </div>
-        <div className={styles['actions']}>
-          <Button
-            type="submit"
-            disabled={Boolean(result.error) || isDragging || isSaving || isLoading}
+          <fieldset
+            className={styles['field']}
+            onChange={() => setScheduleError('')}
+            aria-describedby={scheduleError ? 'routine-schedule-error' : undefined}
+            aria-invalid={Boolean(scheduleError)}
           >
-            저장
+            <legend>
+              반복 일정{' '}
+              <span className={styles['required']} aria-hidden="true">
+                *
+              </span>
+            </legend>
+            {initialValues?.schedule.type === 'interval' &&
+              Boolean(initialValues.schedule.postponedDates?.length) && (
+                <p className={styles['hint']}>
+                  시작일이나 반복 간격을 변경하면 미루기 내역이 초기화돼요.
+                </p>
+              )}
+            <div className={styles['schedule-options']}>
+              <Radio
+                name="scheduleType"
+                value="weekdays"
+                checked={scheduleType === 'weekdays'}
+                onChange={() => setScheduleType('weekdays')}
+              >
+                요일 반복
+              </Radio>
+              <Radio
+                name="scheduleType"
+                value="interval"
+                checked={scheduleType === 'interval'}
+                onChange={() => setScheduleType('interval')}
+              >
+                간격 반복
+              </Radio>
+            </div>
+            <div hidden={scheduleType !== 'weekdays'} className={styles['weekdays']}>
+              {WEEKDAYS.map(({ day, label }) => (
+                <label key={day}>
+                  <input
+                    type="checkbox"
+                    name="days"
+                    value={day}
+                    defaultChecked={
+                      initialValues?.schedule.type === 'weekdays' &&
+                      initialValues.schedule.days.includes(day)
+                    }
+                    disabled={scheduleType !== 'weekdays'}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+            <div hidden={scheduleType !== 'interval'}>
+              <div className={styles['field']}>
+                <label htmlFor="routine-start">시작일</label>
+                <Input
+                  id="routine-start"
+                  name="startDate"
+                  type="date"
+                  defaultValue={
+                    initialValues?.schedule.type === 'interval'
+                      ? initialValues.schedule.startDate
+                      : today
+                  }
+                  required
+                  disabled={scheduleType !== 'interval'}
+                />
+              </div>
+              <div className={styles['field']}>
+                <label htmlFor="routine-interval">반복 간격 (일)</label>
+                <Input
+                  id="routine-interval"
+                  name="intervalDays"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  defaultValue={
+                    initialValues?.schedule.type === 'interval'
+                      ? initialValues.schedule.intervalDays
+                      : 2
+                  }
+                  required
+                  disabled={scheduleType !== 'interval'}
+                />
+                <p className={styles['hint']}>2일 간격이면 시작일, 2일 후, 4일 후에 반복해요.</p>
+              </div>
+            </div>
+            <FieldError id="routine-schedule-error" message={scheduleError} />
+          </fieldset>
+          <div className={styles['field']}>
+            <label htmlFor="routine-memo">메모</label>
+            <Textarea
+              id="routine-memo"
+              name="memo"
+              defaultValue={initialValues?.memo}
+              rows={4}
+              placeholder="루틴에 대해 자유롭게 적어주세요."
+            />
+          </div>
+        </fieldset>
+        <div className={styles['actions']}>
+          <Button type="submit" disabled={Boolean(error) || isDragging || isSaving || isLoading}>
+            {isSaving ? '저장 중…' : '저장'}
           </Button>
         </div>
       </form>
@@ -398,13 +401,13 @@ export default function RoutineForm({ initialValues, onSave }: TRoutineFormProps
           </Button>
         }
       >
-        {result.exercises.length === 0 && (
+        {exercises.length === 0 && (
           <p className={styles['hint']}>
             등록한 운동이 없어요. 운동 메뉴에서 먼저 운동을 등록해 주세요.
           </p>
         )}
         <div className={styles['exercise-options']}>
-          {result.exercises.map((exercise) => (
+          {exercises.map((exercise) => (
             <Checkbox
               key={exercise.id}
               className={styles['exercise-option']}
@@ -432,6 +435,7 @@ type TSelectedExerciseProps = {
   exercise: TExercise | undefined;
   isLoadError: boolean;
   isSortable: boolean;
+  isDisabled: boolean;
   onRemove: (id: string) => void;
 };
 
@@ -441,13 +445,14 @@ function SelectedExercise({
   exercise,
   isLoadError,
   isSortable: isSortingEnabled,
+  isDisabled,
   onRemove,
 }: TSelectedExerciseProps) {
   const exerciseName = exercise?.name ?? (isLoadError ? '운동 정보 확인 불가' : '삭제된 운동');
   const { ref, handleRef, isDragSource } = useSortable({
     id,
     index,
-    disabled: !isSortingEnabled,
+    disabled: !isSortingEnabled || isDisabled,
     data: { name: exerciseName },
   });
 
@@ -462,7 +467,7 @@ function SelectedExercise({
         className={styles['drag-handle']}
         aria-label={`${exerciseName} 순서 이동`}
         hidden={!isSortingEnabled}
-        disabled={!isSortingEnabled}
+        disabled={!isSortingEnabled || isDisabled}
       >
         <MdDragHandle size={20} aria-hidden="true" />
       </button>

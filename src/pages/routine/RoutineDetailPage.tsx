@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import toast from '@/utils/toast';
-import { useDeleteRoutine, useSetRoutineActive } from '@/queries/routineQuery';
+import { useRoutinesQuery, useDeleteRoutine, useSetRoutineActive } from '@/queries/routineQuery';
 import type { TRoutineSchedule } from '@/api/routine/type';
-import { useRoutine } from '@/features/routine/routineLoader';
+import { ROUTINE_LOAD_ERROR } from '@/features/routine/messages';
 import { useExercisesQuery } from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
 import { getNextRoutineDate } from '@/features/routine/routineSchedule';
 import { useRoutineToday } from '@/features/routine/useRoutineToday';
 
 import Header from '@/components/common/header/Header';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 import MoreMenu from '@/components/common/moreMenu/MoreMenu';
 import Confirm from '@/components/common/modal/Confirm';
 
@@ -25,11 +26,13 @@ export default function RoutineDetailPage() {
 }
 
 function RoutineDetail({ routineId }: { routineId: string | undefined }) {
-  const { mutateAsync: setRoutineActive } = useSetRoutineActive();
-  const { mutateAsync: deleteRoutine } = useDeleteRoutine();
+  const { mutateAsync: setRoutineActive, isPending: isActivating } = useSetRoutineActive();
+  const { mutateAsync: deleteRoutine, isPending: isDeleting } = useDeleteRoutine();
   const navigate = useNavigate();
-  const { routine, error, isLoading, refetch } = useRoutine(routineId);
-  const [isSaving, setIsSaving] = useState(false);
+  const { data: routines = [], isError, isPending: isLoading, refetch } = useRoutinesQuery();
+  const routine = routines.find((routine) => routine.id === routineId);
+  const error = isError ? ROUTINE_LOAD_ERROR : '';
+  const isSaving = isActivating || isDeleting;
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   let title = '루틴 상세';
   if (!isLoading && !error && !routine) title = '루틴을 찾을 수 없어요.';
@@ -37,7 +40,6 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
 
   async function handleToggleActive() {
     if (!routine || isSaving) return;
-    setIsSaving(true);
     try {
       const updated = await setRoutineActive({
         id: routine.id,
@@ -51,20 +53,16 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
         });
         return;
       }
-      await refetch();
       toast.success(!routine.isActive ? '루틴을 활성화했어요.' : '루틴을 비활성화했어요.');
     } catch {
       toast.error('활성 상태를 변경하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.', {
         isShowCloseButton: true,
       });
-    } finally {
-      setIsSaving(false);
     }
   }
 
   async function handleDelete() {
     if (!routine || isSaving) return;
-    setIsSaving(true);
     setIsDeleteConfirmOpen(false);
     try {
       await deleteRoutine(routine.id);
@@ -73,8 +71,6 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
         isShowCloseButton: true,
       });
       return;
-    } finally {
-      setIsSaving(false);
     }
     toast.success('루틴을 삭제했어요.');
     navigate('/routine', { replace: true });
@@ -86,7 +82,7 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
         title={title}
         fallbackTo="/routine"
         actions={
-          routine ? (
+          routine && !isSaving ? (
             <MoreMenu
               items={[
                 { label: '수정', to: `/routine/${encodeURIComponent(routine.id)}/edit` },
@@ -97,7 +93,8 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
         }
       />
       <div className={styles['content']}>
-        {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+        {isSaving && <p role="status">{isDeleting ? '삭제 중…' : '변경 중…'}</p>}
+        {isLoading && <BoxLoading />}
         {error && (
           <button type="button" onClick={() => void refetch()}>
             다시 시도
@@ -211,7 +208,7 @@ function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
         </p>
       )}
       {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-      {!error && !isLoading && (
+      {!isLoading && (!isError || exercises.length > 0) && (
         <ol className={styles['exercise-list']}>
           {exerciseIds.map((id) => {
             const exercise = exercises.find((item) => item.id === id);

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useRoutines } from '@/features/routine/routineLoader';
+import {
+  useRoutinesQuery,
+  useRoutineProgressQuery,
+  useSetExerciseCompleted,
+} from '@/queries/routineQuery';
+import { ROUTINES_LOAD_ERROR, ROUTINE_PROGRESS_LOAD_ERROR } from '@/features/routine/messages';
 import { useExercisesQuery } from '@/queries/exerciseQuery';
 import { EXERCISES_LOAD_ERROR } from '@/features/exercise/messages';
-import { useSetExerciseCompleted } from '@/queries/routineQuery';
-import { useRoutineProgress } from '@/features/routine/useRoutineProgress';
 import toast from '@/utils/toast';
 import {
   getNextRoutineDate,
@@ -23,23 +26,25 @@ export default function HomeRoutines({ today }: { today: string }) {
   const { mutateAsync: setExerciseCompleted } = useSetExerciseCompleted();
   const [isSaving, setIsSaving] = useState(false);
   const {
-    progress,
-    error: progressError,
-    isLoading: isProgressLoading,
+    data: progress = [],
+    isError: isProgressError,
+    isPending: isProgressLoading,
     refetch: refetchProgress,
-  } = useRoutineProgress(today);
+  } = useRoutineProgressQuery(today);
   const {
-    routines,
-    error: routineError,
-    isLoading: isRoutineLoading,
+    data: routines = [],
+    isError: isRoutineError,
+    isPending: isRoutineLoading,
     refetch: refetchRoutines,
-  } = useRoutines();
+  } = useRoutinesQuery();
   const {
     data: exercises = [],
     isError: isExerciseError,
     isPending: isExerciseLoading,
     refetch,
   } = useExercisesQuery();
+  const routineError = isRoutineError ? ROUTINES_LOAD_ERROR : '';
+  const progressError = isProgressError ? ROUTINE_PROGRESS_LOAD_ERROR : '';
   const exerciseError = isExerciseError ? EXERCISES_LOAD_ERROR : '';
   const isLoading = isRoutineLoading || isExerciseLoading || isProgressLoading;
   const error = progressError || routineError || exerciseError;
@@ -64,7 +69,6 @@ export default function HomeRoutines({ today }: { today: string }) {
     setIsSaving(true);
     try {
       await setExerciseCompleted({ routineId, date: today, exerciseId, isCompleted });
-      await refetchProgress();
     } catch {
       toast.error(
         '완료 상태를 저장하지 못했어요. 인터넷 연결과 루틴 정보를 확인하고 다시 시도해 주세요.',

@@ -1,16 +1,19 @@
 import { Link } from 'react-router-dom';
 
-import { useRoutines } from '@/features/routine/routineLoader';
+import { useRoutinesQuery } from '@/queries/routineQuery';
+import { ROUTINES_LOAD_ERROR } from '@/features/routine/messages';
 
 import ButtonLink from '@/components/common/button/ButtonLink';
 import Header from '@/components/common/header/Header';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 
 import styles from './RoutinePage.module.scss';
 
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function RoutinePage() {
-  const { routines, error, isLoading, refetch } = useRoutines();
+  const { data: routines = [], isError, isPending: isLoading, refetch } = useRoutinesQuery();
+  const error = isError ? ROUTINES_LOAD_ERROR : '';
 
   return (
     <section className={styles['routine-page']}>
@@ -18,16 +21,14 @@ export default function RoutinePage() {
         title="내 루틴 관리"
         showBack={false}
         actions={
-          (error || routines.length > 0) && (
-            <ButtonLink className={styles['add-button']} to="/routine/new">
-              <MdAdd size={20} aria-hidden="true" />
-              루틴 생성
-            </ButtonLink>
-          )
+          <ButtonLink className={styles['add-button']} to="/routine/new">
+            <MdAdd size={20} aria-hidden="true" />
+            루틴 생성
+          </ButtonLink>
         }
       />
       <div className={styles['content']}>
-        {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
+        {isLoading && <BoxLoading />}
         {error && (
           <button type="button" onClick={() => void refetch()}>
             다시 시도
@@ -42,13 +43,9 @@ export default function RoutinePage() {
           <div className={styles['empty']}>
             <p>아직 등록한 루틴이 없어요.</p>
             <p className={styles['hint']}>운동을 묶어 나만의 반복 일정을 만들어보세요.</p>
-            <ButtonLink className={styles['empty-add']} to="/routine/new">
-              <MdAdd size={20} aria-hidden="true" />
-              루틴 생성
-            </ButtonLink>
           </div>
         )}
-        {!isLoading && !error && routines.length > 0 && (
+        {routines.length > 0 && (
           <>
             <div className={styles['list-toolbar']}>
               <p>총 {routines.length}개</p>

@@ -4,6 +4,13 @@
     padding-bottom: calc(#{$control-height} + 48px + env(safe-area-inset-bottom));
   }
 
+  .fields {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
   .required {
     color: $mint-accent;
   }

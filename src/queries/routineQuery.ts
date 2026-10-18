@@ -5,25 +5,13 @@ import * as api from '@/api/routine';
 import type { TRoutine, TRoutineValues } from '@/api/routine/type';
 import { getUserKey } from '@/lib/auth/currentUser';
 
-type TRoutineQueryOptions = {
-  cacheKey?: string;
-  refetchOnWindowFocus?: boolean;
-  refetchOnReconnect?: boolean;
-};
-
 export const ROUTINES_QUERY_KEY = ['routines'] as const;
 export const ROUTINE_PROGRESS_QUERY_KEY = ['routine-progress'] as const;
 
-export function useRoutinesQuery({
-  cacheKey = 'list',
-  refetchOnWindowFocus = true,
-  refetchOnReconnect = true,
-}: TRoutineQueryOptions = {}) {
+export function useRoutinesQuery() {
   return useQuery({
-    queryKey: [...ROUTINES_QUERY_KEY, getUserKey('owner'), cacheKey],
+    queryKey: [...ROUTINES_QUERY_KEY, getUserKey('owner')],
     queryFn: ({ signal }) => api.getRoutines(signal),
-    refetchOnWindowFocus,
-    refetchOnReconnect,
   });
 }
 
@@ -35,7 +23,7 @@ export function useRoutineProgressQuery(date: string) {
 }
 
 export function invalidateRoutines(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: ROUTINES_QUERY_KEY, refetchType: 'none' });
+  return queryClient.invalidateQueries({ queryKey: ROUTINES_QUERY_KEY });
 }
 
 export function useCreateRoutine() {
@@ -125,7 +113,6 @@ export function useSetExerciseCompleted() {
     onSuccess: () => {
       return queryClient.invalidateQueries({
         queryKey: ROUTINE_PROGRESS_QUERY_KEY,
-        refetchType: 'none',
       });
     },
   });

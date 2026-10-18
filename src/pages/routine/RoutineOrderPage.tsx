@@ -5,13 +5,14 @@ import type { DragStartEvent } from '@dnd-kit/react';
 import { Accessibility, PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 
-import { useReorderRoutines } from '@/queries/routineQuery';
+import { useRoutinesQuery, useReorderRoutines } from '@/queries/routineQuery';
 import type { TRoutine } from '@/api/routine/type';
-import { useRoutines } from '@/features/routine/routineLoader';
+import { ROUTINES_LOAD_ERROR } from '@/features/routine/messages';
 import toast from '@/utils/toast';
 
 import Button from '@/components/common/button/Button';
 import Header from '@/components/common/header/Header';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 
 import styles from './RoutineOrderPage.module.scss';
 
@@ -36,30 +37,32 @@ const ORDER_ACCESSIBILITY = Accessibility.configure({
 type TSortableRoutineProps = {
   routine: TRoutine;
   index: number;
+  isDisabled: boolean;
 };
 
 export default function RoutineOrderPage() {
-  const { routines, error, isLoading, refetch } = useRoutines(true);
-  if (isLoading || error)
-    return (
-      <section className={styles['order-page']}>
-        <Header title="루틴 순서 변경" fallbackTo="/routine" />
-        <div className={styles['content']}>
-          {isLoading && <p role="status">루틴을 불러오고 있어요.</p>}
-          {error && (
-            <>
-              <p className={styles['error']} role="alert">
-                {error}
-              </p>
-              <button type="button" onClick={() => void refetch()}>
-                다시 시도
-              </button>
-            </>
-          )}
-        </div>
-      </section>
-    );
-  return <RoutineOrderContent initialRoutines={routines} />;
+  const { data: routines, isError, isPending: isLoading, refetch } = useRoutinesQuery();
+  const error = isError ? ROUTINES_LOAD_ERROR : '';
+  const navigate = useNavigate();
+  return (
+    <section className={styles['order-page']}>
+      <Header title="루틴 순서 변경" onBack={() => navigate('/routine', { replace: true })} />
+      <div className={styles['content']}>
+        {isLoading && <BoxLoading />}
+        {error && (
+          <>
+            <p className={styles['error']} role="alert">
+              {error}
+            </p>
+            <button type="button" onClick={() => void refetch()}>
+              다시 시도
+            </button>
+          </>
+        )}
+        {routines !== undefined && <RoutineOrderContent initialRoutines={routines} />}
+      </div>
+    </section>
+  );
 }
 
 function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] }) {
@@ -109,60 +112,59 @@ function RoutineOrderContent({ initialRoutines }: { initialRoutines: TRoutine[] 
   }
 
   return (
-    <section className={styles['order-page']}>
-      <Header title="루틴 순서 변경" onBack={() => navigate('/routine', { replace: true })} />
-      <div className={styles['content']}>
-        {routines.length === 0 && <p className={styles['hint']}>순서를 변경할 루틴이 없어요.</p>}
-        {routines.length > 0 && (
-          <>
-            <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
-            <p className={styles['announcement']} role="status" aria-live="polite">
-              {announcement}
-            </p>
-            <DragDropProvider
-              sensors={(defaults) =>
-                defaults.map((sensor) => (sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor))
+    <>
+      {routines.length === 0 && <p className={styles['hint']}>순서를 변경할 루틴이 없어요.</p>}
+      {routines.length > 0 && (
+        <>
+          <p className={styles['hint']}>핸들을 잡고 옮겨 순서를 바꿔주세요.</p>
+          <p className={styles['announcement']} role="status" aria-live="polite">
+            {announcement}
+          </p>
+          <DragDropProvider
+            sensors={(defaults) =>
+              defaults.map((sensor) => (sensor === PointerSensor ? ORDER_POINTER_SENSOR : sensor))
+            }
+            plugins={(defaults) =>
+              defaults.map((plugin) => (plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin))
+            }
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={(event) => {
+              setIsDragging(false);
+              if (event.canceled) {
+                setAnnouncement('이동을 취소했어요.');
+                return;
               }
-              plugins={(defaults) =>
-                defaults.map((plugin) => (plugin === Accessibility ? ORDER_ACCESSIBILITY : plugin))
-              }
-              onDragStart={() => setIsDragging(true)}
-              onDragEnd={(event) => {
-                setIsDragging(false);
-                if (event.canceled) {
-                  setAnnouncement('이동을 취소했어요.');
-                  return;
-                }
-                const { source } = event.operation;
-                if (isSortable(source)) handleMove(source.initialIndex, source.index);
-              }}
-            >
-              <ul className={styles['list']} aria-label="루틴 순서">
-                {orderedIds.map((id, index) => (
-                  <SortableRoutine
-                    key={id}
-                    routine={routines.find((routine) => routine.id === id)!}
-                    index={index}
-                  />
-                ))}
-              </ul>
-            </DragDropProvider>
-            <div className={styles['actions']}>
-              <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
-                완료
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </section>
+              const { source } = event.operation;
+              if (isSortable(source)) handleMove(source.initialIndex, source.index);
+            }}
+          >
+            <ul className={styles['list']} aria-label="루틴 순서">
+              {orderedIds.map((id, index) => (
+                <SortableRoutine
+                  key={id}
+                  routine={routines.find((routine) => routine.id === id)!}
+                  index={index}
+                  isDisabled={isSaving}
+                />
+              ))}
+            </ul>
+          </DragDropProvider>
+          <div className={styles['actions']}>
+            <Button disabled={!isChanged || isDragging || isSaving} onClick={handleSave}>
+              완료
+            </Button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
-function SortableRoutine({ routine, index }: TSortableRoutineProps) {
+function SortableRoutine({ routine, index, isDisabled }: TSortableRoutineProps) {
   const { ref, handleRef, isDragSource } = useSortable({
     id: routine.id,
     index,
+    disabled: isDisabled,
     data: { name: routine.name },
   });
 
@@ -170,6 +172,7 @@ function SortableRoutine({ routine, index }: TSortableRoutineProps) {
     <li ref={ref} className={`${styles['item']} ${isDragSource ? styles['dragging'] : ''}`}>
       <button
         ref={handleRef}
+        disabled={isDisabled}
         type="button"
         className={styles['handle']}
         aria-label={`${routine.name} 순서 이동`}
