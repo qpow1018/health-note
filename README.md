@@ -125,23 +125,8 @@ E2E 테스트는 설치된 Google Chrome이 필요합니다.
 - 운동 삭제는 복구할 수 없습니다.
 - BrowserRouter를 사용하므로 배포 환경에 SPA fallback을 설정해야 합니다. `/exercise` 같은 페이지 경로에 직접 접속해도 `index.html`을 반환해야 합니다.
 
-## 코드 구조
+## 문서
 
-- `src/app/`: 앱 레이아웃과 라우트 조립
-- `src/pages/`: 페이지와 페이지 전용 스타일
-- `src/features/auth/`: 로그인·로그아웃과 인증 상태 관리
-- `src/api/`: 인증·운동·루틴·완료 기록의 서버 요청과 요청·응답·DB 타입
-- `src/queries/`: 조회·mutation 훅과 Query 키·캐시·재조회 설정
-- `src/features/exercise/`: 운동 폼·화면용 조회 결과·검증
-- `src/features/routine/`: 루틴 폼·일정 계산·화면용 조회 결과·완료 기록 상태
-- `src/lib/`: Supabase 클라이언트와 현재 사용자 정보
-- `src/lib/query/`: 공유 QueryClient와 QueryProvider
-- `src/components/common/`: 공용 UI
-- `src/styles/`: 폰트·다크 테마·공통 토큰·전역 스타일
-
-- `tests/`: Playwright 브라우저 테스트와 모의 API
-- `supabase/`: 로컬 설정·마이그레이션·DB 테스트와 스키마 초안
-
-현재 인증 세션 구독은 `src/features/auth/useAuthSession.ts`에서 처리합니다. 사용자 변경 시 공유 QueryClient의 캐시를 초기화하고, `src/app/AuthBoundary.tsx`에서 사용자별로 하위 화면을 재마운트해 이전 계정의 편집 상태가 이어지지 않도록 합니다.
-
-작성 규칙은 [AGENTS.md](./AGENTS.md)와 연결된 프로젝트 스킬을 참고합니다.
+- [아키텍처](./docs/architecture.md): 책임 경계·인증·조회와 저장 흐름·캐시의 현재 구현
+- [제품 동작 정책](./docs/behavior-decisions.md): 기록 보존·삭제, 루틴 활성화와 일정 변경 규칙
+- [AGENTS.md](./AGENTS.md): 작성·리뷰·검증 기준과 프로젝트 스킬 안내
