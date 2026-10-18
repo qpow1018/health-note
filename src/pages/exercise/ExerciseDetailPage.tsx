@@ -10,6 +10,7 @@ import type { TExercise } from '@/api/exercise/type';
 import Header from '@/components/common/header/Header';
 import MoreMenu from '@/components/common/moreMenu/MoreMenu';
 import Confirm from '@/components/common/modal/Confirm';
+import BoxLoading from '@/components/common/loading/BoxLoading';
 
 import styles from './ExerciseDetailPage.module.scss';
 
@@ -20,7 +21,7 @@ type TExerciseDetailContentProps = {
 };
 
 export default function ExerciseDetailPage() {
-  const { mutateAsync: deleteExercise } = useDeleteExercise();
+  const { mutateAsync: deleteExercise, isPending: isDeleting } = useDeleteExercise();
   const navigate = useNavigate();
 
   const { exerciseId } = useParams();
@@ -29,11 +30,8 @@ export default function ExerciseDetailPage() {
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const [isDeleting, setIsDeleting] = useState(false);
-
   async function handleDelete() {
     if (!exercise || isDeleting) return;
-    setIsDeleting(true);
 
     setIsDeleteConfirmOpen(false);
 
@@ -48,8 +46,6 @@ export default function ExerciseDetailPage() {
         isShowCloseButton: true,
       });
       return;
-    } finally {
-      setIsDeleting(false);
     }
 
     toast.success('운동을 삭제했어요.');
@@ -62,41 +58,30 @@ export default function ExerciseDetailPage() {
         title={exercise?.name ?? '운동 상세'}
         fallbackTo="/exercise"
         actions={
-          !isError && exercise ? (
-            <MoreMenu
-              items={[
-                { label: '수정', to: `/exercise/${encodeURIComponent(exercise.id)}/edit` },
-                { label: '삭제', color: 'rose', onClick: () => setIsDeleteConfirmOpen(true) },
-              ]}
-            />
-          ) : undefined
+          exercise && (
+            <>
+              {isDeleting && <p role="status">삭제 중…</p>}
+              {!isDeleting && (
+                <MoreMenu
+                  items={[
+                    { label: '수정', to: `/exercise/${encodeURIComponent(exercise.id)}/edit` },
+                    { label: '삭제', color: 'rose', onClick: () => setIsDeleteConfirmOpen(true) },
+                  ]}
+                />
+              )}
+            </>
+          )
         }
       />
 
       <div className={styles['content']}>
-        {isPending && <p role="status">운동을 불러오고 있어요.</p>}
-        {isError && (
-          <button type="button" onClick={() => void refetch()}>
-            다시 시도
-          </button>
-        )}
-        {isError && (
-          <p className={styles['error']} role="alert">
-            {EXERCISE_LOAD_ERROR}
-          </p>
-        )}
-
-        {!isPending && !isError && !exercise && (
-          <div>
-            <p className={styles['hint']}>운동을 찾을 수 없어요.</p>
-            <p className={styles['hint']}>목록으로 돌아가 운동을 선택해 주세요.</p>
-          </div>
-        )}
-
-        {!isError && exercise && <ExerciseDetailContent exercise={exercise} />}
+        {isPending && <BoxLoading />}
+        {isError && <ExerciseDetailLoadError onRetry={() => void refetch()} />}
+        {!isPending && !isError && !exercise && <MissingExercise />}
+        {exercise && <ExerciseDetailContent exercise={exercise} />}
       </div>
 
-      {!isError && exercise && (
+      {exercise && (
         <Confirm
           isOpen={isDeleteConfirmOpen}
           title="운동 삭제"
@@ -180,6 +165,28 @@ function ExerciseDetailContent({ exercise }: TExerciseDetailContentProps) {
         {exercise.memo && <p className={styles['memo']}>{exercise.memo}</p>}
         {!exercise.memo && <p className={styles['hint']}>-</p>}
       </section>
+    </div>
+  );
+}
+
+function ExerciseDetailLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+      <p className={styles['error']} role="alert">
+        {EXERCISE_LOAD_ERROR}
+      </p>
+    </>
+  );
+}
+
+function MissingExercise() {
+  return (
+    <div>
+      <p className={styles['hint']}>운동을 찾을 수 없어요.</p>
+      <p className={styles['hint']}>목록으로 돌아가 운동을 선택해 주세요.</p>
     </div>
   );
 }

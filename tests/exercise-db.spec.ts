@@ -137,3 +137,65 @@ test('재조회에 실패해도 기존 목록을 유지하고 재시도로 최�
   await expect(page.getByRole('link', { name: /최신 스쿼트/ })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
+
+test('상세 재조회 실패와 재시도 중 기존 내용과 영상 프레임을 유지한다', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/exercise');
+  await page.evaluate(
+    ({ key, exercise }) =>
+      localStorage.setItem(
+        key,
+        JSON.stringify([
+          { ...exercise, youtubeLinks: ['https://youtu.be/abcdefghijk'], memo: '상세 메모' },
+        ]),
+      ),
+    { key: KEY, exercise: EXERCISE },
+  );
+  await page.reload();
+  await page.getByRole('link', { name: /스쿼트/ }).click();
+  const player = page.locator('iframe');
+  await expect(player).toHaveCount(1);
+  await player.evaluate((element) => element.setAttribute('data-preserved', 'true'));
+  await page.route('**/rest/v1/exercises?**', (route) =>
+    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
+  );
+  await page.clock.fastForward(61_000);
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(page.getByRole('alert')).toContainText('운동을 불러오지 못했어요.');
+  await expect(page.getByText('상세 메모', { exact: true })).toBeVisible();
+  await expect(player).toHaveAttribute('data-preserved', 'true');
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '다시 시도', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(player).toHaveAttribute('data-preserved', 'true');
+  await page.screenshot({ path: '/tmp/health-note-detail.png' });
+});
+
+test('삭제 응답을 기다리는 동안 수정·삭제 메뉴를 제공하지 않는다', async ({ page }) => {
+  await page.goto('/exercise');
+  await page.evaluate(
+    ({ key, exercise }) => localStorage.setItem(key, JSON.stringify([exercise])),
+    { key: KEY, exercise: EXERCISE },
+  );
+  await page.reload();
+  await page.getByRole('link', { name: /스쿼트/ }).click();
+  let release: () => void = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    await pending;
+    await route.fallback();
+  });
+  await page.getByRole('button', { name: '더보기', exact: true }).click();
+  await page.getByRole('button', { name: '삭제', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('삭제 중…');
+  await expect(page.getByRole('button', { name: '더보기', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: '수정', exact: true })).toHaveCount(0);
+  release();
+  await expect(page).toHaveURL('/exercise');
+  await expect(page.getByText('아직 등록한 운동이 없어요.')).toBeVisible();
+});
