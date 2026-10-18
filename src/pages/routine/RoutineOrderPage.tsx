@@ -41,24 +41,16 @@ type TSortableRoutineProps = {
 };
 
 export default function RoutineOrderPage() {
-  const { data: routines, isError, isPending: isLoading, refetch } = useRoutinesQuery();
-  const error = isError ? ROUTINES_LOAD_ERROR : '';
   const navigate = useNavigate();
+
+  const { data: routines, isError, isPending, refetch } = useRoutinesQuery();
+
   return (
     <section className={styles['order-page']}>
       <Header title="루틴 순서 변경" onBack={() => navigate('/routine', { replace: true })} />
       <div className={styles['content']}>
-        {isLoading && <BoxLoading />}
-        {error && (
-          <>
-            <p className={styles['error']} role="alert">
-              {error}
-            </p>
-            <button type="button" onClick={() => void refetch()}>
-              다시 시도
-            </button>
-          </>
-        )}
+        {isPending && <BoxLoading />}
+        {isError && <RoutineOrderLoadError onRetry={() => void refetch()} />}
         {routines !== undefined && <RoutineOrderContent initialRoutines={routines} />}
       </div>
     </section>
@@ -184,5 +176,18 @@ function SortableRoutine({ routine, index, isDisabled }: TSortableRoutineProps) 
         <p>운동 {routine.exerciseIds.length}개</p>
       </div>
     </li>
+  );
+}
+
+function RoutineOrderLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <p className={styles['error']} role="alert">
+        {ROUTINES_LOAD_ERROR}
+      </p>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+    </>
   );
 }

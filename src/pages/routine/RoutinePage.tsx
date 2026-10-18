@@ -12,8 +12,7 @@ import styles from './RoutinePage.module.scss';
 import { MdAdd, MdChevronRight } from 'react-icons/md';
 
 export default function RoutinePage() {
-  const { data: routines = [], isError, isPending: isLoading, refetch } = useRoutinesQuery();
-  const error = isError ? ROUTINES_LOAD_ERROR : '';
+  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
 
   return (
     <section className={styles['routine-page']}>
@@ -28,23 +27,12 @@ export default function RoutinePage() {
         }
       />
       <div className={styles['content']}>
-        {isLoading && <BoxLoading />}
-        {error && (
-          <button type="button" onClick={() => void refetch()}>
-            다시 시도
-          </button>
-        )}
-        {error && (
-          <p role="alert" className={styles['error']}>
-            {error}
-          </p>
-        )}
-        {!isLoading && !error && routines.length === 0 && (
-          <div className={styles['empty']}>
-            <p>아직 등록한 루틴이 없어요.</p>
-            <p className={styles['hint']}>운동을 묶어 나만의 반복 일정을 만들어보세요.</p>
-          </div>
-        )}
+        {isPending && <BoxLoading />}
+
+        {isError && <RoutineLoadError onRetry={() => void refetch()} />}
+
+        {!isPending && !isError && routines.length === 0 && <EmptyRoutines />}
+
         {routines.length > 0 && (
           <>
             <div className={styles['list-toolbar']}>
@@ -80,5 +68,27 @@ export default function RoutinePage() {
         )}
       </div>
     </section>
+  );
+}
+
+function RoutineLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+      <p role="alert" className={styles['error']}>
+        {ROUTINES_LOAD_ERROR}
+      </p>
+    </>
+  );
+}
+
+function EmptyRoutines() {
+  return (
+    <div className={styles['empty']}>
+      <p>아직 등록한 루틴이 없어요.</p>
+      <p className={styles['hint']}>운동을 묶어 나만의 반복 일정을 만들어보세요.</p>
+    </div>
   );
 }

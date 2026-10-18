@@ -156,3 +156,34 @@ test('삭제 응답 대기 중 수정 메뉴와 활성화 조작을 막는다', 
   await expect(page.getByRole('alert')).toContainText('삭제하지 못했어요');
   await expect(page.getByRole('switch')).toBeEnabled();
 });
+
+test('입력 검증은 운동 재조회보다 먼저 수행하고 조회 실패는 한 번만 안내한다', async ({ page }) => {
+  await page.goto('/routine/r1/edit');
+  await expect(page.getByRole('listitem')).toHaveCount(2);
+  let reads = 0;
+  await page.route('**/rest/v1/exercises?**', async (route) => {
+    reads++;
+    await route.fulfill({ status: 503, json: { message: 'Unavailable' } });
+  });
+  await page.getByLabel('루틴 이름').fill('   ');
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('루틴 이름을 입력해 주세요.');
+  expect(reads).toBe(0);
+  await page.getByLabel('루틴 이름').fill('유효한 이름');
+  await page.getByRole('checkbox', { name: '월', exact: true }).uncheck();
+  await page.getByRole('checkbox', { name: '금', exact: true }).uncheck();
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('반복할 요일을 하나 이상 선택해 주세요.');
+  expect(reads).toBe(0);
+  await page.getByRole('checkbox', { name: '월', exact: true }).check();
+  await page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveCount(1);
+  await expect(page.getByRole('alert')).toContainText('운동 목록을 불러오지 못했어요.');
+  expect(reads).toBe(1);
+  await expect(page.getByLabel('루틴 이름')).toHaveValue('유효한 이름');
+  await page.unroute('**/rest/v1/exercises?**');
+  await page.getByRole('button', { name: '운동 선택', exact: true }).click();
+  await page.getByRole('button', { name: /선택 완료/ }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '저장', exact: true })).toBeEnabled();
+});

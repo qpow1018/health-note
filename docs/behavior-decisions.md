@@ -23,3 +23,9 @@
 간격 반복 루틴의 이름·메모·운동 구성만 수정하고 시작일과 반복 간격을 유지하면 기존 미루기 내역도 유지한다. 시작일이나 반복 간격을 바꾸면 미루기 내역을 초기화한다. 요일 반복으로 바꿀 때도 기존 간격 반복의 미루기 내역을 이어받지 않는다.
 
 근거: [루틴 수정 값 준비](../src/features/routine/routineActions.ts), [폼 안내](../src/features/routine/routineForm/RoutineForm.tsx). 관련 테스트: [일정 수정과 미루기 내역](../tests/routine-postpone.spec.ts).
+
+## 루틴 저장은 입력 검증 후 운동 존재 여부를 확인한다
+
+루틴 폼은 이름·운동 선택·반복 일정의 입력 오류를 먼저 안내한다. 유효한 입력에 대해서만 운동 목록을 재조회해 선택한 운동이 여전히 존재하는지 확인하고 저장한다. 조회 실패는 운동 목록 오류 영역에서 한 번만 안내하며 입력을 유지한다. 운동 선택을 다시 열어 조회에 성공하면 저장을 재시도할 수 있다.
+
+근거: [루틴 폼](../src/features/routine/routineForm/RoutineForm.tsx). 관련 테스트: [입력 검증 순서와 조회 실패 복구](../tests/routine-refetch.spec.ts).

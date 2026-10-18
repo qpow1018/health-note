@@ -20,34 +20,17 @@ export default function RoutineEditPage() {
 }
 
 function RoutineEditContent({ routineId }: { routineId: string | undefined }) {
-  const { data: routines = [], isError, isPending: isLoading, refetch } = useRoutinesQuery();
+  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
   const routine = routines.find((routine) => routine.id === routineId);
-  const error = isError ? ROUTINE_LOAD_ERROR : '';
   const detailTo = `/routine/${encodeURIComponent(routineId ?? '')}`;
 
   return (
     <section className={styles['routine-edit-page']}>
       <Header title="루틴 수정" backTo={detailTo} />
       <div className={styles['content']}>
-        {isLoading && <BoxLoading />}
-        {error && (
-          <button type="button" onClick={() => void refetch()}>
-            다시 시도
-          </button>
-        )}
-        {error && (
-          <p role="alert" className={styles['error']}>
-            {error}
-          </p>
-        )}
-        {!isLoading && !error && !routine && (
-          <div className={styles['missing']}>
-            <p>루틴을 찾을 수 없어요.</p>
-            <ButtonLink to="/routine" color="gray" fill="outline">
-              루틴 목록으로
-            </ButtonLink>
-          </div>
-        )}
+        {isPending && <BoxLoading />}
+        {isError && <RoutineEditLoadError onRetry={() => void refetch()} />}
+        {!isPending && !isError && !routine && <MissingRoutine />}
         {routine && (
           <RoutineEditor initialRoutine={routine} detailTo={detailTo} onRefresh={refetch} />
         )}
@@ -95,4 +78,28 @@ function RoutineEditor({
   }
 
   return <RoutineForm initialValues={routine} onSave={handleSave} />;
+}
+
+function RoutineEditLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+      <p role="alert" className={styles['error']}>
+        {ROUTINE_LOAD_ERROR}
+      </p>
+    </>
+  );
+}
+
+function MissingRoutine() {
+  return (
+    <div className={styles['missing']}>
+      <p>루틴을 찾을 수 없어요.</p>
+      <ButtonLink to="/routine" color="gray" fill="outline">
+        루틴 목록으로
+      </ButtonLink>
+    </div>
+  );
 }

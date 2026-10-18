@@ -29,13 +29,12 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
   const { mutateAsync: setRoutineActive, isPending: isActivating } = useSetRoutineActive();
   const { mutateAsync: deleteRoutine, isPending: isDeleting } = useDeleteRoutine();
   const navigate = useNavigate();
-  const { data: routines = [], isError, isPending: isLoading, refetch } = useRoutinesQuery();
+  const { data: routines = [], isError, isPending, refetch } = useRoutinesQuery();
   const routine = routines.find((routine) => routine.id === routineId);
-  const error = isError ? ROUTINE_LOAD_ERROR : '';
   const isSaving = isActivating || isDeleting;
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   let title = '루틴 상세';
-  if (!isLoading && !error && !routine) title = '루틴을 찾을 수 없어요.';
+  if (!isPending && !isError && !routine) title = '루틴을 찾을 수 없어요.';
   if (routine) title = routine.name;
 
   async function handleToggleActive() {
@@ -94,20 +93,9 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
       />
       <div className={styles['content']}>
         {isSaving && <p role="status">{isDeleting ? '삭제 중…' : '변경 중…'}</p>}
-        {isLoading && <BoxLoading />}
-        {error && (
-          <button type="button" onClick={() => void refetch()}>
-            다시 시도
-          </button>
-        )}
-        {error && (
-          <p className={styles['error']} role="alert">
-            {error}
-          </p>
-        )}
-        {!isLoading && !error && !routine && (
-          <p className={styles['hint']}>목록으로 돌아가 루틴을 선택해 주세요.</p>
-        )}
+        {isPending && <BoxLoading />}
+        {isError && <RoutineDetailLoadError onRetry={() => void refetch()} />}
+        {!isPending && !isError && !routine && <MissingRoutine />}
         {routine && (
           <>
             <div className={styles['activation']}>
@@ -154,6 +142,23 @@ function RoutineDetail({ routineId }: { routineId: string | undefined }) {
   );
 }
 
+function RoutineDetailLoadError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <>
+      <button type="button" onClick={onRetry}>
+        다시 시도
+      </button>
+      <p className={styles['error']} role="alert">
+        {ROUTINE_LOAD_ERROR}
+      </p>
+    </>
+  );
+}
+
+function MissingRoutine() {
+  return <p className={styles['hint']}>목록으로 돌아가 루틴을 선택해 주세요.</p>;
+}
+
 function RoutineSchedule({
   schedule,
   isActive,
@@ -195,20 +200,19 @@ function RoutineSchedule({
 }
 
 function RoutineExercises({ exerciseIds }: { exerciseIds: string[] }) {
-  const { data: exercises = [], isError, isPending: isLoading } = useExercisesQuery();
-  const error = isError ? EXERCISES_LOAD_ERROR : '';
+  const { data: exercises = [], isError, isPending } = useExercisesQuery();
   return (
     <section className={styles['section']} aria-labelledby="exercises-heading">
       <h2 id="exercises-heading">
         운동 <span className={styles['exercise-count']}>{exerciseIds.length}개</span>
       </h2>
-      {error && (
+      {isError && (
         <p className={styles['error']} role="alert">
-          {error}
+          {EXERCISES_LOAD_ERROR}
         </p>
       )}
-      {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-      {!isLoading && (!isError || exercises.length > 0) && (
+      {isPending && <p role="status">운동을 불러오고 있어요.</p>}
+      {!isPending && (!isError || exercises.length > 0) && (
         <ol className={styles['exercise-list']}>
           {exerciseIds.map((id) => {
             const exercise = exercises.find((item) => item.id === id);

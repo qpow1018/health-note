@@ -63,8 +63,7 @@ export default function RoutineForm({
   onSave,
 }: TRoutineFormProps) {
   const [initialValues] = useState(initialFormValues);
-  const { data: exercises = [], isError, isPending: isLoading, refetch } = useExercisesQuery();
-  const error = isError ? EXERCISES_LOAD_ERROR : '';
+  const { data: exercises = [], isError, isPending, refetch } = useExercisesQuery();
   const [isSaving, setIsSaving] = useState(false);
   const [exerciseIds, setExerciseIds] = useState<string[]>(initialValues?.exerciseIds ?? []);
   const [draftIds, setDraftIds] = useState<string[]>([]);
@@ -142,44 +141,41 @@ export default function RoutineForm({
     setNameError('');
     setExerciseError('');
     setScheduleError('');
+    if (!name) {
+      setNameError('루틴 이름을 입력해 주세요.');
+      return;
+    }
+    if (exerciseIds.length === 0) {
+      setExerciseError('운동을 하나 이상 선택해 주세요.');
+      return;
+    }
+    let schedule: TRoutineSchedule;
+    if (scheduleType === 'weekdays') {
+      const days = data.getAll('days').map(Number);
+      if (days.length === 0) {
+        setScheduleError('반복할 요일을 하나 이상 선택해 주세요.');
+        return;
+      }
+      schedule = { type: 'weekdays', days };
+    } else {
+      const intervalDays = Number(data.get('intervalDays'));
+      if (!Number.isSafeInteger(intervalDays) || intervalDays < 1) {
+        setScheduleError('간격은 1 이상의 정수로 입력해 주세요.');
+        return;
+      }
+      schedule = {
+        type: 'interval',
+        intervalDays,
+        startDate: String(data.get('startDate') ?? ''),
+      };
+    }
     setIsSaving(true);
     try {
       const latest = await refetch();
-      if (latest.error) {
-        setExerciseError(EXERCISES_LOAD_ERROR);
-        return;
-      }
+      if (latest.isError) return;
       if (exerciseIds.some((id) => !(latest.data ?? []).some((exercise) => exercise.id === id))) {
         setExerciseError('저장하지 못했어요. 삭제된 운동을 제거하거나 다시 선택해 주세요.');
         return;
-      }
-      if (!name) {
-        setNameError('루틴 이름을 입력해 주세요.');
-        return;
-      }
-      if (exerciseIds.length === 0) {
-        setExerciseError('운동을 하나 이상 선택해 주세요.');
-        return;
-      }
-      let schedule: TRoutineSchedule;
-      if (scheduleType === 'weekdays') {
-        const days = data.getAll('days').map(Number);
-        if (days.length === 0) {
-          setScheduleError('반복할 요일을 하나 이상 선택해 주세요.');
-          return;
-        }
-        schedule = { type: 'weekdays', days };
-      } else {
-        const intervalDays = Number(data.get('intervalDays'));
-        if (!Number.isSafeInteger(intervalDays) || intervalDays < 1) {
-          setScheduleError('간격은 1 이상의 정수로 입력해 주세요.');
-          return;
-        }
-        schedule = {
-          type: 'interval',
-          intervalDays,
-          startDate: String(data.get('startDate') ?? ''),
-        };
       }
       await onSave({
         name,
@@ -227,16 +223,16 @@ export default function RoutineForm({
                 type="button"
                 className={styles['select-button']}
                 onClick={handleOpenExercises}
-                disabled={isDragging || isLoading || isSaving}
+                disabled={isDragging || isPending || isSaving}
                 aria-describedby={exerciseError ? 'routine-exercises-error' : undefined}
               >
                 <MdAdd size={18} aria-hidden="true" />
                 운동 선택
               </button>
             </div>
-            {error && (
+            {isError && (
               <p role="alert" className={styles['error']}>
-                {error}
+                {EXERCISES_LOAD_ERROR}
               </p>
             )}
             <FieldError id="routine-exercises-error" message={exerciseError} />
@@ -247,8 +243,8 @@ export default function RoutineForm({
               {exerciseIds.length === 0 && (
                 <p className={styles['empty-exercises']}>선택한 운동이 없어요.</p>
               )}
-              {isLoading && <p role="status">운동을 불러오고 있어요.</p>}
-              {exerciseIds.length > 0 && !isLoading && (
+              {isPending && <p role="status">운동을 불러오고 있어요.</p>}
+              {exerciseIds.length > 0 && !isPending && (
                 <DragDropProvider
                   sensors={(defaults) =>
                     defaults.map((sensor) =>
@@ -272,7 +268,7 @@ export default function RoutineForm({
                         id={id}
                         index={index}
                         exercise={exercises.find((exercise) => exercise.id === id)}
-                        isLoadError={Boolean(error)}
+                        isLoadError={isError}
                         isSortable={exerciseIds.length > 1}
                         isDisabled={isSaving}
                         onRemove={handleRemoveExercise}
@@ -386,7 +382,7 @@ export default function RoutineForm({
           </div>
         </fieldset>
         <div className={styles['actions']}>
-          <Button type="submit" disabled={Boolean(error) || isDragging || isSaving || isLoading}>
+          <Button type="submit" disabled={isError || isDragging || isSaving || isPending}>
             {isSaving ? '저장 중…' : '저장'}
           </Button>
         </div>
